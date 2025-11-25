@@ -1,5 +1,7 @@
 package io.mero.app.domain.user.service;
 
+import io.mero.app.domain.user.dto.LoginRequest;
+import io.mero.app.domain.user.dto.LoginResponse;
 import io.mero.app.domain.user.dto.SignUpRequest;
 import io.mero.app.domain.user.dto.UserResponse;
 import io.mero.app.domain.user.entity.User;
@@ -14,6 +16,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -143,5 +147,77 @@ class UserServiceTest {
 
         verify(userRepository).existsByEmail(request.getEmail());
         verify(userRepository).existsByNickname(request.getNickname());
+    }
+
+    @Test
+    @DisplayName("로그인 성공")
+    void 로그인_성공() {
+        // given
+        LoginRequest request = new LoginRequest("test@email.com", "password123");
+
+        User user = User.builder()
+                .email("test@email.com")
+                .passwordHash("encodedPassword")
+                .nickname("테스트유저")
+                .defaultCurrency(Currency.KRW)
+                .timezone(Timezone.ASIA_SEOUL)
+                .build();
+
+        given(userRepository.findByEmail(request.getEmail())).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(request.getPassword(), user.getPasswordHash())).willReturn(true);
+
+        // when
+        LoginResponse login = userService.login(request);
+
+        // then
+        assertThat(login.getEmail()).isEqualTo(request.getEmail());
+        assertThat(login.getNickname()).isEqualTo("테스트유저");
+        assertThat(login.getAccessToken()).isNotNull();
+
+        verify(userRepository).findByEmail(request.getEmail());
+        verify(passwordEncoder).matches(request.getPassword(), user.getPasswordHash());
+    }
+
+    @Test
+    @DisplayName("로그인 실패 - 존재하지 않는 이메일")
+    void 로그인_실패_존재하지_않는_이메일() {
+        // given
+        LoginRequest request = new LoginRequest("test@email.com", "password123");
+
+        given(userRepository.findByEmail(request.getEmail()))
+                .willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> userService.login(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("이메일 또는 비밀번호가 일치하지 않습니다");
+
+        verify(userRepository).findByEmail(request.getEmail());
+
+    }
+
+    @Test
+    @DisplayName("로그인 실패 - 비밀번호 불일치")
+    void 로그인_실패_비밀번호_불일치() {
+        // given
+        LoginRequest request = new LoginRequest("test@email.com", "password123");
+
+        User user = User.builder()
+                .email(request.getEmail())
+                .passwordHash("encodedPassword")
+                .build();
+
+        given(userRepository.findByEmail(request.getEmail()))
+                .willReturn(Optional.of(user));
+        given(passwordEncoder.matches(request.getPassword(), user.getPasswordHash()))
+                .willReturn(false);
+
+        // when & then
+        assertThatThrownBy(() -> userService.login(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("이메일 또는 비밀번호가 일치하지 않습니다");
+
+        verify(userRepository).findByEmail(request.getEmail());
+        verify(passwordEncoder).matches(request.getPassword(), user.getPasswordHash());
     }
 }

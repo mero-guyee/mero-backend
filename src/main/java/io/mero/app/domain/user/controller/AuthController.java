@@ -1,5 +1,7 @@
 package io.mero.app.domain.user.controller;
 
+import io.mero.app.domain.user.dto.LoginRequest;
+import io.mero.app.domain.user.dto.LoginResponse;
 import io.mero.app.domain.user.dto.SignUpRequest;
 import io.mero.app.domain.user.dto.UserResponse;
 import io.mero.app.domain.user.service.UserService;
@@ -23,5 +25,11 @@ public class AuthController {
     public ResponseEntity<UserResponse> signUp(@Valid @RequestBody SignUpRequest request) {
         UserResponse response = userService.signUp(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        LoginResponse response = userService.login(request);
+        return ResponseEntity.ok(response);
     }
 }

@@ -1,6 +1,8 @@
 package io.mero.app.domain.user.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.mero.app.domain.user.dto.LoginRequest;
+import io.mero.app.domain.user.dto.LoginResponse;
 import io.mero.app.domain.user.dto.SignUpRequest;
 import io.mero.app.domain.user.dto.UserResponse;
 import io.mero.app.domain.user.service.UserService;
@@ -127,6 +129,48 @@ class AuthControllerTest {
 
         // when & then
         mockMvc.perform(post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("로그인 API 성공")
+    void 로그인_API_성공() throws Exception {
+        // given
+        LoginRequest request = new LoginRequest("test@email.com", "password123");
+
+        LoginResponse response = new LoginResponse(
+                1L,
+                "test@email.com",
+                "테스트유저",
+                "temporary-access-token"
+        );
+
+        given(userService.login(any(LoginRequest.class))).willReturn(response);
+
+        // when & then
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.userId").value(1L))
+                .andExpect(jsonPath("$.email").value("test@email.com"))
+                .andExpect(jsonPath("$.nickname").value("테스트유저"))
+                .andExpect(jsonPath("$.accessToken").value("temporary-access-token"));
+
+    }
+
+    @Test
+    @DisplayName("로그인 API 실패 - 이메일 형식 오류")
+    void 로그인_API_실패_이메일_형식_오류() throws Exception {
+        // given
+        LoginRequest request = new LoginRequest("invalid-email.com", "password123");
+
+        // when & then
+        mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())

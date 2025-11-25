@@ -1,11 +1,14 @@
 package io.mero.app.domain.user.service;
 
+import io.mero.app.domain.user.dto.LoginRequest;
+import io.mero.app.domain.user.dto.LoginResponse;
 import io.mero.app.domain.user.dto.SignUpRequest;
 import io.mero.app.domain.user.dto.UserResponse;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.UserRepository;
 import io.mero.app.global.enums.Currency;
 import io.mero.app.global.enums.Timezone;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -52,5 +55,25 @@ public class UserService {
                 .timezone(request.getTimezone() != null ?
                         request.getTimezone() : Timezone.ASIA_SEOUL)
                 .build();
+    }
+
+    @Transactional
+    public LoginResponse login(LoginRequest request) {
+        // 1. 이메일로 사용자 찾기
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다"));
+
+        // 2. 비밀번호 검증
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다");
+        }
+
+        // 3. 로그인 성공 (TODO: JWT 생성)
+        return new LoginResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getNickname(),
+                "temporary-access-token"
+        );
     }
 }
