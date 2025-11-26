@@ -95,7 +95,7 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"));
 
         if (!refreshToken.equals(user.getRefreshToken())) {
-            throw new IllegalArgumentException("토큰이 일치하지 않습니다");
+            throw new IllegalArgumentException("유효하지 않은 토큰입니다");
         }
 
         String newAccessToken = jwtTokenProvider.createAccessToken(userId);
@@ -104,6 +104,22 @@ public class UserService {
         user.updateRefreshToken(newRefreshToken);
 
         return new TokenRefreshResponse(newAccessToken, newRefreshToken);
+
+    }
+
+    @Transactional
+    public void logout(LogoutRequest request) {
+        String refreshToken = request.getRefreshToken();
+
+        if(!jwtTokenProvider.validateToken(refreshToken)) {
+            throw new IllegalArgumentException("유효하지 않은 토큰입니다");
+        }
+
+        Long userId = jwtTokenProvider.getUserIdFrom(refreshToken);
+
+        userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"))
+                .clearRefreshToken();
 
     }
 }

@@ -318,7 +318,58 @@ class UserServiceTest {
         // when & then
         assertThatThrownBy(() -> userService.refreshToken(request))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("토큰이 일치하지 않습니다");
+                .hasMessage("유효하지 않은 토큰입니다");
 
+    }
+    
+    @Test
+    @DisplayName("로그아웃 성공")
+    void 로그아웃_성공() {
+        // given
+        String refreshToken = "valid-refresh-token";
+        long userId = 1L;
+
+        User user = User.builder()
+                .id(userId)
+                .email("test@email.com")
+                .passwordHash("encodedPassword")
+                .nickname("테스트유저")
+                .build();
+
+        user.updateRefreshToken(refreshToken);
+
+        given(jwtTokenProvider.validateToken(refreshToken)).willReturn(true);
+        given(jwtTokenProvider.getUserIdFrom(refreshToken)).willReturn(userId);
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+
+        LogoutRequest request = new LogoutRequest(refreshToken);
+
+        // when
+        userService.logout(request);
+
+        // then
+        assertThat(user.getRefreshToken()).isNull();
+
+        verify(jwtTokenProvider).validateToken(refreshToken);
+        verify(jwtTokenProvider).getUserIdFrom(refreshToken);
+        verify(userRepository).findById(userId);
+    }
+    
+    @Test
+    @DisplayName("로그아웃 실패 - 유효하지 않는 토큰")
+    void 로그아웃_실패_유효하지_않는_토큰() {
+        // given
+        String invalidToken = "invalid-token";
+
+        given(jwtTokenProvider.validateToken(invalidToken)).willReturn(false);
+
+        LogoutRequest request = new LogoutRequest(invalidToken);
+    
+        // when & then
+        assertThatThrownBy(() -> userService.logout(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("유효하지 않은 토큰입니다");
+
+        verify(jwtTokenProvider).validateToken(invalidToken);
     }
 }

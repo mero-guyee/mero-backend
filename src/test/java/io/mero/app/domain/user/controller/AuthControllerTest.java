@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -204,6 +205,36 @@ class AuthControllerTest {
     
         // when & then
         mockMvc.perform(post("/api/auth/refresh-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+    }
+    
+    @Test
+    @DisplayName("로그아웃 API 성공")
+    void 로그아웃_API_성공() throws Exception {
+        // given
+        LogoutRequest request = new LogoutRequest("valid-refresh-token");
+
+        // when & then
+        mockMvc.perform(post("/api/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isNoContent());
+
+        verify(userService).logout(any(LogoutRequest.class));
+    }
+    
+    @Test
+    @DisplayName("로그아웃 API 실패 - 토큰 없음")
+    void 로그아웃_API_실패_토큰_없음() throws Exception {
+        // given
+        LogoutRequest request = new LogoutRequest("");
+
+        // when & then
+        mockMvc.perform(post("/api/auth/logout")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
