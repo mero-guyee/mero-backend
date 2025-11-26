@@ -8,6 +8,7 @@ import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.UserRepository;
 import io.mero.app.global.enums.Currency;
 import io.mero.app.global.enums.Timezone;
+import io.mero.app.global.jwt.JwtTokenProvider;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +22,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
     public UserResponse signUp(SignUpRequest request) {
@@ -59,21 +61,22 @@ public class UserService {
 
     @Transactional
     public LoginResponse login(LoginRequest request) {
-        // 1. 이메일로 사용자 찾기
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다"));
 
-        // 2. 비밀번호 검증
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다");
         }
 
-        // 3. 로그인 성공 (TODO: JWT 생성)
+        String accessToken = jwtTokenProvider.createAccessToken(user.getId());
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
+
         return new LoginResponse(
                 user.getId(),
                 user.getEmail(),
                 user.getNickname(),
-                "temporary-access-token"
+                accessToken,
+                refreshToken
         );
     }
 }

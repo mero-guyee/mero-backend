@@ -45,8 +45,9 @@ public class User extends BaseEntity {
     private LocalDateTime lastLoginAt;
 
     @Builder
-    public User(String email, String nickname, String passwordHash,
+    public User(Long id, String email, String nickname, String passwordHash,
                 String profileImageUrl, Currency defaultCurrency, Timezone timezone) {
+        this.id = id;
         this.email = email;
         this.nickname = nickname;
         this.passwordHash = passwordHash;

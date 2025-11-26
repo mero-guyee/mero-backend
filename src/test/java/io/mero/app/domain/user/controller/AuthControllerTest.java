@@ -145,7 +145,8 @@ class AuthControllerTest {
                 1L,
                 "test@email.com",
                 "테스트유저",
-                "temporary-access-token"
+                "temporary-access-token",
+                "temporary-refresh-token"
         );
 
         given(userService.login(any(LoginRequest.class))).willReturn(response);
@@ -159,7 +160,8 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.userId").value(1L))
                 .andExpect(jsonPath("$.email").value("test@email.com"))
                 .andExpect(jsonPath("$.nickname").value("테스트유저"))
-                .andExpect(jsonPath("$.accessToken").value("temporary-access-token"));
+                .andExpect(jsonPath("$.accessToken").value("temporary-access-token"))
+                .andExpect(jsonPath("$.refreshToken").value("temporary-refresh-token"));
 
     }
 

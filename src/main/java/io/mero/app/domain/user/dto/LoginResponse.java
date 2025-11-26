@@ -9,5 +9,6 @@ public class LoginResponse {
     private Long userId;
     private String email;
     private String nickname;
-    private String accessToken;  // TODO: JWT 생성
+    private String accessToken;
+    private String refreshToken;
 }

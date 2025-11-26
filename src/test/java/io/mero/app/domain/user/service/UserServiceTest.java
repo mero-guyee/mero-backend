@@ -9,6 +9,7 @@ import io.mero.app.domain.user.repository.UserRepository;
 import io.mero.app.domain.user.service.UserService;
 import io.mero.app.global.enums.Currency;
 import io.mero.app.global.enums.Timezone;
+import io.mero.app.global.jwt.JwtTokenProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +33,9 @@ class UserServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private JwtTokenProvider jwtTokenProvider;
 
     @InjectMocks
     private UserService userService;
@@ -156,6 +160,7 @@ class UserServiceTest {
         LoginRequest request = new LoginRequest("test@email.com", "password123");
 
         User user = User.builder()
+                .id(1L)
                 .email("test@email.com")
                 .passwordHash("encodedPassword")
                 .nickname("테스트유저")
@@ -163,19 +168,29 @@ class UserServiceTest {
                 .timezone(Timezone.ASIA_SEOUL)
                 .build();
 
-        given(userRepository.findByEmail(request.getEmail())).willReturn(Optional.of(user));
-        given(passwordEncoder.matches(request.getPassword(), user.getPasswordHash())).willReturn(true);
+        given(userRepository.findByEmail(request.getEmail()))
+                .willReturn(Optional.of(user));
+        given(passwordEncoder.matches(request.getPassword(), user.getPasswordHash()))
+                .willReturn(true);
+        given(jwtTokenProvider.createAccessToken(user.getId()))
+                .willReturn("access-token");
+        given(jwtTokenProvider.createRefreshToken(user.getId()))
+                .willReturn("refresh-token");
 
         // when
-        LoginResponse login = userService.login(request);
+        LoginResponse response = userService.login(request);
 
         // then
-        assertThat(login.getEmail()).isEqualTo(request.getEmail());
-        assertThat(login.getNickname()).isEqualTo("테스트유저");
-        assertThat(login.getAccessToken()).isNotNull();
+        assertThat(response.getUserId()).isEqualTo(1L);
+        assertThat(response.getEmail()).isEqualTo(request.getEmail());
+        assertThat(response.getNickname()).isEqualTo("테스트유저");
+        assertThat(response.getAccessToken()).isEqualTo("access-token");
+        assertThat(response.getRefreshToken()).isEqualTo("refresh-token");
 
         verify(userRepository).findByEmail(request.getEmail());
         verify(passwordEncoder).matches(request.getPassword(), user.getPasswordHash());
+        verify(jwtTokenProvider).createRefreshToken(user.getId());
+        verify(jwtTokenProvider).createRefreshToken(user.getId());
     }
 
     @Test
