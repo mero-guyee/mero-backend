@@ -44,6 +44,9 @@ public class User extends BaseEntity {
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
+    @Column(name = "refresh_token", length = 500)
+    private String refreshToken;
+
     @Builder
     public User(Long id, String email, String nickname, String passwordHash,
                 String profileImageUrl, Currency defaultCurrency, Timezone timezone) {
@@ -88,5 +91,9 @@ public class User extends BaseEntity {
             throw new IllegalArgumentException("타임존은 필수입니다");
         }
         this.timezone = timezone;
+    }
+
+    public void updateRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
     }
 }

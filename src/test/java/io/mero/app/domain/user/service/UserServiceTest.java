@@ -186,6 +186,7 @@ class UserServiceTest {
         assertThat(response.getNickname()).isEqualTo("테스트유저");
         assertThat(response.getAccessToken()).isEqualTo("access-token");
         assertThat(response.getRefreshToken()).isEqualTo("refresh-token");
+        assertThat(user.getRefreshToken()).isEqualTo("refresh-token");
 
         verify(userRepository).findByEmail(request.getEmail());
         verify(passwordEncoder).matches(request.getPassword(), user.getPasswordHash());
