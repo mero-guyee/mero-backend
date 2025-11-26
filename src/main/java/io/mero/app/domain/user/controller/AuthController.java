@@ -1,9 +1,6 @@
 package io.mero.app.domain.user.controller;
 
-import io.mero.app.domain.user.dto.LoginRequest;
-import io.mero.app.domain.user.dto.LoginResponse;
-import io.mero.app.domain.user.dto.SignUpRequest;
-import io.mero.app.domain.user.dto.UserResponse;
+import io.mero.app.domain.user.dto.*;
 import io.mero.app.domain.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,4 +29,11 @@ public class AuthController {
         LoginResponse response = userService.login(request);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<TokenRefreshResponse> login(@Valid @RequestBody TokenRefreshRequest request) {
+        TokenRefreshResponse response = userService.refreshToken(request);
+        return ResponseEntity.ok(response);
+    }
+
 }

@@ -1,9 +1,6 @@
 package io.mero.app.domain.user.service;
 
-import io.mero.app.domain.user.dto.LoginRequest;
-import io.mero.app.domain.user.dto.LoginResponse;
-import io.mero.app.domain.user.dto.SignUpRequest;
-import io.mero.app.domain.user.dto.UserResponse;
+import io.mero.app.domain.user.dto.*;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.UserRepository;
 import io.mero.app.global.enums.Currency;
@@ -14,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -80,5 +79,31 @@ public class UserService {
                 accessToken,
                 refreshToken
         );
+    }
+
+    @Transactional
+    public TokenRefreshResponse refreshToken(TokenRefreshRequest request) {
+        String refreshToken = request.getRefreshToken();
+
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            throw new IllegalArgumentException("유효하지 않은 토큰입니다");
+        }
+
+        Long userId = jwtTokenProvider.getUserIdFrom(refreshToken);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"));
+
+        if (!refreshToken.equals(user.getRefreshToken())) {
+            throw new IllegalArgumentException("토큰이 일치하지 않습니다");
+        }
+
+        String newAccessToken = jwtTokenProvider.createAccessToken(userId);
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(userId);
+
+        user.updateRefreshToken(newRefreshToken);
+
+        return new TokenRefreshResponse(newAccessToken, newRefreshToken);
+
     }
 }

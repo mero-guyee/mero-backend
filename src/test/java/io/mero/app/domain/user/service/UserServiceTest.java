@@ -1,9 +1,6 @@
 package io.mero.app.domain.user.service;
 
-import io.mero.app.domain.user.dto.LoginRequest;
-import io.mero.app.domain.user.dto.LoginResponse;
-import io.mero.app.domain.user.dto.SignUpRequest;
-import io.mero.app.domain.user.dto.UserResponse;
+import io.mero.app.domain.user.dto.*;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.UserRepository;
 import io.mero.app.domain.user.service.UserService;
@@ -235,5 +232,93 @@ class UserServiceTest {
 
         verify(userRepository).findByEmail(request.getEmail());
         verify(passwordEncoder).matches(request.getPassword(), user.getPasswordHash());
+    }
+    
+    @Test
+    @DisplayName("토큰 재발급 성공")
+    void 토큰_재발급_성공() {
+        // given
+        String oldRefreshToken = "old-refresh-token";
+        long userId = 1L;
+
+        User user = User.builder()
+                .id(userId)
+                .email("test@email.com")
+                .passwordHash("encodedPassword")
+                .nickname("테스트유저")
+                .build();
+
+        user.updateRefreshToken(oldRefreshToken);
+
+        given(jwtTokenProvider.validateToken(oldRefreshToken)).willReturn(true);
+        given(jwtTokenProvider.getUserIdFrom(oldRefreshToken)).willReturn(1L);
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(jwtTokenProvider.createAccessToken(userId)).willReturn("new-access-token");
+        given(jwtTokenProvider.createRefreshToken(userId)).willReturn("new-refresh-token");
+
+        TokenRefreshRequest request = new TokenRefreshRequest(oldRefreshToken);
+
+        // when
+        TokenRefreshResponse response = userService.refreshToken(request);
+
+        //then
+        assertThat(response.getAccessToken()).isEqualTo("new-access-token");
+        assertThat(response.getRefreshToken()).isEqualTo("new-refresh-token");
+        assertThat(user.getRefreshToken()).isEqualTo("new-refresh-token");
+
+        verify(jwtTokenProvider).validateToken(oldRefreshToken);
+        verify(jwtTokenProvider).getUserIdFrom(oldRefreshToken);
+        verify(userRepository).findById(userId);
+        verify(jwtTokenProvider).createAccessToken(userId);
+        verify(jwtTokenProvider).createRefreshToken(userId);
+
+    }
+    
+    @Test
+    @DisplayName("토큰 재발급 실패 - 유효하지 않은 토큰")
+    void 토큰_재발급_실패_유효하지_않은_토큰() {
+        // given
+        String invalidToken = "invalid-token";
+
+        given(jwtTokenProvider.validateToken(invalidToken)).willReturn(false);
+
+        TokenRefreshRequest request = new TokenRefreshRequest(invalidToken);
+
+        // when & then
+        assertThatThrownBy(() -> userService.refreshToken(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("유효하지 않은 토큰입니다");
+
+        verify(jwtTokenProvider).validateToken(invalidToken);
+    }
+    
+    @Test
+    @DisplayName("토큰 재발급 실패 - 기존 토큰과 불일치")
+    void 토큰_재발급_실패_기존_토큰과_불일치() {
+        // given
+        String requestToken = "request-token";
+        String savedToken = "saved-token";
+        long userId = 1L;
+
+        User user = User.builder()
+                .id(userId)
+                .email("test@email.com")
+                .passwordHash("encodedPassword")
+                .nickname("테스트유저")
+                .build();
+
+        user.updateRefreshToken(savedToken);
+
+        given(jwtTokenProvider.validateToken(requestToken)).willReturn(true);
+        given(jwtTokenProvider.getUserIdFrom(requestToken)).willReturn(1L);
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+
+        TokenRefreshRequest request = new TokenRefreshRequest(requestToken);
+
+        // when & then
+        assertThatThrownBy(() -> userService.refreshToken(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("토큰이 일치하지 않습니다");
+
     }
 }

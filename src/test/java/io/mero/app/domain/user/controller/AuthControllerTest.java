@@ -1,10 +1,8 @@
 package io.mero.app.domain.user.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.mero.app.domain.user.dto.LoginRequest;
-import io.mero.app.domain.user.dto.LoginResponse;
-import io.mero.app.domain.user.dto.SignUpRequest;
-import io.mero.app.domain.user.dto.UserResponse;
+import io.mero.app.domain.user.dto.*;
 import io.mero.app.domain.user.service.UserService;
 import io.mero.app.global.enums.Currency;
 import io.mero.app.global.enums.Timezone;
@@ -173,6 +171,39 @@ class AuthControllerTest {
 
         // when & then
         mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+    }
+    
+    @Test
+    @DisplayName("토큰 재발급 API 성공")
+    void 토큰_재발급_API_성공() throws Exception {
+        // given
+        TokenRefreshRequest request = new TokenRefreshRequest("old-refresh-token");
+        TokenRefreshResponse response = new TokenRefreshResponse("new-access-token", "new-refresh-token");
+
+        given(userService.refreshToken(any(TokenRefreshRequest.class))).willReturn(response);
+
+        // when & then
+        mockMvc.perform(post("/api/auth/refresh-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").value("new-access-token"))
+                .andExpect(jsonPath("$.refreshToken").value("new-refresh-token"));
+    }
+    
+    @Test
+    @DisplayName("토큰 재발급 API 실패 - refresh token 없음")
+    void 토큰_재발급_API_실패_refresh_token_없음() throws Exception {
+        // given
+        TokenRefreshRequest request = new TokenRefreshRequest("");
+    
+        // when & then
+        mockMvc.perform(post("/api/auth/refresh-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
