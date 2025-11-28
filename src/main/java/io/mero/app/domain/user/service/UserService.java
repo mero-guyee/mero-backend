@@ -6,13 +6,11 @@ import io.mero.app.domain.user.repository.UserRepository;
 import io.mero.app.global.enums.Currency;
 import io.mero.app.global.enums.Timezone;
 import io.mero.app.global.jwt.JwtTokenProvider;
-import jakarta.validation.Valid;
+import io.mero.app.global.util.MessageUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +20,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final MessageUtil messageUtil;
 
     @Transactional
     public UserResponse signUp(SignUpRequest request) {
@@ -36,13 +35,15 @@ public class UserService {
 
     private void validateDuplicateEmail(String email) {
         if (userRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("이미 사용 중인 이메일입니다");
+            throw new IllegalArgumentException(
+                    messageUtil.getMessage("error.duplicate.email"));
         }
     }
 
     private void validateDuplicateNickname(String nickname) {
         if (userRepository.existsByNickname(nickname)) {
-            throw new IllegalArgumentException("이미 사용 중인 닉네임입니다");
+            throw new IllegalArgumentException(
+                    messageUtil.getMessage("error.duplicate.nickname"));
         }
     }
 
@@ -61,10 +62,12 @@ public class UserService {
     @Transactional
     public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다"));
+                .orElseThrow(() -> new IllegalArgumentException(
+                        messageUtil.getMessage("error.invalid.login")));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다");
+            throw new IllegalArgumentException(
+                    messageUtil.getMessage("error.invalid.login"));
         }
 
         String accessToken = jwtTokenProvider.createAccessToken(user.getId());
@@ -86,16 +89,19 @@ public class UserService {
         String refreshToken = request.getRefreshToken();
 
         if (!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new IllegalArgumentException("유효하지 않은 토큰입니다");
+            throw new IllegalArgumentException(
+                    messageUtil.getMessage("error.invalid.token"));
         }
 
         Long userId = jwtTokenProvider.getUserIdFrom(refreshToken);
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"));
+                .orElseThrow(() -> new IllegalArgumentException(
+                        messageUtil.getMessage("error.user.notFound")));
 
         if (!refreshToken.equals(user.getRefreshToken())) {
-            throw new IllegalArgumentException("유효하지 않은 토큰입니다");
+            throw new IllegalArgumentException(
+                    messageUtil.getMessage("error.invalid.token"));
         }
 
         String newAccessToken = jwtTokenProvider.createAccessToken(userId);
@@ -112,13 +118,15 @@ public class UserService {
         String refreshToken = request.getRefreshToken();
 
         if(!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new IllegalArgumentException("유효하지 않은 토큰입니다");
+            throw new IllegalArgumentException(
+                    messageUtil.getMessage("error.invalid.token"));
         }
 
         Long userId = jwtTokenProvider.getUserIdFrom(refreshToken);
 
         userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다"))
+                .orElseThrow(() -> new IllegalArgumentException(
+                        messageUtil.getMessage("error.user.notFound")))
                 .clearRefreshToken();
 
     }
