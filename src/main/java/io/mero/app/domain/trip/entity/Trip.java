@@ -53,9 +53,10 @@ public class Trip extends BaseEntity {
     private Currency defaultCurrency;
 
     @Builder
-    public Trip(User user, String title, String description,
+    public Trip(Long id, User user, String title, String description,
                 LocalDate startDate, LocalDate endDate, String countries,
                 BigDecimal totalBudget, Currency budgetCurrency, Currency defaultCurrency) {
+        this.id = id;
         this.user = user;
         this.title = title;
         this.description = description;
@@ -67,46 +68,52 @@ public class Trip extends BaseEntity {
         this.defaultCurrency = defaultCurrency != null ? defaultCurrency : Currency.KRW;
     }
 
-    public void updateTitle(String title) {
+    public boolean isOwner(Long userId) {
+        return this.user.getId().equals(userId);
+    }
+
+    public void update(String title, String description, LocalDate startDate, LocalDate endDate,
+                       String countries, BigDecimal totalBudget,
+                       Currency budgetCurrency, Currency defaultCurrency) {
+        validateTitle(title);
+        validatePeriod(startDate, endDate);
+        validateBudget(totalBudget);
+        validateDefaultCurrency(defaultCurrency);
+
+        this.title = title;
+        this.description = description;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.countries = countries;
+        this.totalBudget = totalBudget;
+        this.budgetCurrency = budgetCurrency;
+        this.defaultCurrency = defaultCurrency;
+    }
+
+    private void validateTitle(String title) {
         if (title == null || title.trim().isEmpty()) {
             throw new IllegalArgumentException("여행 제목은 필수입니다");
         }
-        this.title = title;
     }
 
-    public void updateDescription(String description) {
-        this.description = description;
-    }
-
-    public void updatePeriod(LocalDate startDate, LocalDate endDate) {
+    private void validatePeriod(LocalDate startDate, LocalDate endDate) {
         if (startDate == null || endDate == null) {
             throw new IllegalArgumentException("시작일과 종료일은 필수입니다");
         }
         if (startDate.isAfter(endDate)) {
             throw new IllegalArgumentException("시작일은 종료일보다 이전이어야 합니다");
         }
-        this.startDate = startDate;
-        this.endDate = endDate;
     }
 
-    public void updateCountries(String countries) {
-        this.countries = countries;
-    }
-
-    public void updateBudget(BigDecimal totalBudget, Currency budgetCurrency) {
+    private void validateBudget(BigDecimal totalBudget) {
         if (totalBudget != null && totalBudget.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("예산은 0 이상이어야 합니다");
         }
-        this.totalBudget = totalBudget;
-        if (budgetCurrency != null) {
-            this.budgetCurrency = budgetCurrency;
-        }
     }
 
-    public void updateDefaultCurrency(Currency currency) {
+    private void validateDefaultCurrency(Currency currency) {
         if (currency == null) {
             throw new IllegalArgumentException("기본 통화는 필수입니다");
         }
-        this.defaultCurrency = currency;
     }
 }

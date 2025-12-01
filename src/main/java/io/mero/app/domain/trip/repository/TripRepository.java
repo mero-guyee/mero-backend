@@ -8,6 +8,6 @@ import java.util.List;
 
 public interface TripRepository extends JpaRepository<Trip, Long> {
 
-    List<Trip> findByUserOrderByStartDateDesc(User user);
+    List<Trip> findByUserOrderByStartDateDesc(Long userId);
 
 }
