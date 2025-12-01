@@ -3,10 +3,10 @@ package io.mero.app.domain.user.service;
 import io.mero.app.domain.user.dto.*;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.UserRepository;
-import io.mero.app.domain.user.service.UserService;
 import io.mero.app.global.enums.Currency;
 import io.mero.app.global.enums.Timezone;
 import io.mero.app.global.jwt.JwtTokenProvider;
+import io.mero.app.global.util.MessageUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,7 +17,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -33,6 +34,9 @@ class UserServiceTest {
 
     @Mock
     private JwtTokenProvider jwtTokenProvider;
+
+    @Mock
+    private MessageUtil messageUtil;
 
     @InjectMocks
     private UserService userService;
@@ -86,6 +90,7 @@ class UserServiceTest {
         );
 
         given(userRepository.existsByEmail(request.getEmail())).willReturn(true);
+        given(messageUtil.getMessage("error.duplicate.email")).willReturn("이미 사용 중인 이메일입니다");
 
         // when & then
         assertThatThrownBy(() -> userService.signUp(request))
@@ -140,6 +145,7 @@ class UserServiceTest {
 
         given(userRepository.existsByEmail(request.getEmail())).willReturn(false);
         given(userRepository.existsByNickname(request.getNickname())).willReturn(true);
+        given(messageUtil.getMessage("error.duplicate.nickname")).willReturn("이미 사용 중인 닉네임입니다");
 
         // when & then
         assertThatThrownBy(() -> userService.signUp(request))
@@ -199,6 +205,7 @@ class UserServiceTest {
 
         given(userRepository.findByEmail(request.getEmail()))
                 .willReturn(Optional.empty());
+        given(messageUtil.getMessage("error.invalid.login")).willReturn("이메일 또는 비밀번호가 일치하지 않습니다");
 
         // when & then
         assertThatThrownBy(() -> userService.login(request))
@@ -224,6 +231,7 @@ class UserServiceTest {
                 .willReturn(Optional.of(user));
         given(passwordEncoder.matches(request.getPassword(), user.getPasswordHash()))
                 .willReturn(false);
+        given(messageUtil.getMessage("error.invalid.login")).willReturn("이메일 또는 비밀번호가 일치하지 않습니다");
 
         // when & then
         assertThatThrownBy(() -> userService.login(request))
@@ -281,6 +289,7 @@ class UserServiceTest {
         String invalidToken = "invalid-token";
 
         given(jwtTokenProvider.validateToken(invalidToken)).willReturn(false);
+        given(messageUtil.getMessage("error.invalid.token")).willReturn("유효하지 않은 토큰입니다");
 
         TokenRefreshRequest request = new TokenRefreshRequest(invalidToken);
 
@@ -312,6 +321,7 @@ class UserServiceTest {
         given(jwtTokenProvider.validateToken(requestToken)).willReturn(true);
         given(jwtTokenProvider.getUserIdFrom(requestToken)).willReturn(1L);
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(messageUtil.getMessage("error.invalid.token")).willReturn("유효하지 않은 토큰입니다");
 
         TokenRefreshRequest request = new TokenRefreshRequest(requestToken);
 
@@ -362,6 +372,7 @@ class UserServiceTest {
         String invalidToken = "invalid-token";
 
         given(jwtTokenProvider.validateToken(invalidToken)).willReturn(false);
+        given(messageUtil.getMessage("error.invalid.token")).willReturn("유효하지 않은 토큰입니다");
 
         LogoutRequest request = new LogoutRequest(invalidToken);
     
