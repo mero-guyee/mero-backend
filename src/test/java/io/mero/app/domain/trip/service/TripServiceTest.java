@@ -75,7 +75,7 @@ class TripServiceTest {
                 .description(request.getDescription())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
-                .countries(String.join(",", request.getCountries()))
+                .countries(request.getCountries())
                 .totalBudget(request.getTotalBudget())
                 .budgetCurrency(request.getBudgetCurrency())
                 .defaultCurrency(request.getDefaultCurrency())
@@ -122,7 +122,7 @@ class TripServiceTest {
                         .endDate(LocalDate.of(2026, 10, 15)).build()
         );
 
-        given(tripRepository.findByUserOrderByStartDateDesc(userId)).willReturn(trips);
+        given(tripRepository.findByUserIdOrderByStartDateDesc(userId)).willReturn(trips);
 
         // when
         List<TripResponse> responses = tripService.getTrips(userId);
@@ -132,7 +132,7 @@ class TripServiceTest {
         assertThat(responses.get(0).getTitle()).isEqualTo("남미 여행");
         assertThat(responses.get(1).getTitle()).isEqualTo("일본 여행");
 
-        verify(tripRepository).findByUserOrderByStartDateDesc(userId);
+        verify(tripRepository).findByUserIdOrderByStartDateDesc(userId);
     }
     
     @Test

@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +25,7 @@ public class TripService {
     private final TripRepository tripRepository;
     private final MessageUtil messageUtil;
 
+    @Transactional
     public TripResponse createTrip(Long userId, TripCreateRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(
@@ -36,7 +38,7 @@ public class TripService {
                 .description(request.getDescription())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
-                .countries(request.getCountries().toString())
+                .countries(request.getCountries())
                 .totalBudget(request.getTotalBudget())
                 .budgetCurrency(request.getBudgetCurrency())
                 .defaultCurrency(request.getDefaultCurrency())
@@ -48,10 +50,10 @@ public class TripService {
     }
 
     public List<TripResponse> getTrips(Long userId) {
-        List<Trip> trips = tripRepository.findByUserOrderByStartDateDesc(userId);
+        List<Trip> trips = tripRepository.findByUserIdOrderByStartDateDesc(userId);
         return trips.stream()
                 .map(TripResponse::from)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     public TripResponse getTrip(Long userId, Long tripId) {
@@ -63,6 +65,7 @@ public class TripService {
 
     }
 
+    @Transactional
     public TripResponse updateTrip(Long userId, Long tripId, TripUpdateRequest request) {
         Trip trip = findTripById(tripId);
 
@@ -73,7 +76,7 @@ public class TripService {
                 request.getDescription(),
                 request.getStartDate(),
                 request.getEndDate(),
-                request.getCountries().toString(),
+                request.getCountries(),
                 request.getTotalBudget(),
                 request.getBudgetCurrency(),
                 request.getDefaultCurrency()
@@ -82,6 +85,7 @@ public class TripService {
         return TripResponse.from(trip);
     }
 
+    @Transactional
     public void deleteTrip(Long userId, Long tripId) {
         Trip trip = findTripById(tripId);
 

@@ -11,6 +11,9 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Entity
 @Table(name = "trips")
@@ -38,8 +41,8 @@ public class Trip extends BaseEntity {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
-    @Column(length = 500)
-    private String countries;
+    @Column(name = "countries", length = 1000)
+    private String countriesStr;
 
     @Column(name = "total_budget", precision = 15, scale = 2)
     private BigDecimal totalBudget;
@@ -54,7 +57,7 @@ public class Trip extends BaseEntity {
 
     @Builder
     public Trip(Long id, User user, String title, String description,
-                LocalDate startDate, LocalDate endDate, String countries,
+                LocalDate startDate, LocalDate endDate, List<String> countries,
                 BigDecimal totalBudget, Currency budgetCurrency, Currency defaultCurrency) {
         this.id = id;
         this.user = user;
@@ -62,7 +65,7 @@ public class Trip extends BaseEntity {
         this.description = description;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.countries = countries;
+        setCountries(countries);
         this.totalBudget = totalBudget;
         this.budgetCurrency = budgetCurrency;
         this.defaultCurrency = defaultCurrency != null ? defaultCurrency : Currency.KRW;
@@ -73,7 +76,7 @@ public class Trip extends BaseEntity {
     }
 
     public void update(String title, String description, LocalDate startDate, LocalDate endDate,
-                       String countries, BigDecimal totalBudget,
+                       List<String> countries, BigDecimal totalBudget,
                        Currency budgetCurrency, Currency defaultCurrency) {
         validateTitle(title);
         validatePeriod(startDate, endDate);
@@ -84,10 +87,25 @@ public class Trip extends BaseEntity {
         this.description = description;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.countries = countries;
+        setCountries(countries);
         this.totalBudget = totalBudget;
         this.budgetCurrency = budgetCurrency;
         this.defaultCurrency = defaultCurrency;
+    }
+
+    public List<String> getCountries() {
+        if (countriesStr == null || countriesStr.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        return new ArrayList<>(Arrays.asList(countriesStr.split(",")));
+    }
+
+    public void setCountries(List<String> countries) {
+        if (countries == null || countries.isEmpty()) {
+            this.countriesStr = "";
+        } else {
+            this.countriesStr = String.join(",", countries);
+        }
     }
 
     private void validateTitle(String title) {

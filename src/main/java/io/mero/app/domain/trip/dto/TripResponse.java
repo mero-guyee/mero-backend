@@ -8,6 +8,7 @@ import lombok.Getter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @AllArgsConstructor
@@ -18,7 +19,7 @@ public class TripResponse {
     private String description;
     private LocalDate startDate;
     private LocalDate endDate;
-    private String countries;
+    private List<String> countries;
     private BigDecimal totalBudget;
     private Currency budgetCurrency;
     private Currency defaultCurrency;

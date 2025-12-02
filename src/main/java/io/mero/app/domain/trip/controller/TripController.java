@@ -1,0 +1,61 @@
+package io.mero.app.domain.trip.controller;
+
+import io.mero.app.domain.trip.dto.TripCreateRequest;
+import io.mero.app.domain.trip.dto.TripResponse;
+import io.mero.app.domain.trip.dto.TripUpdateRequest;
+import io.mero.app.domain.trip.service.TripService;
+import io.mero.app.global.util.SecurityUtil;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/trips")
+@RequiredArgsConstructor
+public class TripController {
+
+    private final TripService tripService;
+
+    @PostMapping
+    public ResponseEntity<TripResponse> createTrip(@Valid @RequestBody TripCreateRequest request) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        TripResponse response = tripService.createTrip(userId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<TripResponse>> getTrips() {
+        Long userId = SecurityUtil.getCurrentUserId();
+        List<TripResponse> responses = tripService.getTrips(userId);
+        return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/{tripId}")
+    public ResponseEntity<TripResponse> getTrip(@PathVariable Long tripId) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        TripResponse response = tripService.getTrip(userId, tripId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{tripId}")
+    public ResponseEntity<TripResponse> updateTrip(
+            @PathVariable Long tripId,
+            @Valid @RequestBody TripUpdateRequest request) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        TripResponse response = tripService.updateTrip(userId, tripId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{tripId}")
+    public ResponseEntity<Void> deleteTrip(@PathVariable Long tripId) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        tripService.deleteTrip(userId, tripId);
+        return ResponseEntity.noContent().build();
+    }
+
+
+}
