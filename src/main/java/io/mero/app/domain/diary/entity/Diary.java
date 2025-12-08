@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -23,15 +25,8 @@ public class Diary extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trip_id", nullable = false)
     private Trip trip;
-
-    @Column(nullable = false, length = 200)
-    private String title;
 
     @Column(columnDefinition = "TEXT")
     private String content;
@@ -44,6 +39,12 @@ public class Diary extends BaseEntity {
 
     @Column(name = "weather_info", length = 100)
     private String weatherInfo;
+
+    @ElementCollection
+    @CollectionTable(name = "diary_photos", joinColumns = @JoinColumn(name = "diary_id"))
+    @Column(name = "photo_url", length = 500)
+    private List<String> photoUrls = new ArrayList<>();
+
 
     @Column(name = "is_synced", nullable = false)
     private Boolean isSynced = false;
@@ -58,48 +59,25 @@ public class Diary extends BaseEntity {
     private LocalDateTime lastModifiedAt;
 
     @Builder
-    public Diary(User user, Trip trip, String title, String content,
-                 LocalDate date, Location location, String weatherInfo) {
-        this.user = user;
+    public Diary(Long id, Trip trip, String content,
+                 LocalDate date, Location location, String weatherInfo, List<String> photoUrls) {
+        this.id = id;
         this.trip = trip;
-        this.title = title;
         this.content = content;
         this.date = date;
         this.location = location;
         this.weatherInfo = weatherInfo;
         this.isSynced = false;
         this.lastModifiedAt = LocalDateTime.now();
+        this.photoUrls = photoUrls != null ? photoUrls : new ArrayList<>();
     }
 
-    public void updateTitle(String title) {
-        if (title == null || title.trim().isEmpty()) {
-            throw new IllegalArgumentException("일기 제목은 필수입니다");
-        }
-        this.title = title;
-        this.lastModifiedAt = LocalDateTime.now();
-    }
-
-    public void updateContent(String content) {
+    public void update(String content, LocalDate date,
+                       Location location, List<String> photoUrls) {
         this.content = content;
-        this.lastModifiedAt = LocalDateTime.now();
-    }
-
-    public void updateDate(LocalDate date) {
-        if (date == null) {
-            throw new IllegalArgumentException("날짜는 필수입니다");
-        }
         this.date = date;
-        this.lastModifiedAt = LocalDateTime.now();
-    }
-
-    public void updateLocation(Location location) {
         this.location = location;
-        this.lastModifiedAt = LocalDateTime.now();
-    }
-
-    public void updateWeather(String weatherInfo) {
-        this.weatherInfo = weatherInfo;
-        this.lastModifiedAt = LocalDateTime.now();
+        this.photoUrls = photoUrls != null ? photoUrls : new ArrayList<>();
     }
 
     // === 동기화 관리 ===

@@ -9,8 +9,6 @@ import java.util.List;
 
 public interface DiaryRepository extends JpaRepository<Diary, Long> {
 
-    List<Diary> findByUserAndDeletedAtIsNullOrderByDateDesc(User user);
-
-    List<Diary> findByTripAndDeletedAtIsNullOrderByDateAsc(Trip trip);
+    List<Diary> findByTripIdOrderByDateDesc(Long tripId);
 
 }
