@@ -35,6 +35,7 @@ public class SecurityConfig {
                         // 인증 불필요 (누구나 접근 가능)
                         .requestMatchers(
                                 "/api/auth/**",
+                                "/api/exchange-rates/**",
                                 "/h2-console/**"
                         ).permitAll()
                         .anyRequest().authenticated()

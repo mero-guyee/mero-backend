@@ -52,9 +52,6 @@ public class Expense extends BaseEntity {
     @Column(name = "converted_amount", precision = 15, scale = 2)
     private BigDecimal convertedAmount;
 
-    @Column(name = "exchange_rate", precision = 10, scale = 4)
-    private BigDecimal exchangeRate;
-
     @Column(name = "receipt_url", length = 500)
     private String receiptUrl;
 
@@ -67,8 +64,7 @@ public class Expense extends BaseEntity {
     @Builder
     public Expense(User user, Trip trip, Diary diary, ExpenseCategory category,
                    LocalDate date, BigDecimal amount, Currency originalCurrency,
-                   BigDecimal convertedAmount, BigDecimal exchangeRate,
-                   String receiptUrl, String memo) {
+                   BigDecimal convertedAmount, String receiptUrl, String memo) {
         this.user = user;
         this.trip = trip;
         this.diary = diary;
@@ -77,7 +73,6 @@ public class Expense extends BaseEntity {
         this.amount = amount;
         this.originalCurrency = originalCurrency;
         this.convertedAmount = convertedAmount;
-        this.exchangeRate = exchangeRate;
         this.receiptUrl = receiptUrl;
         this.memo = memo;
         this.isSynced = false;
@@ -108,9 +103,8 @@ public class Expense extends BaseEntity {
         this.originalCurrency = originalCurrency;
     }
 
-    public void updateConversion(BigDecimal convertedAmount, BigDecimal exchangeRate) {
+    public void updateConversion(BigDecimal convertedAmount) {
         this.convertedAmount = convertedAmount;
-        this.exchangeRate = exchangeRate;
     }
 
     public void updateReceipt(String receiptUrl) {
