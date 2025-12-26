@@ -5,7 +5,9 @@ import io.mero.app.domain.diary.dto.DiaryCreateRequest;
 import io.mero.app.domain.diary.dto.DiaryResponse;
 import io.mero.app.domain.diary.dto.DiaryUpdateRequest;
 import io.mero.app.domain.diary.service.DiaryService;
+import io.mero.app.domain.expense.dto.ExpenseResponse;
 import io.mero.app.global.embedded.Location;
+import io.mero.app.global.enums.Currency;
 import io.mero.app.global.jwt.JwtAuthenticationFilter;
 import io.mero.app.global.util.SecurityUtil;
 import org.junit.jupiter.api.AfterEach;
@@ -24,6 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -85,7 +88,9 @@ class DiaryControllerTest {
                 LocalDate.of(2025, 12, 25),
                 new Location(new BigDecimal("37.5665"), new BigDecimal("126.9780"), "서울특별시"),
                 null,
-                List.of("url1", "url2")
+                List.of("url1", "url2"),
+                null,
+                null
         );
 
         given(diaryService.createDiary(anyLong(), any(DiaryCreateRequest.class))).willReturn(response);
@@ -113,6 +118,8 @@ class DiaryControllerTest {
                 null,
                 null,
                 null,
+                null,
+                null,
                 null
         );
 
@@ -124,6 +131,41 @@ class DiaryControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.content").value("첫째날"));
+    }
+
+    @Test
+    @DisplayName("일기 상세 조회 API 성공 - 경비 포함")
+    void 일기_상세_조회_API_성공_경비_포함() throws Exception {
+        // given
+        List<ExpenseResponse> expenses = List.of(
+                new ExpenseResponse(1L, 1L, 1L, new BigDecimal("100"), Currency.USD,
+                        "식비", "스타벅스", LocalDate.now(), null,
+                        new BigDecimal("1472"), new BigDecimal("147200.00"),
+                        Currency.KRW, false, null, LocalDateTime.now()),
+                new ExpenseResponse(2L, 1L, 1L, new BigDecimal("5000"), Currency.JPY,
+                        "교통", "택시", LocalDate.now(), "신주쿠",
+                        new BigDecimal("9.49"), new BigDecimal("47450.00"),
+                        Currency.KRW, false, null, LocalDateTime.now())
+        );
+
+        DiaryResponse response = new DiaryResponse(
+                1L, 1L, "멋진 하루였다",
+                LocalDate.of(2024, 12, 8), null, "맑음",
+                List.of("photo1.jpg"), expenses, LocalDateTime.now()
+        );
+
+        given(diaryService.getDiary(anyLong(), eq(1L)))
+                .willReturn(response);
+
+        // when & then
+        mockMvc.perform(get("/api/diaries/1"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.expenses").isArray())
+                .andExpect(jsonPath("$.expenses.length()").value(2))
+                .andExpect(jsonPath("$.expenses[0].diaryId").value(1L))
+                .andExpect(jsonPath("$.expenses[1].diaryId").value(1L));
     }
     
     @Test
@@ -142,6 +184,8 @@ class DiaryControllerTest {
                 1L,
                 1L,
                 "첫째날 수정",
+                null,
+                null,
                 null,
                 null,
                 null,

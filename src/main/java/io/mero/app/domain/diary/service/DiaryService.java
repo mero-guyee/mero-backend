@@ -5,6 +5,9 @@ import io.mero.app.domain.diary.dto.DiaryResponse;
 import io.mero.app.domain.diary.dto.DiaryUpdateRequest;
 import io.mero.app.domain.diary.entity.Diary;
 import io.mero.app.domain.diary.repository.DiaryRepository;
+import io.mero.app.domain.exchange.service.ExchangeRateService;
+import io.mero.app.domain.expense.dto.ExpenseResponse;
+import io.mero.app.domain.expense.repository.ExpenseRepository;
 import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.domain.trip.repository.TripRepository;
 import io.mero.app.global.util.MessageUtil;
@@ -12,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -21,12 +25,13 @@ public class DiaryService {
 
     private final DiaryRepository diaryRepository;
     private final TripRepository tripRepository;
+    private final ExpenseRepository expenseRepository;
+    private final ExchangeRateService exchangeRateService;
     private final MessageUtil messageUtil;
 
     @Transactional
     public DiaryResponse createDiary(Long userId, DiaryCreateRequest request) {
         Trip trip = findTripById(request.getTripId());
-
         validateOwner(trip, userId);
 
         Diary diary = Diary.builder()
@@ -44,7 +49,6 @@ public class DiaryService {
 
     public List<DiaryResponse> getDiariesByTrip(Long userId, Long tripId) {
         Trip trip = findTripById(tripId);
-
         validateOwner(trip, userId);
 
         List<Diary> diaries = diaryRepository.findByTripIdOrderByDateDesc(tripId);
@@ -55,16 +59,32 @@ public class DiaryService {
 
     public DiaryResponse getDiary(Long userId, Long diaryId) {
         Diary diary = findDiaryById(diaryId);
-
         validateOwner(diary.getTrip(), userId);
 
-        return DiaryResponse.from(diary);
+        List<ExpenseResponse> expenses = expenseRepository.findByDiary(diary)
+                .stream()
+                .map(expense -> {
+                    BigDecimal exchangeRate = exchangeRateService.getRate(
+                            expense.getCurrency(),
+                            expense.getTrip().getDefaultCurrency(),
+                            expense.getDate()
+                    );
+                    return ExpenseResponse.from(
+                            expense,
+                            exchangeRate,
+                            expense.getTrip().getDefaultCurrency(),
+                            false,
+                            null
+                    );
+                })
+                .toList();
+
+        return DiaryResponse.from(diary, expenses);
     }
 
     @Transactional
     public DiaryResponse updateDiary(Long userId, Long diaryId, DiaryUpdateRequest request) {
         Diary diary = findDiaryById(diaryId);
-
         validateOwner(diary.getTrip(), userId);
 
         diary.update(
@@ -80,7 +100,6 @@ public class DiaryService {
     @Transactional
     public void deleteDiary(Long userId, Long diaryId) {
         Diary diary = findDiaryById(diaryId);
-
         validateOwner(diary.getTrip(), userId);
 
         diaryRepository.delete(diary);
