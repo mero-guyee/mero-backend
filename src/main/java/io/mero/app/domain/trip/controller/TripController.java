@@ -2,6 +2,8 @@ package io.mero.app.domain.trip.controller;
 
 import io.mero.app.domain.diary.dto.DiaryResponse;
 import io.mero.app.domain.diary.service.DiaryService;
+import io.mero.app.domain.expense.dto.ExpenseResponse;
+import io.mero.app.domain.expense.service.ExpenseService;
 import io.mero.app.domain.trip.dto.TripCreateRequest;
 import io.mero.app.domain.trip.dto.TripResponse;
 import io.mero.app.domain.trip.dto.TripUpdateRequest;
@@ -22,6 +24,7 @@ public class TripController {
 
     private final TripService tripService;
     private final DiaryService diaryService;
+    private final ExpenseService expenseService;
 
     @PostMapping
     public ResponseEntity<TripResponse> createTrip(@Valid @RequestBody TripCreateRequest request) {
@@ -64,6 +67,13 @@ public class TripController {
     public ResponseEntity<List<DiaryResponse>> getDiariesByTrip(@PathVariable Long tripId) {
         Long userId = SecurityUtil.getCurrentUserId();
         List<DiaryResponse> responses = diaryService.getDiariesByTrip(userId, tripId);
+        return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/{tripId}/expenses")
+    public ResponseEntity<List<ExpenseResponse>> getExpensesByTrip(@PathVariable Long tripId) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        List<ExpenseResponse> responses = expenseService.getExpensesByTrip(userId, tripId);
         return ResponseEntity.ok(responses);
     }
 

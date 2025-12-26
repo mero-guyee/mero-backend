@@ -3,6 +3,8 @@ package io.mero.app.domain.trip.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mero.app.domain.diary.dto.DiaryResponse;
 import io.mero.app.domain.diary.service.DiaryService;
+import io.mero.app.domain.expense.dto.ExpenseResponse;
+import io.mero.app.domain.expense.service.ExpenseService;
 import io.mero.app.domain.trip.dto.TripCreateRequest;
 import io.mero.app.domain.trip.dto.TripResponse;
 import io.mero.app.domain.trip.dto.TripUpdateRequest;
@@ -31,6 +33,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.reset;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -58,6 +61,9 @@ class TripControllerTest {
 
     @MockitoBean
     private DiaryService diaryService;
+
+    @MockitoBean
+    private ExpenseService expenseService;
 
     private MockedStatic<SecurityUtil> securityUtil;
 
@@ -243,8 +249,8 @@ class TripControllerTest {
     void 여행_일기_목록_조회_API_성공() throws Exception {
         // given
         List<DiaryResponse> responses = List.of(
-                new DiaryResponse(1L, 1L, "첫째날", null, null, null, null),
-                new DiaryResponse(2L, 1L, "둘째날", null, null, null, null)
+                new DiaryResponse(1L, 1L, "첫째날", null, null, null, null, null, null),
+                new DiaryResponse(2L, 1L, "둘째날", null, null, null, null, null, null)
         );
 
         given(diaryService.getDiariesByTrip(anyLong(), anyLong())).willReturn(responses);
@@ -257,4 +263,90 @@ class TripControllerTest {
                 .andExpect(jsonPath("$[0].content").value("첫째날"))
                 .andExpect(jsonPath("$[1].content").value("둘째날"));
     }
+
+    @Test
+    @DisplayName("여행의 지출 목록 조회 API 성공")
+    void 여행의_지출_목록_조회_API_성공() throws Exception {
+        // given
+        List<ExpenseResponse> responses = List.of(
+                new ExpenseResponse(1L, 1L, 1L, new BigDecimal("100"), Currency.USD,
+                        null, null, null, null, null, null, null, false, null, null),
+                new ExpenseResponse(2L, 1L, null, new BigDecimal("5000"), Currency.JPY,
+                        null, null, null, null, null, null, null, false, null, null)
+        );
+
+        given(expenseService.getExpensesByTrip(anyLong(), eq(1L)))
+                .willReturn(responses);
+
+        // when & then
+        mockMvc.perform(get("/api/trips/1/expenses"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].diaryId").value(1L))
+                .andExpect(jsonPath("$[1].diaryId").isEmpty());
+    }
+
+    @Test
+    @DisplayName("여행의 경비 목록 조회 API 성공")
+    void 여행의_경비_목록_조회_API_성공() throws Exception {
+        // given
+        List<ExpenseResponse> responses = List.of(
+                new ExpenseResponse(
+                        1L, 1L, 1L,
+                        new BigDecimal("100"), Currency.USD,
+                        "식비", "스타벅스",
+                        LocalDate.of(2024, 12, 8), "도쿄",
+                        new BigDecimal("1472"), new BigDecimal("147200.00"),
+                        Currency.KRW, false, null,
+                        LocalDateTime.now()
+                ),
+                new ExpenseResponse(
+                        2L, 1L, null,
+                        new BigDecimal("5000"), Currency.JPY,
+                        "교통", "택시",
+                        LocalDate.of(2024, 12, 8), "신주쿠",
+                        new BigDecimal("9.49"), new BigDecimal("47450.00"),
+                        Currency.KRW, false, null,
+                        LocalDateTime.now()
+                )
+        );
+
+        given(expenseService.getExpensesByTrip(anyLong(), eq(1L)))
+                .willReturn(responses);
+
+        // when & then
+        mockMvc.perform(get("/api/trips/1/expenses"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].tripId").value(1L))
+                .andExpect(jsonPath("$[0].diaryId").value(1L))
+                .andExpect(jsonPath("$[0].amount").value(100))
+                .andExpect(jsonPath("$[0].currency").value("USD"))
+                .andExpect(jsonPath("$[0].category").value("식비"))
+                .andExpect(jsonPath("$[0].exchangeRate").value(1472.00))
+                .andExpect(jsonPath("$[0].convertedAmount").value(147200.00))
+                .andExpect(jsonPath("$[1].diaryId").isEmpty())
+                .andExpect(jsonPath("$[1].amount").value(5000))
+                .andExpect(jsonPath("$[1].currency").value("JPY"));
+    }
+
+    @Test
+    @DisplayName("여행의 경비 목록 조회 API 성공 - 경비 없음")
+    void 여행의_경비_목록_조회_API_성공_경비_없음() throws Exception {
+        // given
+        given(expenseService.getExpensesByTrip(anyLong(), eq(1L)))
+                .willReturn(List.of());
+
+        // when & then
+        mockMvc.perform(get("/api/trips/1/expenses"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
 }

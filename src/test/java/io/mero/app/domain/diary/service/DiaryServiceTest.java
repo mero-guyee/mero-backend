@@ -5,6 +5,9 @@ import io.mero.app.domain.diary.dto.DiaryResponse;
 import io.mero.app.domain.diary.dto.DiaryUpdateRequest;
 import io.mero.app.domain.diary.entity.Diary;
 import io.mero.app.domain.diary.repository.DiaryRepository;
+import io.mero.app.domain.exchange.service.ExchangeRateService;
+import io.mero.app.domain.expense.entity.Expense;
+import io.mero.app.domain.expense.repository.ExpenseRepository;
 import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.domain.trip.repository.TripRepository;
 import io.mero.app.domain.user.entity.User;
@@ -28,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,6 +42,13 @@ class DiaryServiceTest {
 
     @Mock
     private TripRepository tripRepository;
+
+    @Mock
+    private ExpenseRepository expenseRepository;
+
+    @Mock
+    private ExchangeRateService exchangeRateService;
+
     
     @Mock
     private MessageUtil messageUtil;
@@ -210,6 +221,62 @@ class DiaryServiceTest {
         assertThat(response.getId()).isEqualTo(diaryId);
         assertThat(response.getContent()).isEqualTo("첫째 날 일기");
 
+    }
+
+    @Test
+    @DisplayName("일기 상세 조회 성공 - 경비 포함")
+    void 일기_상세_조회_성공_경비_포함() {
+        // given
+        Long userId = 1L;
+        Long diaryId = 1L;
+
+        User user = User.builder().id(userId).build();
+        Trip trip = Trip.builder()
+                .id(1L)
+                .user(user)
+                .defaultCurrency(Currency.KRW)
+                .build();
+        Diary diary = Diary.builder()
+                .id(diaryId)
+                .trip(trip)
+                .date(LocalDate.of(2024, 12, 8))
+                .build();
+
+        List<Expense> expenses = List.of(
+                Expense.builder()
+                        .id(1L)
+                        .trip(trip)
+                        .diary(diary)
+                        .amount(new BigDecimal("100"))
+                        .currency(Currency.USD)
+                        .date(LocalDate.of(2024, 12, 8))
+                        .build(),
+                Expense.builder()
+                        .id(2L)
+                        .trip(trip)
+                        .diary(diary)
+                        .amount(new BigDecimal("5000"))
+                        .currency(Currency.JPY)
+                        .date(LocalDate.of(2024, 12, 8))
+                        .build()
+        );
+
+        given(diaryRepository.findById(diaryId)).willReturn(Optional.of(diary));
+        given(expenseRepository.findByDiary(diary)).willReturn(expenses);
+        given(exchangeRateService.getRate(any(), any(), any()))
+                .willReturn(new BigDecimal("1472"));
+
+        // when
+        DiaryResponse response = diaryService.getDiary(userId, diaryId);
+
+        // then
+        assertThat(response.getId()).isEqualTo(diaryId);
+        assertThat(response.getExpenses()).hasSize(2);
+        assertThat(response.getExpenses().get(0).getId()).isEqualTo(1L);
+        assertThat(response.getExpenses().get(1).getId()).isEqualTo(2L);
+
+        verify(expenseRepository).findByDiary(diary);
+        verify(exchangeRateService, times(2)).getRate(any(), any(), any());
     }
     
     @Test
