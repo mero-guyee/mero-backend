@@ -5,6 +5,9 @@ import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.UserRepository;
 import io.mero.app.global.enums.Currency;
 import io.mero.app.global.enums.Timezone;
+import io.mero.app.global.exception.DuplicateException;
+import io.mero.app.global.exception.ForbiddenException;
+import io.mero.app.global.exception.UnauthorizedException;
 import io.mero.app.global.jwt.JwtTokenProvider;
 import io.mero.app.global.util.MessageUtil;
 import org.junit.jupiter.api.DisplayName;
@@ -94,7 +97,7 @@ class UserServiceTest {
 
         // when & then
         assertThatThrownBy(() -> userService.signUp(request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(DuplicateException.class)
                 .hasMessage("이미 사용 중인 이메일입니다");
 
         verify(userRepository).existsByEmail(request.getEmail());
@@ -149,7 +152,7 @@ class UserServiceTest {
 
         // when & then
         assertThatThrownBy(() -> userService.signUp(request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(DuplicateException.class)
                 .hasMessage("이미 사용 중인 닉네임입니다");
 
         verify(userRepository).existsByEmail(request.getEmail());
@@ -209,7 +212,7 @@ class UserServiceTest {
 
         // when & then
         assertThatThrownBy(() -> userService.login(request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(UnauthorizedException.class)
                 .hasMessage("이메일 또는 비밀번호가 일치하지 않습니다");
 
         verify(userRepository).findByEmail(request.getEmail());
@@ -235,7 +238,7 @@ class UserServiceTest {
 
         // when & then
         assertThatThrownBy(() -> userService.login(request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(UnauthorizedException.class)
                 .hasMessage("이메일 또는 비밀번호가 일치하지 않습니다");
 
         verify(userRepository).findByEmail(request.getEmail());
@@ -295,7 +298,7 @@ class UserServiceTest {
 
         // when & then
         assertThatThrownBy(() -> userService.refreshToken(request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(UnauthorizedException.class)
                 .hasMessage("유효하지 않은 토큰입니다");
 
         verify(jwtTokenProvider).validateToken(invalidToken);
@@ -327,7 +330,7 @@ class UserServiceTest {
 
         // when & then
         assertThatThrownBy(() -> userService.refreshToken(request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(UnauthorizedException.class)
                 .hasMessage("유효하지 않은 토큰입니다");
 
     }
@@ -378,7 +381,7 @@ class UserServiceTest {
     
         // when & then
         assertThatThrownBy(() -> userService.logout(request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(UnauthorizedException.class)
                 .hasMessage("유효하지 않은 토큰입니다");
 
         verify(jwtTokenProvider).validateToken(invalidToken);

@@ -2,14 +2,17 @@ package io.mero.app.domain.expense.service;
 
 import io.mero.app.domain.diary.entity.Diary;
 import io.mero.app.domain.diary.repository.DiaryRepository;
+import io.mero.app.domain.exchange.service.ExchangeRateService;
 import io.mero.app.domain.expense.dto.ExpenseCreateRequest;
 import io.mero.app.domain.expense.dto.ExpenseResponse;
 import io.mero.app.domain.expense.dto.ExpenseUpdateRequest;
 import io.mero.app.domain.expense.entity.Expense;
 import io.mero.app.domain.expense.repository.ExpenseRepository;
-import io.mero.app.domain.exchange.service.ExchangeRateService;
 import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.domain.trip.repository.TripRepository;
+import io.mero.app.global.exception.BadRequestException;
+import io.mero.app.global.exception.ForbiddenException;
+import io.mero.app.global.exception.NotFoundException;
 import io.mero.app.global.util.MessageUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -185,32 +188,33 @@ public class ExpenseService {
 
     private Trip findTripById(Long tripId) {
         return tripRepository.findById(tripId)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new NotFoundException(
                         messageUtil.getMessage("error.trip.notFound")));
     }
 
     private Expense findExpenseById(Long expenseId) {
         return expenseRepository.findById(expenseId)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new NotFoundException(
                         messageUtil.getMessage("error.expense.notFound")));
     }
 
     private Diary findDiaryById(Long diaryId) {
         return diaryRepository.findById(diaryId)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new NotFoundException(
                         messageUtil.getMessage("error.diary.notFound")));
     }
 
     private void validateOwner(Trip trip, Long userId) {
         if (!trip.isOwner(userId)) {
-            throw new IllegalArgumentException(
+            throw new ForbiddenException(
                     messageUtil.getMessage("error.forbidden"));
         }
     }
 
     private void validateDiaryBelongsToTrip(Diary diary, Trip trip) {
         if (!diary.getTrip().equals(trip)) {
-            throw new IllegalArgumentException("같은 여행의 일기만 연결할 수 있습니다");
+            throw new BadRequestException(
+                    messageUtil.getMessage("error.diary.tripMismatch"));
         }
     }
 }

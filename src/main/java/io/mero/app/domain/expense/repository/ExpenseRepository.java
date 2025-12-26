@@ -18,9 +18,6 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 
     List<Expense> findByDiary(Diary diary);
 
-    List<Expense> findByUserAndDate(User user, LocalDate date);
-
     List<Expense> findByCategory(ExpenseCategory category);
 
-    List<Expense> findByUserAndIsSyncedFalse(User user);
 }

@@ -10,6 +10,8 @@ import io.mero.app.domain.expense.dto.ExpenseResponse;
 import io.mero.app.domain.expense.repository.ExpenseRepository;
 import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.domain.trip.repository.TripRepository;
+import io.mero.app.global.exception.ForbiddenException;
+import io.mero.app.global.exception.NotFoundException;
 import io.mero.app.global.util.MessageUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -107,25 +109,20 @@ public class DiaryService {
 
     private Trip findTripById(Long tripId) {
         return tripRepository.findById(tripId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        messageUtil.getMessage("error.trip.not_found")
-                ));
+                .orElseThrow(() -> new NotFoundException(
+                        messageUtil.getMessage("error.trip.notFound")));
     }
 
     private Diary findDiaryById(Long diaryId) {
         return diaryRepository.findById(diaryId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        messageUtil.getMessage("error.diary.notFound")
-                ));
+                .orElseThrow(() -> new NotFoundException(
+                        messageUtil.getMessage("error.diary.notFound")));
     }
 
     private void validateOwner(Trip trip, Long userId) {
-        if(!trip.isOwner(userId)) {
-            throw new IllegalArgumentException(
-                    messageUtil.getMessage("error.forbidden")
-            );
+        if (!trip.isOwner(userId)) {
+            throw new ForbiddenException(
+                    messageUtil.getMessage("error.forbidden"));
         }
     }
-
-
 }

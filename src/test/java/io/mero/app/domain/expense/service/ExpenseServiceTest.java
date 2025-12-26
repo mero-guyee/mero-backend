@@ -13,6 +13,9 @@ import io.mero.app.domain.trip.repository.TripRepository;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.global.enums.Currency;
 import io.mero.app.global.enums.Timezone;
+import io.mero.app.global.exception.BadRequestException;
+import io.mero.app.global.exception.ForbiddenException;
+import io.mero.app.global.exception.NotFoundException;
 import io.mero.app.global.util.MessageUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -211,10 +214,11 @@ class ExpenseServiceTest {
 
         given(tripRepository.findById(1L)).willReturn(Optional.of(trip1));
         given(diaryRepository.findById(2L)).willReturn(Optional.of(diary));
+        given(messageUtil.getMessage("error.diary.tripMismatch")).willReturn("같은 여행의 일기만 연결할 수 있습니다");
 
         // when & then
         assertThatThrownBy(() -> expenseService.createExpense(userId, request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(BadRequestException.class)
                 .hasMessage("같은 여행의 일기만 연결할 수 있습니다");
     }
 
@@ -286,7 +290,7 @@ class ExpenseServiceTest {
 
         // when & then
         assertThatThrownBy(() -> expenseService.createExpense(userId, request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ForbiddenException.class)
                 .hasMessage("접근 권한이 없습니다");
     }
 
@@ -524,10 +528,11 @@ class ExpenseServiceTest {
 
         given(expenseRepository.findById(expenseId)).willReturn(Optional.of(expense));
         given(diaryRepository.findById(2L)).willReturn(Optional.of(diary));
+        given(messageUtil.getMessage("error.diary.tripMismatch")).willReturn("같은 여행의 일기만 연결할 수 있습니다");
 
         // when & then
         assertThatThrownBy(() -> expenseService.updateExpense(userId, expenseId, request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(BadRequestException.class)
                 .hasMessage("같은 여행의 일기만 연결할 수 있습니다");
     }
 
@@ -573,7 +578,7 @@ class ExpenseServiceTest {
 
         // when & then
         assertThatThrownBy(() -> expenseService.createExpense(userId, request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasMessage("여행을 찾을 수 없습니다");
     }
 
@@ -600,7 +605,7 @@ class ExpenseServiceTest {
 
         // when & then
         assertThatThrownBy(() -> expenseService.createExpense(userId, request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(NotFoundException.class)
                 .hasMessage("일기를 찾을 수 없습니다");
     }
 }

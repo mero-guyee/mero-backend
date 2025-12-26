@@ -14,6 +14,7 @@ import io.mero.app.domain.user.entity.User;
 import io.mero.app.global.embedded.Location;
 import io.mero.app.global.enums.Currency;
 import io.mero.app.global.enums.Timezone;
+import io.mero.app.global.exception.ForbiddenException;
 import io.mero.app.global.util.MessageUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -144,7 +145,7 @@ class DiaryServiceTest {
 
         // when & then
         assertThatThrownBy(() -> diaryService.createDiary(userId, request))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ForbiddenException.class)
                 .hasMessage("접근 권한이 없습니다");
 
     }

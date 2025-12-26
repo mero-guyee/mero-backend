@@ -7,6 +7,8 @@ import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.domain.trip.repository.TripRepository;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.UserRepository;
+import io.mero.app.global.exception.ForbiddenException;
+import io.mero.app.global.exception.NotFoundException;
 import io.mero.app.global.util.MessageUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -96,14 +98,13 @@ public class TripService {
 
     private Trip findTripById(Long tripId) {
         return tripRepository.findById(tripId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        messageUtil.getMessage("error.trip.notFound")
-                ));
+                .orElseThrow(() -> new NotFoundException(
+                        messageUtil.getMessage("error.trip.notFound")));
     }
 
     private void validateOwner(Long userId, Trip trip) {
         if (!trip.isOwner(userId)) {
-            throw new IllegalArgumentException(
+            throw new ForbiddenException(
                     messageUtil.getMessage("error.forbidden"));
         }
     }

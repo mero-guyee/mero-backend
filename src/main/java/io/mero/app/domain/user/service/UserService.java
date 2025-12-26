@@ -5,6 +5,9 @@ import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.UserRepository;
 import io.mero.app.global.enums.Currency;
 import io.mero.app.global.enums.Timezone;
+import io.mero.app.global.exception.DuplicateException;
+import io.mero.app.global.exception.NotFoundException;
+import io.mero.app.global.exception.UnauthorizedException;
 import io.mero.app.global.jwt.JwtTokenProvider;
 import io.mero.app.global.util.MessageUtil;
 import lombok.RequiredArgsConstructor;
@@ -35,14 +38,14 @@ public class UserService {
 
     private void validateDuplicateEmail(String email) {
         if (userRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException(
+            throw new DuplicateException(
                     messageUtil.getMessage("error.duplicate.email"));
         }
     }
 
     private void validateDuplicateNickname(String nickname) {
         if (userRepository.existsByNickname(nickname)) {
-            throw new IllegalArgumentException(
+            throw new DuplicateException(
                     messageUtil.getMessage("error.duplicate.nickname"));
         }
     }
@@ -62,11 +65,11 @@ public class UserService {
     @Transactional
     public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new UnauthorizedException(
                         messageUtil.getMessage("error.invalid.login")));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new IllegalArgumentException(
+            throw new UnauthorizedException(
                     messageUtil.getMessage("error.invalid.login"));
         }
 
@@ -89,18 +92,18 @@ public class UserService {
         String refreshToken = request.getRefreshToken();
 
         if (!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new IllegalArgumentException(
+            throw new UnauthorizedException(
                     messageUtil.getMessage("error.invalid.token"));
         }
 
         Long userId = jwtTokenProvider.getUserIdFrom(refreshToken);
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        messageUtil.getMessage("error.user.notFound")));
+                .orElseThrow(() -> new NotFoundException(
+                    messageUtil.getMessage("error.user.notFound")));
 
         if (!refreshToken.equals(user.getRefreshToken())) {
-            throw new IllegalArgumentException(
+            throw new UnauthorizedException(
                     messageUtil.getMessage("error.invalid.token"));
         }
 
@@ -118,14 +121,14 @@ public class UserService {
         String refreshToken = request.getRefreshToken();
 
         if(!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new IllegalArgumentException(
+            throw new UnauthorizedException(
                     messageUtil.getMessage("error.invalid.token"));
         }
 
         Long userId = jwtTokenProvider.getUserIdFrom(refreshToken);
 
         userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new NotFoundException(
                         messageUtil.getMessage("error.user.notFound")))
                 .clearRefreshToken();
 

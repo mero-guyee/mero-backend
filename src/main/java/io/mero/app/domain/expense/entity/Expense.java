@@ -4,6 +4,7 @@ import io.mero.app.domain.diary.entity.Diary;
 import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.global.entity.BaseEntity;
 import io.mero.app.global.enums.Currency;
+import io.mero.app.global.exception.BadRequestException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -80,7 +81,7 @@ public class Expense extends BaseEntity {
 
     public void linkToDiary(Diary diary) {
         if (diary != null && !diary.getTrip().equals(this.trip)) {
-            throw new IllegalArgumentException("같은 여행의 일기만 연결할 수 있습니다");
+            throw new BadRequestException("같은 여행의 일기만 연결할 수 있습니다");
         }
         this.diary = diary;
     }
@@ -92,19 +93,19 @@ public class Expense extends BaseEntity {
 
     private void validateAmount(BigDecimal amount) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("금액은 0보다 커야 합니다");
+            throw new BadRequestException("금액은 0보다 커야 합니다");
         }
     }
 
     private void validateCurrency(Currency currency) {
         if (currency == null) {
-            throw new IllegalArgumentException("통화는 필수입니다");
+            throw new BadRequestException("통화는 필수입니다");
         }
     }
 
     private void validateDate(LocalDate date) {
         if (date == null) {
-            throw new IllegalArgumentException("날짜는 필수입니다");
+            throw new BadRequestException("날짜는 필수입니다");
         }
     }
 }

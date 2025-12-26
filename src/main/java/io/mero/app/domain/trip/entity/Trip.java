@@ -3,6 +3,7 @@ package io.mero.app.domain.trip.entity;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.global.entity.BaseEntity;
 import io.mero.app.global.enums.Currency;
+import io.mero.app.global.exception.BadRequestException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -110,28 +111,28 @@ public class Trip extends BaseEntity {
 
     private void validateTitle(String title) {
         if (title == null || title.trim().isEmpty()) {
-            throw new IllegalArgumentException("여행 제목은 필수입니다");
+            throw new BadRequestException("여행 제목은 필수입니다");
         }
     }
 
     private void validatePeriod(LocalDate startDate, LocalDate endDate) {
         if (startDate == null || endDate == null) {
-            throw new IllegalArgumentException("시작일과 종료일은 필수입니다");
+            throw new BadRequestException("날짜는 필수입니다");
         }
         if (startDate.isAfter(endDate)) {
-            throw new IllegalArgumentException("시작일은 종료일보다 이전이어야 합니다");
+            throw new BadRequestException("시작일은 종료일보다 이전이어야 합니다");
         }
     }
 
     private void validateBudget(BigDecimal totalBudget) {
         if (totalBudget != null && totalBudget.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("예산은 0 이상이어야 합니다");
+            throw new BadRequestException("예산은 0 이상이어야 합니다");
         }
     }
 
     private void validateDefaultCurrency(Currency currency) {
         if (currency == null) {
-            throw new IllegalArgumentException("기본 통화는 필수입니다");
+            throw new BadRequestException("기본 통화는 필수입니다");
         }
     }
 }
