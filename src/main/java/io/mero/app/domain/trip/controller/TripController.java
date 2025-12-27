@@ -6,7 +6,9 @@ import io.mero.app.domain.expense.dto.ExpenseResponse;
 import io.mero.app.domain.expense.service.ExpenseService;
 import io.mero.app.domain.trip.dto.TripCreateRequest;
 import io.mero.app.domain.trip.dto.TripResponse;
+import io.mero.app.domain.trip.dto.TripStatisticsResponse;
 import io.mero.app.domain.trip.dto.TripUpdateRequest;
+import io.mero.app.domain.trip.service.StatisticsService;
 import io.mero.app.domain.trip.service.TripService;
 import io.mero.app.global.util.SecurityUtil;
 import jakarta.validation.Valid;
@@ -25,6 +27,7 @@ public class TripController {
     private final TripService tripService;
     private final DiaryService diaryService;
     private final ExpenseService expenseService;
+    private final StatisticsService statisticsService;
 
     @PostMapping
     public ResponseEntity<TripResponse> createTrip(@Valid @RequestBody TripCreateRequest request) {
@@ -75,6 +78,14 @@ public class TripController {
         Long userId = SecurityUtil.getCurrentUserId();
         List<ExpenseResponse> responses = expenseService.getExpensesByTrip(userId, tripId);
         return ResponseEntity.ok(responses);
+    }
+
+
+    @GetMapping("/{tripId}/statistics")
+    public ResponseEntity<TripStatisticsResponse> getTripStatistics(@PathVariable Long tripId) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        TripStatisticsResponse response = statisticsService.getTripStatistics(userId, tripId);
+        return ResponseEntity.ok(response);
     }
 
 }
