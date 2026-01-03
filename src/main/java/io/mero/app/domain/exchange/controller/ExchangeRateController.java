@@ -4,6 +4,8 @@ import io.mero.app.domain.exchange.dto.ExchangeRateResponse;
 import io.mero.app.domain.exchange.service.ExchangeRateService;
 import io.mero.app.global.enums.Currency;
 import io.mero.app.global.util.SecurityUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
+@Tag(name = "Exchange Rate", description = "환율 API")
 @RestController
 @RequestMapping("/api/exchange-rates")
 @RequiredArgsConstructor
@@ -24,6 +27,7 @@ public class ExchangeRateController {
      * GET /api/exchange-rates?baseCurrency=KRW
      * GET /api/exchange-rates?baseCurrency=USD
      */
+    @Operation(summary = "환율 조회", description = "특정 통화의 환율 정보를 조회합니다")
     @GetMapping
     public ResponseEntity<List<ExchangeRateResponse>> getRatesByDate(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
@@ -38,6 +42,7 @@ public class ExchangeRateController {
     /**
      * 내 기본 통화 기준 환율 조회 (인증 필요)
      */
+    @Operation(summary = "환율 조회", description = "내 기본 통화 기준 환율 정보를 조회합니다")
     @GetMapping("/me")
     public ResponseEntity<List<ExchangeRateResponse>> getMyRates(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
@@ -52,6 +57,7 @@ public class ExchangeRateController {
     /**
      * 환율 수동 업데이트 (개발/테스트용)
      */
+    @Operation(summary = "환율 조회", description = "개발/테스트용 환율 조회")
     @PostMapping("/update")
     public ResponseEntity<String> updateRatesManually() {
         exchangeRateService.updateDailyRates();
