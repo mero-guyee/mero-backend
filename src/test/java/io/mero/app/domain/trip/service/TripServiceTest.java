@@ -18,7 +18,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -51,13 +50,11 @@ class TripServiceTest {
         Long userId = 1L;
         TripCreateRequest request = new TripCreateRequest(
                 "남미 여행",
-                "남미 가자!",
-                LocalDate.of(2026,03,11),
-                LocalDate.of(2026,05,15),
+                LocalDate.of(2026,3,11),
+                LocalDate.of(2026,5,15),
                 List.of("브라질", "아르헨티나", "페루"),
-                new BigDecimal(10000000),
-                Currency.ARS,
-                Currency.KRW
+                Currency.KRW,
+                null
         );
 
         User user = User.builder()
@@ -73,12 +70,9 @@ class TripServiceTest {
                 .user(user)
                 .id(1L)
                 .title(request.getTitle())
-                .description(request.getDescription())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .countries(request.getCountries())
-                .totalBudget(request.getTotalBudget())
-                .budgetCurrency(request.getBudgetCurrency())
                 .defaultCurrency(request.getDefaultCurrency())
                 .build();
 
@@ -91,9 +85,8 @@ class TripServiceTest {
         // then
         assertThat(response.getId()).isEqualTo(1L);
         assertThat(response.getTitle()).isEqualTo("남미 여행");
-        assertThat(response.getDescription()).isEqualTo("남미 가자!");
-        assertThat(response.getStartDate()).isEqualTo(LocalDate.of(2026,03,11));
-        assertThat(response.getEndDate()).isEqualTo(LocalDate.of(2026,05,15));
+        assertThat(response.getStartDate()).isEqualTo(LocalDate.of(2026,3,11));
+        assertThat(response.getEndDate()).isEqualTo(LocalDate.of(2026,5,15));
 
         verify(userRepository).findById(userId);
         verify(tripRepository).save(any(Trip.class));
@@ -114,11 +107,11 @@ class TripServiceTest {
 
         List<Trip> trips = List.of(
                 Trip.builder()
-                        .id(1L).user(user).title("남미 여행").description("남미 가자!")
+                        .id(1L).user(user).title("남미 여행")
                         .startDate(LocalDate.of(2026, 3, 11))
                         .endDate(LocalDate.of(2026, 5, 15)).build(),
                 Trip.builder()
-                        .id(1L).user(user).title("일본 여행").description("일본 가자!")
+                        .id(1L).user(user).title("일본 여행")
                         .startDate(LocalDate.of(2026, 8, 11))
                         .endDate(LocalDate.of(2026, 10, 15)).build()
         );
@@ -153,9 +146,8 @@ class TripServiceTest {
                 .user(user)
                 .id(tripId)
                 .title("남미 여행")
-                .description("남미 가자!")
-                .startDate(LocalDate.of(2026, 03, 11))
-                .endDate(LocalDate.of(2026, 05, 15))
+                .startDate(LocalDate.of(2026, 3, 11))
+                .endDate(LocalDate.of(2026, 5, 15))
                 .build();
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
@@ -188,9 +180,8 @@ class TripServiceTest {
                 .user(otherUser)
                 .id(tripId)
                 .title("남미 여행")
-                .description("남미 가자!")
-                .startDate(LocalDate.of(2026, 03, 11))
-                .endDate(LocalDate.of(2026, 05, 15))
+                .startDate(LocalDate.of(2026, 3, 11))
+                .endDate(LocalDate.of(2026, 5, 15))
                 .build();
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
@@ -224,21 +215,17 @@ class TripServiceTest {
                 .user(user)
                 .id(tripId)
                 .title("남미 여행")
-                .description("남미 가자!")
-                .startDate(LocalDate.of(2026, 03, 11))
-                .endDate(LocalDate.of(2026, 05, 15))
+                .startDate(LocalDate.of(2026, 3, 11))
+                .endDate(LocalDate.of(2026, 5, 15))
                 .build();
 
         TripUpdateRequest request = new TripUpdateRequest(
                 "남미 여행 수정",
-                "남미 진짜 가자!",
-                LocalDate.of(2026,03,10),
-                LocalDate.of(2026,05,16),
+                LocalDate.of(2026,3,10),
+                LocalDate.of(2026,5,16),
                 List.of("아르헨티나", "페루", "볼리비아"),
-                null,
-                new BigDecimal(20000000),
-                Currency.ARS,
-                Currency.USD
+                Currency.USD,
+                null
         );
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
@@ -248,9 +235,8 @@ class TripServiceTest {
 
         // then
         assertThat(response.getTitle()).isEqualTo("남미 여행 수정");
-        assertThat(response.getDescription()).isEqualTo("남미 진짜 가자!");
-        assertThat(response.getStartDate()).isEqualTo(LocalDate.of(2026,03,10));
-        assertThat(response.getEndDate()).isEqualTo(LocalDate.of(2026,05,16));
+        assertThat(response.getStartDate()).isEqualTo(LocalDate.of(2026,3,10));
+        assertThat(response.getEndDate()).isEqualTo(LocalDate.of(2026,5,16));
         assertThat(response.getDefaultCurrency()).isEqualTo(Currency.USD);
 
         verify(tripRepository).findById(tripId);
@@ -276,9 +262,8 @@ class TripServiceTest {
                 .user(user)
                 .id(tripId)
                 .title("남미 여행")
-                .description("남미 가자!")
-                .startDate(LocalDate.of(2026, 03, 11))
-                .endDate(LocalDate.of(2026, 05, 15))
+                .startDate(LocalDate.of(2026, 3, 11))
+                .endDate(LocalDate.of(2026, 5, 15))
                 .build();
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));

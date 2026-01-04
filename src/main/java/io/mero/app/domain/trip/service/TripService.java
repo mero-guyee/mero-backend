@@ -37,12 +37,9 @@ public class TripService {
         Trip trip = Trip.builder()
                 .user(user)
                 .title(request.getTitle())
-                .description(request.getDescription())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .countries(request.getCountries())
-                .totalBudget(request.getTotalBudget())
-                .budgetCurrency(request.getBudgetCurrency())
                 .defaultCurrency(request.getDefaultCurrency())
                 .build();
 
@@ -75,13 +72,11 @@ public class TripService {
 
         trip.update(
                 request.getTitle(),
-                request.getDescription(),
                 request.getStartDate(),
                 request.getEndDate(),
                 request.getCountries(),
-                request.getTotalBudget(),
-                request.getBudgetCurrency(),
-                request.getDefaultCurrency()
+                request.getDefaultCurrency(),
+                request.getImageUrl()
         );
 
         return TripResponse.from(trip);

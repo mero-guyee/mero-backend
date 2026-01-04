@@ -16,26 +16,22 @@ public class TripResponse {
 
     private Long id;
     private String title;
-    private String description;
     private LocalDate startDate;
     private LocalDate endDate;
     private List<String> countries;
-    private BigDecimal totalBudget;
-    private Currency budgetCurrency;
     private Currency defaultCurrency;
+    private String imageUrl;
     private LocalDateTime createdAt;
 
     public static TripResponse from(Trip trip) {
         return new TripResponse(
                 trip.getId(),
                 trip.getTitle(),
-                trip.getDescription(),
                 trip.getStartDate(),
                 trip.getEndDate(),
                 trip.getCountries(),
-                trip.getTotalBudget(),
-                trip.getBudgetCurrency(),
                 trip.getDefaultCurrency(),
+                trip.getImageUrl(),
                 trip.getCreatedAt()
         );
     }

@@ -10,7 +10,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,42 +32,32 @@ public class Trip extends BaseEntity {
     @Column(nullable = false, length = 200)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
-
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
-    @Column(name = "countries", length = 1000)
-    private String countriesStr;
-
-    @Column(name = "total_budget", precision = 15, scale = 2)
-    private BigDecimal totalBudget;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "budget_currency", length = 20)
-    private Currency budgetCurrency;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "default_currency", length = 20)
     private Currency defaultCurrency;
 
+    @Column(name = "countries", length = 1000)
+    private String countriesStr;
+
+    @Column(name = "imageUrl", length = 1000)
+    private String imageUrl;
+
     @Builder
-    public Trip(Long id, User user, String title, String description,
+    public Trip(Long id, User user, String title,
                 LocalDate startDate, LocalDate endDate, List<String> countries,
-                BigDecimal totalBudget, Currency budgetCurrency, Currency defaultCurrency) {
+                Currency defaultCurrency) {
         this.id = id;
         this.user = user;
         this.title = title;
-        this.description = description;
         this.startDate = startDate;
         this.endDate = endDate;
         setCountries(countries);
-        this.totalBudget = totalBudget;
-        this.budgetCurrency = budgetCurrency;
         this.defaultCurrency = defaultCurrency != null ? defaultCurrency : Currency.KRW;
     }
 
@@ -76,22 +65,18 @@ public class Trip extends BaseEntity {
         return this.user.getId().equals(userId);
     }
 
-    public void update(String title, String description, LocalDate startDate, LocalDate endDate,
-                       List<String> countries, BigDecimal totalBudget,
-                       Currency budgetCurrency, Currency defaultCurrency) {
+    public void update(String title, LocalDate startDate, LocalDate endDate,
+                       List<String> countries, Currency defaultCurrency, String imageUrl) {
         validateTitle(title);
         validatePeriod(startDate, endDate);
-        validateBudget(totalBudget);
         validateDefaultCurrency(defaultCurrency);
 
         this.title = title;
-        this.description = description;
         this.startDate = startDate;
         this.endDate = endDate;
         setCountries(countries);
-        this.totalBudget = totalBudget;
-        this.budgetCurrency = budgetCurrency;
         this.defaultCurrency = defaultCurrency;
+        this.imageUrl = imageUrl;
     }
 
     public List<String> getCountries() {
@@ -121,12 +106,6 @@ public class Trip extends BaseEntity {
         }
         if (startDate.isAfter(endDate)) {
             throw new BadRequestException("시작일은 종료일보다 이전이어야 합니다");
-        }
-    }
-
-    private void validateBudget(BigDecimal totalBudget) {
-        if (totalBudget != null && totalBudget.compareTo(BigDecimal.ZERO) < 0) {
-            throw new BadRequestException("예산은 0 이상이어야 합니다");
         }
     }
 

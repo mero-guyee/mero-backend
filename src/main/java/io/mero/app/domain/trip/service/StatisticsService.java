@@ -51,7 +51,7 @@ public class StatisticsService {
         BigDecimal totalExpense = calculateTotalExpense(expenses, baseCurrency);
 
         // 예산 정보 계산
-        BigDecimal budget = trip.getTotalBudget();
+        BigDecimal budget = null;
         BigDecimal budgetRemaining = budget != null ? budget.subtract(totalExpense) : null;
         Double budgetUsagePercentage = calculateBudgetUsage(totalExpense, budget);
 

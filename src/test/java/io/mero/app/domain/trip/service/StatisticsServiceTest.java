@@ -1,8 +1,8 @@
 package io.mero.app.domain.trip.service;
 
+import io.mero.app.domain.exchange.service.ExchangeRateService;
 import io.mero.app.domain.expense.entity.Expense;
 import io.mero.app.domain.expense.repository.ExpenseRepository;
-import io.mero.app.domain.exchange.service.ExchangeRateService;
 import io.mero.app.domain.trip.dto.TripStatisticsResponse;
 import io.mero.app.domain.trip.dto.TripStatisticsResponse.CategoryExpense;
 import io.mero.app.domain.trip.dto.TripStatisticsResponse.CurrencyExpense;
@@ -27,7 +27,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -73,8 +74,6 @@ class StatisticsServiceTest {
                 .startDate(LocalDate.of(2024, 12, 1))
                 .endDate(LocalDate.of(2024, 12, 7))
                 .defaultCurrency(Currency.KRW)
-                .totalBudget(new BigDecimal("2000000"))
-                .budgetCurrency(Currency.KRW)
                 .build();
 
         List<Expense> expenses = List.of(
@@ -134,9 +133,9 @@ class StatisticsServiceTest {
         assertThat(response.getTotalExpense()).isEqualByComparingTo(new BigDecimal("415450.00"));
 
         // 예산 정보
-        assertThat(response.getBudget()).isEqualByComparingTo(new BigDecimal("2000000"));
-        assertThat(response.getBudgetRemaining()).isEqualByComparingTo(new BigDecimal("1584550.00"));
-        assertThat(response.getBudgetUsagePercentage()).isEqualTo(20.77);
+//        assertThat(response.getBudget()).isEqualByComparingTo(new BigDecimal("2000000"));
+//        assertThat(response.getBudgetRemaining()).isEqualByComparingTo(new BigDecimal("1584550.00"));
+//        assertThat(response.getBudgetUsagePercentage()).isEqualTo(20.77);
     }
 
     @Test
@@ -152,7 +151,6 @@ class StatisticsServiceTest {
                 .user(user)
                 .title("일본 여행")
                 .defaultCurrency(Currency.KRW)
-                .totalBudget(new BigDecimal("2000000"))
                 .build();
 
         List<Expense> expenses = List.of(
@@ -341,7 +339,6 @@ class StatisticsServiceTest {
                 .user(user)
                 .title("계획 중인 여행")
                 .defaultCurrency(Currency.KRW)
-                .totalBudget(new BigDecimal("2000000"))
                 .build();
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
@@ -353,50 +350,11 @@ class StatisticsServiceTest {
         // then
         assertThat(response.getTotalExpense()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(response.getExpenseCount()).isEqualTo(0);
-        assertThat(response.getBudgetRemaining()).isEqualByComparingTo(new BigDecimal("2000000"));
-        assertThat(response.getBudgetUsagePercentage()).isEqualTo(0.0);
+//        assertThat(response.getBudgetRemaining()).isEqualByComparingTo(new BigDecimal("2000000"));
+//        assertThat(response.getBudgetUsagePercentage()).isEqualTo(0.0);
         assertThat(response.getExpensesByCategory()).isEmpty();
         assertThat(response.getExpensesByDate()).isEmpty();
         assertThat(response.getExpensesByCurrency()).isEmpty();
-    }
-
-    @Test
-    @DisplayName("여행 통계 조회 성공 - 예산 없는 경우")
-    void 여행_통계_조회_성공_예산_없는_경우() {
-        // given
-        Long userId = 1L;
-        Long tripId = 1L;
-
-        User user = User.builder().id(userId).build();
-        Trip trip = Trip.builder()
-                .id(tripId)
-                .user(user)
-                .title("일본 여행")
-                .defaultCurrency(Currency.KRW)
-                .totalBudget(null)  // 예산 없음
-                .build();
-
-        List<Expense> expenses = List.of(
-                Expense.builder()
-                        .trip(trip)
-                        .amount(new BigDecimal("100"))
-                        .currency(Currency.USD)
-                        .date(LocalDate.of(2024, 12, 1))
-                        .build()
-        );
-
-        given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
-        given(expenseRepository.findByTripOrderByDateDesc(trip)).willReturn(expenses);
-        given(exchangeRateService.getRate(any(), any(), any()))
-                .willReturn(new BigDecimal("1472"));
-
-        // when
-        TripStatisticsResponse response = statisticsService.getTripStatistics(userId, tripId);
-
-        // then
-        assertThat(response.getBudget()).isNull();
-        assertThat(response.getBudgetRemaining()).isNull();
-        assertThat(response.getBudgetUsagePercentage()).isNull();
     }
 
     @Test

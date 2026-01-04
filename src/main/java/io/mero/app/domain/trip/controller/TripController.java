@@ -1,14 +1,10 @@
 package io.mero.app.domain.trip.controller;
 
-import io.mero.app.domain.diary.dto.DiaryResponse;
 import io.mero.app.domain.diary.service.DiaryService;
-import io.mero.app.domain.expense.dto.ExpenseResponse;
 import io.mero.app.domain.expense.service.ExpenseService;
 import io.mero.app.domain.trip.dto.TripCreateRequest;
 import io.mero.app.domain.trip.dto.TripResponse;
-import io.mero.app.domain.trip.dto.TripStatisticsResponse;
 import io.mero.app.domain.trip.dto.TripUpdateRequest;
-import io.mero.app.domain.trip.service.StatisticsService;
 import io.mero.app.domain.trip.service.TripService;
 import io.mero.app.global.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,9 +26,6 @@ import java.util.List;
 public class TripController {
 
     private final TripService tripService;
-    private final DiaryService diaryService;
-    private final ExpenseService expenseService;
-    private final StatisticsService statisticsService;
 
     @Operation(summary = "여행 생성", description = "새로운 여행을 생성합니다")
     @PostMapping
@@ -75,29 +68,4 @@ public class TripController {
         tripService.deleteTrip(userId, tripId);
         return ResponseEntity.noContent().build();
     }
-
-    @Operation(summary = "여행의 일기 목록 조회", description = "특정 여행의 모든 일기를 조회합니다")
-    @GetMapping("/{tripId}/diaries")
-    public ResponseEntity<List<DiaryResponse>> getDiariesByTrip(@PathVariable Long tripId) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        List<DiaryResponse> responses = diaryService.getDiariesByTrip(userId, tripId);
-        return ResponseEntity.ok(responses);
-    }
-
-    @Operation(summary = "여행의 경비 목록 조회", description = "특정 여행의 모든 경비를 조회합니다")
-    @GetMapping("/{tripId}/expenses")
-    public ResponseEntity<List<ExpenseResponse>> getExpensesByTrip(@PathVariable Long tripId) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        List<ExpenseResponse> responses = expenseService.getExpensesByTrip(userId, tripId);
-        return ResponseEntity.ok(responses);
-    }
-
-    @Operation(summary = "여행 통계 조회", description = "여행의 지출 통계를 조회합니다 (총 지출, 카테고리별, 일별, 통화별)")
-    @GetMapping("/{tripId}/statistics")
-    public ResponseEntity<TripStatisticsResponse> getTripStatistics(@PathVariable Long tripId) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        TripStatisticsResponse response = statisticsService.getTripStatistics(userId, tripId);
-        return ResponseEntity.ok(response);
-    }
-
 }

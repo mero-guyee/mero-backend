@@ -21,9 +21,6 @@ public class TripUpdateRequest {
     @Size(max = 100, message = "{trip.title.size}")
     private String title;
 
-    @Size(max = 500, message = "{trip.description.size}")
-    private String description;
-
     @NotNull(message = "{trip.startDate.notNull}")
     private LocalDate startDate;
 
@@ -31,9 +28,7 @@ public class TripUpdateRequest {
     private LocalDate endDate;
 
     private List<String> countries;
-    private String coverImageUrl;
-    private BigDecimal totalBudget;
-    private Currency budgetCurrency;
     private Currency defaultCurrency;
+    private String imageUrl;
 
 }
