@@ -62,8 +62,9 @@ class DiaryServiceTest {
     void 일기_생성_성공() {
         // given
         Long userId = 1L;
+        Long tripId = 1L;
         DiaryCreateRequest request = new DiaryCreateRequest(
-                1L,
+                "12월 25일",
                 "오늘은 크리스마스",
                 LocalDate.of(2025, 12, 25),
                 new Location(new BigDecimal("37.5665"), new BigDecimal("126.9780"), "서울특별시"),
@@ -80,7 +81,7 @@ class DiaryServiceTest {
                 .build();
 
         Trip trip = Trip.builder()
-                .id(1L)
+                .id(tripId)
                 .user(user)
                 .title("서울 여행")
                 .build();
@@ -98,7 +99,7 @@ class DiaryServiceTest {
         given(diaryRepository.save(any(Diary.class))).willReturn(diary);
 
         // when
-        DiaryResponse response = diaryService.createDiary(userId, request);
+        DiaryResponse response = diaryService.createDiary(userId, tripId, request);
 
         // then
         assertThat(response.getTripId()).isEqualTo(1L);
@@ -117,8 +118,9 @@ class DiaryServiceTest {
         // given
         Long userId = 1L;
         Long otherUserId = 2L;
+        Long tripId = 1L;
         DiaryCreateRequest request = new DiaryCreateRequest(
-                1L,
+                "12월 25일",
                 "오늘은 크리스마스",
                 LocalDate.of(2025, 12, 25),
                 new Location(new BigDecimal("37.5665"), new BigDecimal("126.9780"), "서울특별시"),
@@ -135,7 +137,7 @@ class DiaryServiceTest {
                 .build();
 
         Trip trip = Trip.builder()
-                .id(1L)
+                .id(tripId)
                 .user(otherUser)
                 .title("서울 여행")
                 .build();
@@ -144,7 +146,7 @@ class DiaryServiceTest {
         given(messageUtil.getMessage("error.forbidden")).willReturn("접근 권한이 없습니다");
 
         // when & then
-        assertThatThrownBy(() -> diaryService.createDiary(userId, request))
+        assertThatThrownBy(() -> diaryService.createDiary(userId, tripId, request))
                 .isInstanceOf(ForbiddenException.class)
                 .hasMessage("접근 권한이 없습니다");
 
@@ -182,7 +184,7 @@ class DiaryServiceTest {
         given(diaryRepository.findByTripIdOrderByDateDesc(tripId)).willReturn(diaries);
 
         // when
-        List<DiaryResponse> responses = diaryService.getDiariesByTrip(userId, tripId);
+        List<DiaryResponse> responses = diaryService.getDiaries(userId, tripId);
 
         // then
         assertThat(responses).hasSize(2);
@@ -216,7 +218,7 @@ class DiaryServiceTest {
         given(diaryRepository.findById(diaryId)).willReturn(Optional.of(diary));
 
         // when
-        DiaryResponse response = diaryService.getDiary(userId, diaryId);
+        DiaryResponse response = diaryService.getDiary(userId, tripId, diaryId);
 
         // then
         assertThat(response.getId()).isEqualTo(diaryId);
@@ -230,10 +232,11 @@ class DiaryServiceTest {
         // given
         Long userId = 1L;
         Long diaryId = 1L;
+        Long tripId = 1L;
 
         User user = User.builder().id(userId).build();
         Trip trip = Trip.builder()
-                .id(1L)
+                .id(tripId)
                 .user(user)
                 .defaultCurrency(Currency.KRW)
                 .build();
@@ -268,7 +271,7 @@ class DiaryServiceTest {
                 .willReturn(new BigDecimal("1472"));
 
         // when
-        DiaryResponse response = diaryService.getDiary(userId, diaryId);
+        DiaryResponse response = diaryService.getDiary(userId, tripId, diaryId);
 
         // then
         assertThat(response.getId()).isEqualTo(diaryId);
@@ -303,7 +306,7 @@ class DiaryServiceTest {
                 .build();
 
         DiaryUpdateRequest request = new DiaryUpdateRequest(
-                tripId,
+                "title",
                 "첫째 날 일기 (수정)",
                 LocalDate.of(2025, 12, 26),
                 new Location(new BigDecimal("37.5665"), new BigDecimal("126.9780"), "서울특별시 - 수정본"),
@@ -313,7 +316,7 @@ class DiaryServiceTest {
         given(diaryRepository.findById(diaryId)).willReturn(Optional.of(diary));
 
         // when
-        DiaryResponse response = diaryService.updateDiary(userId, diaryId, request);
+        DiaryResponse response = diaryService.updateDiary(userId, tripId, diaryId, request);
 
         // then
         assertThat(response.getContent()).isEqualTo("첫째 날 일기 (수정)");
@@ -342,7 +345,7 @@ class DiaryServiceTest {
                 .build();
 
         DiaryUpdateRequest request = new DiaryUpdateRequest(
-                tripId,
+                "title",
                 "첫째 날 일기 (수정)",
                 LocalDate.of(2025, 12, 26),
                 new Location(new BigDecimal("37.5665"), new BigDecimal("126.9780"), "서울특별시 - 수정본"),
@@ -352,7 +355,7 @@ class DiaryServiceTest {
         given(diaryRepository.findById(diaryId)).willReturn(Optional.of(diary));
 
         // when & then
-        diaryService.deleteDiary(userId, diaryId);
+        diaryService.deleteDiary(userId, tripId, diaryId);
 
         // then
         verify(diaryRepository).delete(diary);

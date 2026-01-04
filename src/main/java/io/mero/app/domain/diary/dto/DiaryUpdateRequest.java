@@ -15,8 +15,8 @@ import java.util.List;
 @AllArgsConstructor
 public class DiaryUpdateRequest {
 
-    @NotNull(message = "{diary.tripId.notNull}")
-    private Long tripId;
+    @Size(max = 200, message = "{diary.title.size}")
+    private String title;
 
     @Size(max = 5000, message = "{diary.content.size}")
     private String content;

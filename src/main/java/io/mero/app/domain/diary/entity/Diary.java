@@ -4,6 +4,7 @@ import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.global.embedded.Location;
 import io.mero.app.global.entity.BaseEntity;
+import io.mero.app.global.exception.ForbiddenException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -27,6 +28,9 @@ public class Diary extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trip_id", nullable = false)
     private Trip trip;
+
+    @Column(name = "title", length = 200)
+    private String title;
 
     @Column(columnDefinition = "TEXT")
     private String content;
@@ -59,10 +63,11 @@ public class Diary extends BaseEntity {
     private LocalDateTime lastModifiedAt;
 
     @Builder
-    public Diary(Long id, Trip trip, String content,
+    public Diary(Long id, Trip trip, String title, String content,
                  LocalDate date, Location location, String weatherInfo, List<String> photoUrls) {
         this.id = id;
         this.trip = trip;
+        this.title = title;
         this.content = content;
         this.date = date;
         this.location = location;
@@ -72,8 +77,9 @@ public class Diary extends BaseEntity {
         this.photoUrls = photoUrls != null ? photoUrls : new ArrayList<>();
     }
 
-    public void update(String content, LocalDate date,
+    public void update(String title, String content, LocalDate date,
                        Location location, List<String> photoUrls) {
+        this.title = title;
         this.content = content;
         this.date = date;
         this.location = location;

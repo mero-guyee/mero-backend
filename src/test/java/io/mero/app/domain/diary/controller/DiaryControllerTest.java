@@ -74,7 +74,7 @@ class DiaryControllerTest {
     void 일기_생성_API_성공() throws Exception {
         // given
         DiaryCreateRequest request = new DiaryCreateRequest(
-                1L,
+                "title",
                 "오늘은 크리스마스",
                 LocalDate.of(2025, 12, 25),
                 new Location(new BigDecimal("37.5665"), new BigDecimal("126.9780"), "서울특별시"),
@@ -93,10 +93,10 @@ class DiaryControllerTest {
                 null
         );
 
-        given(diaryService.createDiary(anyLong(), any(DiaryCreateRequest.class))).willReturn(response);
+        given(diaryService.createDiary(anyLong(), anyLong(), any(DiaryCreateRequest.class))).willReturn(response);
 
         // when & then
-        mockMvc.perform(post("/api/diaries")
+        mockMvc.perform(post("/api/trips/1/diaries")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -123,10 +123,10 @@ class DiaryControllerTest {
                 null
         );
 
-        given(diaryService.getDiary(anyLong(), eq(1L))).willReturn(response);
+        given(diaryService.getDiary(anyLong(), anyLong(), eq(1L))).willReturn(response);
 
         // when & then
-        mockMvc.perform(get("/api/diaries/1"))
+        mockMvc.perform(get("/api/trips/1/diaries/1"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
@@ -154,11 +154,11 @@ class DiaryControllerTest {
                 List.of("photo1.jpg"), expenses, LocalDateTime.now()
         );
 
-        given(diaryService.getDiary(anyLong(), eq(1L)))
+        given(diaryService.getDiary(anyLong(), anyLong(), eq(1L)))
                 .willReturn(response);
 
         // when & then
-        mockMvc.perform(get("/api/diaries/1"))
+        mockMvc.perform(get("/api/trips/1/diaries/1"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
@@ -173,7 +173,7 @@ class DiaryControllerTest {
     void 여행_일기_수정_API_성공() throws Exception {
         // given
         DiaryUpdateRequest request = new DiaryUpdateRequest(
-                1L,
+                "첫째날 수정",
                 "첫째날 수정",
                 LocalDate.of(2025, 12, 26),
                 new Location(new BigDecimal("37.5665"), new BigDecimal("126.9780"), "서울특별시"),
@@ -192,10 +192,10 @@ class DiaryControllerTest {
                 null
         );
 
-        given(diaryService.updateDiary(anyLong(), eq(1L), any(DiaryUpdateRequest.class))).willReturn(response);
+        given(diaryService.updateDiary(anyLong(), anyLong(), eq(1L), any(DiaryUpdateRequest.class))).willReturn(response);
 
         // when & then
-        mockMvc.perform(put("/api/diaries/1")
+        mockMvc.perform(put("/api/trips/1/diaries/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -207,7 +207,7 @@ class DiaryControllerTest {
     @DisplayName("여행 일기 삭제 API 성공")
     void 여행_일기_삭제_API_성공() throws Exception {
         // when & then
-        mockMvc.perform(delete("/api/diaries/1"))
+        mockMvc.perform(delete("/api/trips/1/diaries/1"))
                 .andDo(print())
                 .andExpect(status().isNoContent());
     }

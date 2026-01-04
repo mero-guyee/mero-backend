@@ -32,16 +32,17 @@ public class DiaryService {
     private final MessageUtil messageUtil;
 
     @Transactional
-    public DiaryResponse createDiary(Long userId, DiaryCreateRequest request) {
-        Trip trip = findTripById(request.getTripId());
+    public DiaryResponse createDiary(Long userId, Long tripId, DiaryCreateRequest request) {
+        Trip trip = findTripById(tripId);
         validateOwner(trip, userId);
 
         Diary diary = Diary.builder()
                 .trip(trip)
+                .title(request.getTitle())
                 .content(request.getContent())
                 .date(request.getDate())
-                .location(request.getLocation())
                 .photoUrls(request.getPhotoUrls())
+                .location(request.getLocation())
                 .build();
 
         Diary savedDiary = diaryRepository.save(diary);
@@ -49,7 +50,7 @@ public class DiaryService {
         return DiaryResponse.from(savedDiary);
     }
 
-    public List<DiaryResponse> getDiariesByTrip(Long userId, Long tripId) {
+    public List<DiaryResponse> getDiaries(Long userId, Long tripId) {
         Trip trip = findTripById(tripId);
         validateOwner(trip, userId);
 
@@ -59,9 +60,12 @@ public class DiaryService {
                 .toList();
     }
 
-    public DiaryResponse getDiary(Long userId, Long diaryId) {
+    public DiaryResponse getDiary(Long userId, Long tripId, Long diaryId) {
         Diary diary = findDiaryById(diaryId);
-        validateOwner(diary.getTrip(), userId);
+        Trip trip = diary.getTrip();
+
+        validateTripMatch(trip, tripId);
+        validateOwner(trip, userId);
 
         List<ExpenseResponse> expenses = expenseRepository.findByDiary(diary)
                 .stream()
@@ -85,11 +89,15 @@ public class DiaryService {
     }
 
     @Transactional
-    public DiaryResponse updateDiary(Long userId, Long diaryId, DiaryUpdateRequest request) {
+    public DiaryResponse updateDiary(Long userId, Long tripId, Long diaryId, DiaryUpdateRequest request) {
         Diary diary = findDiaryById(diaryId);
-        validateOwner(diary.getTrip(), userId);
+        Trip trip = diary.getTrip();
+
+        validateTripMatch(trip, tripId);
+        validateOwner(trip, userId);
 
         diary.update(
+                request.getTitle(),
                 request.getContent(),
                 request.getDate(),
                 request.getLocation(),
@@ -100,9 +108,12 @@ public class DiaryService {
     }
 
     @Transactional
-    public void deleteDiary(Long userId, Long diaryId) {
+    public void deleteDiary(Long userId, Long tripId, Long diaryId) {
         Diary diary = findDiaryById(diaryId);
-        validateOwner(diary.getTrip(), userId);
+        Trip trip = diary.getTrip();
+
+        validateTripMatch(trip, tripId);
+        validateOwner(trip, userId);
 
         diaryRepository.delete(diary);
     }
@@ -121,6 +132,13 @@ public class DiaryService {
 
     private void validateOwner(Trip trip, Long userId) {
         if (!trip.isOwner(userId)) {
+            throw new ForbiddenException(
+                    messageUtil.getMessage("error.forbidden"));
+        }
+    }
+
+    private void validateTripMatch(Trip trip, Long tripId) {
+        if (!trip.getId().equals(tripId)) {
             throw new ForbiddenException(
                     messageUtil.getMessage("error.forbidden"));
         }

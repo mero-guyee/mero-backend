@@ -1,7 +1,6 @@
 package io.mero.app.domain.diary.dto;
 
 import io.mero.app.global.embedded.Location;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -16,8 +15,8 @@ import java.util.List;
 @AllArgsConstructor
 public class DiaryCreateRequest {
 
-    @NotNull(message = "{diary.tripId.notNull}")
-    private Long tripId;
+    @Size(max = 200, message = "{diary.title.size}")
+    private String title;
 
     @Size(max = 5000, message = "{diary.content.size}")
     private String content;
@@ -26,6 +25,7 @@ public class DiaryCreateRequest {
     private LocalDate date;
 
     private Location location;
+
     private List<String> photoUrls;
 
 }
