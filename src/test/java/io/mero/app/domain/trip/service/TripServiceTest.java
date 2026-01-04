@@ -1,6 +1,8 @@
 package io.mero.app.domain.trip.service;
 
+import io.mero.app.domain.file.repository.FileRepository;
 import io.mero.app.domain.trip.dto.TripCreateRequest;
+import io.mero.app.domain.trip.dto.TripDetailResponse;
 import io.mero.app.domain.trip.dto.TripResponse;
 import io.mero.app.domain.trip.dto.TripUpdateRequest;
 import io.mero.app.domain.trip.entity.Trip;
@@ -19,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,6 +39,9 @@ class TripServiceTest {
 
     @Mock
     private TripRepository tripRepository;
+
+    @Mock
+    private FileRepository fileRepository;
 
     @Mock
     private MessageUtil messageUtil;
@@ -151,15 +157,17 @@ class TripServiceTest {
                 .build();
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
+        given(fileRepository.findByTripId(tripId)).willReturn(Collections.emptyList());
 
         // when
-        TripResponse response = tripService.getTrip(userId, tripId);
+        TripDetailResponse response = tripService.getTrip(userId, tripId);
 
         // then
         assertThat(response.getId()).isEqualTo(tripId);
         assertThat(response.getTitle()).isEqualTo("남미 여행");
 
         verify(tripRepository).findById(tripId);
+        verify(fileRepository).findByTripId(tripId);
     }
 
     @Test

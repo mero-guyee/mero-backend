@@ -2,6 +2,7 @@ package io.mero.app.domain.trip.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mero.app.domain.trip.dto.TripCreateRequest;
+import io.mero.app.domain.trip.dto.TripDetailResponse;
 import io.mero.app.domain.trip.dto.TripResponse;
 import io.mero.app.domain.trip.dto.TripUpdateRequest;
 import io.mero.app.domain.trip.service.TripService;
@@ -149,7 +150,7 @@ class TripControllerTest {
     @DisplayName("여행 상세 조회 성공")
     void 여행_상세_조회_성공() throws Exception {
         // given
-        TripResponse response = new TripResponse(
+        TripDetailResponse response = new TripDetailResponse(
                 1L,
                 "남미 여행",
                 LocalDate.of(2026, 03, 11),
@@ -157,7 +158,8 @@ class TripControllerTest {
                 List.of("브라질", "아르헨티나", "페루"),
                 Currency.KRW,
                 null,
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                null
         );
 
         given(tripService.getTrip(anyLong(), eq(1L))).willReturn(response);

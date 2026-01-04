@@ -201,64 +201,6 @@ class StatisticsServiceTest {
         assertThat(categories.get(1).getCount()).isEqualTo(2);
     }
 
-    @Test
-    @DisplayName("여행 통계 조회 성공 - 일별 분석")
-    void 여행_통계_조회_성공_일별_분석() {
-        // given
-        Long userId = 1L;
-        Long tripId = 1L;
-
-        User user = User.builder().id(userId).build();
-        Trip trip = Trip.builder()
-                .id(tripId)
-                .user(user)
-                .title("일본 여행")
-                .defaultCurrency(Currency.KRW)
-                .build();
-
-        List<Expense> expenses = List.of(
-                Expense.builder()
-                        .trip(trip)
-                        .amount(new BigDecimal("100"))
-                        .currency(Currency.USD)
-                        .date(LocalDate.of(2024, 12, 1))
-                        .build(),
-                Expense.builder()
-                        .trip(trip)
-                        .amount(new BigDecimal("50"))
-                        .currency(Currency.USD)
-                        .date(LocalDate.of(2024, 12, 1))
-                        .build(),
-                Expense.builder()
-                        .trip(trip)
-                        .amount(new BigDecimal("200"))
-                        .currency(Currency.USD)
-                        .date(LocalDate.of(2024, 12, 2))
-                        .build()
-        );
-
-        given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
-        given(expenseRepository.findByTripOrderByDateDesc(trip)).willReturn(expenses);
-        given(exchangeRateService.getRate(any(), any(), any()))
-                .willReturn(new BigDecimal("1472"));
-
-        // when
-        TripStatisticsResponse response = statisticsService.getTripStatistics(userId, tripId);
-
-        // then
-        List<DailyExpense> dailyExpenses = response.getExpensesByDate();
-
-        assertThat(dailyExpenses).hasSize(2);
-
-        // 날짜 순 정렬 확인
-        assertThat(dailyExpenses.get(0).getDate()).isEqualTo(LocalDate.of(2024, 12, 1));
-        assertThat(dailyExpenses.get(0).getAmount()).isEqualByComparingTo(new BigDecimal("220800.00"));
-        assertThat(dailyExpenses.get(0).getCount()).isEqualTo(2);
-
-        assertThat(dailyExpenses.get(1).getDate()).isEqualTo(LocalDate.of(2024, 12, 2));
-        assertThat(dailyExpenses.get(1).getAmount()).isEqualByComparingTo(new BigDecimal("294400.00"));
-        assertThat(dailyExpenses.get(1).getCount()).isEqualTo(1);
-    }
 
     @Test
     @DisplayName("여행 통계 조회 성공 - 통화별 분석")

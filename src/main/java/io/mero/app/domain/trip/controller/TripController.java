@@ -1,8 +1,7 @@
 package io.mero.app.domain.trip.controller;
 
-import io.mero.app.domain.diary.service.DiaryService;
-import io.mero.app.domain.expense.service.ExpenseService;
 import io.mero.app.domain.trip.dto.TripCreateRequest;
+import io.mero.app.domain.trip.dto.TripDetailResponse;
 import io.mero.app.domain.trip.dto.TripResponse;
 import io.mero.app.domain.trip.dto.TripUpdateRequest;
 import io.mero.app.domain.trip.service.TripService;
@@ -45,9 +44,9 @@ public class TripController {
 
     @Operation(summary = "여행 상세 조회", description = "특정 여행의 상세 정보를 조회합니다")
     @GetMapping("/{tripId}")
-    public ResponseEntity<TripResponse> getTrip(@PathVariable Long tripId) {
+    public ResponseEntity<TripDetailResponse> getTrip(@PathVariable Long tripId) {
         Long userId = SecurityUtil.getCurrentUserId();
-        TripResponse response = tripService.getTrip(userId, tripId);
+        TripDetailResponse response = tripService.getTrip(userId, tripId);
         return ResponseEntity.ok(response);
     }
 

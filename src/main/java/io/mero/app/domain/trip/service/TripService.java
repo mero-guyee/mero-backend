@@ -1,6 +1,9 @@
 package io.mero.app.domain.trip.service;
 
+import io.mero.app.domain.file.entity.File;
+import io.mero.app.domain.file.repository.FileRepository;
 import io.mero.app.domain.trip.dto.TripCreateRequest;
+import io.mero.app.domain.trip.dto.TripDetailResponse;
 import io.mero.app.domain.trip.dto.TripResponse;
 import io.mero.app.domain.trip.dto.TripUpdateRequest;
 import io.mero.app.domain.trip.entity.Trip;
@@ -15,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,6 +27,7 @@ public class TripService {
 
     private final UserRepository userRepository;
     private final TripRepository tripRepository;
+    private final FileRepository fileRepository;
     private final MessageUtil messageUtil;
 
     @Transactional
@@ -55,19 +58,19 @@ public class TripService {
                 .collect(Collectors.toList());
     }
 
-    public TripResponse getTrip(Long userId, Long tripId) {
+    public TripDetailResponse getTrip(Long userId, Long tripId) {
         Trip trip = findTripById(tripId);
-
         validateOwner(userId, trip);
 
-        return TripResponse.from(trip);
+        List<File> files = fileRepository.findByTripId(tripId);
+
+        return TripDetailResponse.from(trip, files);
 
     }
 
     @Transactional
     public TripResponse updateTrip(Long userId, Long tripId, TripUpdateRequest request) {
         Trip trip = findTripById(tripId);
-
         validateOwner(userId, trip);
 
         trip.update(
@@ -85,7 +88,6 @@ public class TripService {
     @Transactional
     public void deleteTrip(Long userId, Long tripId) {
         Trip trip = findTripById(tripId);
-
         validateOwner(userId, trip);
 
         tripRepository.delete(trip);
