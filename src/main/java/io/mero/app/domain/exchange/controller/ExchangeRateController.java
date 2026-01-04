@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -57,7 +58,8 @@ public class ExchangeRateController {
     /**
      * 환율 수동 업데이트 (개발/테스트용)
      */
-    @Operation(summary = "환율 조회", description = "개발/테스트용 환율 조회")
+    @Operation(summary = "환율 수동 업데이트", description = "관리자용 환율 수동 업데이트 (ADMIN 권한 필요)")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/update")
     public ResponseEntity<String> updateRatesManually() {
         exchangeRateService.updateDailyRates();

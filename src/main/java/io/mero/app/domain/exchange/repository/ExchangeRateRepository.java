@@ -18,15 +18,6 @@ public interface ExchangeRateRepository extends JpaRepository<ExchangeRate, Long
 
     boolean existsByDate(LocalDate date);
 
-    // 가장 최근 USD 환율 조회 (LIMIT 1)
-    @Query(value = "SELECT er FROM ExchangeRate er " +
-            "WHERE er.fromCurrency = 'USD' " +  // ← USD 고정
-            "AND er.toCurrency = :toCurrency " +
-            "AND er.date <= :date " +
-            "ORDER BY date DESC " +
-            "LIMIT 1",
-            nativeQuery = true)
-    Optional<ExchangeRate> findLatestRateBeforeDate(
-            @Param("toCurrency") Currency toCurrency,  // fromCurrency 파라미터 제거
-            @Param("date") LocalDate date);
+    Optional<ExchangeRate> findFirstByFromCurrencyAndToCurrencyAndDateLessThanEqualOrderByDateDesc(
+            Currency toCurrency, LocalDate date);
 }

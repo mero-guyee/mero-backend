@@ -29,9 +29,11 @@ public class ExchangeRate extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "from_currency", nullable = false, length = 20)
     private Currency fromCurrency;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "to_currency", nullable = false, length = 20)
     private Currency toCurrency;
 

@@ -1,6 +1,7 @@
 package io.mero.app.global.client;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.mero.app.global.util.MessageUtil;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ExchangeRateApiClient {
     private static final String BASE_URL = "https://open.er-api.com/v6/latest/";
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
+    private final MessageUtil messageUtil;
 
     /**
      * 특정 통화 기준 환율 조회
@@ -35,11 +37,11 @@ public class ExchangeRateApiClient {
                 return response;
             } else {
                 log.error("Failed to fetch exchange rates: {}", response);
-                throw new RuntimeException("환율 정보를 가져올 수 없습니다");
+                throw new RuntimeException(messageUtil.getMessage("exchangeRate.rate.fetchFailed"));
             }
         } catch (Exception e) {
             log.error("Error fetching exchange rates", e);
-            throw new RuntimeException("환율 API 호출 실패: " + e.getMessage());
+            throw new RuntimeException(messageUtil.getMessage("exchangeRate.rate.callFailed") + e.getMessage());
         }
     }
 

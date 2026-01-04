@@ -10,6 +10,7 @@ import io.mero.app.global.enums.Currency;
 import io.mero.app.global.util.MessageUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ExchangeRateService {
+    private static final int EXCHANGE_RATE_SCALE = 6;
 
     private final ExchangeRateRepository exchangeRateRepository;
     private final ExchangeRateApiClient exchangeRateApiClient;
@@ -46,13 +48,13 @@ public class ExchangeRateService {
         } else if (toCurrency == Currency.USD) {
             // 다른 통화 → USD: 역산
             BigDecimal usdToFrom = getUsdRate(fromCurrency, date);
-            return BigDecimal.ONE.divide(usdToFrom, 6, RoundingMode.HALF_UP);
+            return BigDecimal.ONE.divide(usdToFrom, EXCHANGE_RATE_SCALE, RoundingMode.HALF_UP);
         } else {
             // 다른 통화 → 다른 통화: USD 경유
             // 예: JPY → KRW = (USD → KRW) / (USD → JPY)
             BigDecimal usdToTarget = getUsdRate(toCurrency, date);
             BigDecimal usdToFrom = getUsdRate(fromCurrency, date);
-            return usdToTarget.divide(usdToFrom, 6, RoundingMode.HALF_UP);
+            return usdToTarget.divide(usdToFrom, EXCHANGE_RATE_SCALE, RoundingMode.HALF_UP);
         }
     }
 
@@ -71,7 +73,7 @@ public class ExchangeRateService {
      */
     private BigDecimal findLatestUsdRate(Currency targetCurrency, LocalDate date) {
         return exchangeRateRepository
-                .findLatestRateBeforeDate(targetCurrency, date)
+                .findFirstByFromCurrencyAndToCurrencyAndDateLessThanEqualOrderByDateDesc(targetCurrency, date)
                 .map(ExchangeRate::getRate)
                 .orElseGet(() -> {
                     log.warn("No USD rate found for {} before {}, fetching from API", targetCurrency, date);
@@ -91,12 +93,16 @@ public class ExchangeRateService {
             if (rate != null) {
                 return rate;
             }
+
+            throw new IllegalStateException(
+                    "환율 데이터에 " + targetCurrency + " 정보가 없습니다");
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Failed to fetch USD rate for {} from API", targetCurrency, e);
+            throw new IllegalStateException(
+                    messageUtil.getMessage("exchangeRate.api.unavailable", targetCurrency), e);
         }
-
-        log.warn("Returning 1.0 as fallback for USD to {}", targetCurrency);
-        return BigDecimal.ONE;
     }
 
     /**
@@ -186,7 +192,6 @@ public class ExchangeRateService {
      * 매일 자정 환율 자동 업데이트 (USD 기준만)
      */
     @Scheduled(cron = "0 0 0 * * *")
-    @Transactional
     public void scheduledDailyUpdate() {
         log.info("Starting scheduled daily exchange rate update...");
         updateDailyRates();
