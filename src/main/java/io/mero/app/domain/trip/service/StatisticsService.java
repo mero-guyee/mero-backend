@@ -1,6 +1,5 @@
 package io.mero.app.domain.trip.service;
 
-import io.mero.app.domain.exchange.service.ExchangeRateService;
 import io.mero.app.domain.expense.entity.Expense;
 import io.mero.app.domain.expense.repository.ExpenseRepository;
 import io.mero.app.domain.trip.dto.TripStatisticsResponse;
@@ -34,7 +33,6 @@ public class StatisticsService {
 
     private final TripRepository tripRepository;
     private final ExpenseRepository expenseRepository;
-    private final ExchangeRateService exchangeRateService;
     private final MessageUtil messageUtil;
 
     /**
@@ -84,14 +82,7 @@ public class StatisticsService {
      */
     private BigDecimal calculateTotalExpense(List<Expense> expenses, Currency baseCurrency) {
         return expenses.stream()
-                .map(expense -> {
-                    BigDecimal rate = exchangeRateService.getRate(
-                            expense.getCurrency(),
-                            baseCurrency,
-                            expense.getDate()
-                    );
-                    return expense.getAmount().multiply(rate);
-                })
+                .map(Expense::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .setScale(2, RoundingMode.HALF_UP);
     }
@@ -125,14 +116,7 @@ public class StatisticsService {
                     List<Expense> categoryExpenses = entry.getValue();
 
                     BigDecimal categoryTotal = categoryExpenses.stream()
-                            .map(expense -> {
-                                BigDecimal rate = exchangeRateService.getRate(
-                                        expense.getCurrency(),
-                                        baseCurrency,
-                                        expense.getDate()
-                                );
-                                return expense.getAmount().multiply(rate);
-                            })
+                            .map(Expense::getAmount)
                             .reduce(BigDecimal.ZERO, BigDecimal::add)
                             .setScale(2, RoundingMode.HALF_UP);
 
@@ -166,14 +150,7 @@ public class StatisticsService {
                     List<Expense> dateExpenses = entry.getValue();
 
                     BigDecimal dailyTotal = dateExpenses.stream()
-                            .map(expense -> {
-                                BigDecimal rate = exchangeRateService.getRate(
-                                        expense.getCurrency(),
-                                        baseCurrency,
-                                        expense.getDate()
-                                );
-                                return expense.getAmount().multiply(rate);
-                            })
+                            .map(Expense::getAmount)
                             .reduce(BigDecimal.ZERO, BigDecimal::add)
                             .setScale(2, RoundingMode.HALF_UP);
 
@@ -205,14 +182,7 @@ public class StatisticsService {
                             .setScale(2, RoundingMode.HALF_UP);
 
                     BigDecimal convertedTotal = currencyExpenses.stream()
-                            .map(expense -> {
-                                BigDecimal rate = exchangeRateService.getRate(
-                                        expense.getCurrency(),
-                                        baseCurrency,
-                                        expense.getDate()
-                                );
-                                return expense.getAmount().multiply(rate);
-                            })
+                            .map(Expense::getAmount)
                             .reduce(BigDecimal.ZERO, BigDecimal::add)
                             .setScale(2, RoundingMode.HALF_UP);
 

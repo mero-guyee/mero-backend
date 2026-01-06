@@ -5,7 +5,6 @@ import io.mero.app.domain.diary.dto.DiaryResponse;
 import io.mero.app.domain.diary.dto.DiaryUpdateRequest;
 import io.mero.app.domain.diary.entity.Diary;
 import io.mero.app.domain.diary.repository.DiaryRepository;
-import io.mero.app.domain.exchange.service.ExchangeRateService;
 import io.mero.app.domain.expense.entity.Expense;
 import io.mero.app.domain.expense.repository.ExpenseRepository;
 import io.mero.app.domain.trip.entity.Trip;
@@ -47,10 +46,6 @@ class DiaryServiceTest {
     @Mock
     private ExpenseRepository expenseRepository;
 
-    @Mock
-    private ExchangeRateService exchangeRateService;
-
-    
     @Mock
     private MessageUtil messageUtil;
     
@@ -267,8 +262,6 @@ class DiaryServiceTest {
 
         given(diaryRepository.findById(diaryId)).willReturn(Optional.of(diary));
         given(expenseRepository.findByDiary(diary)).willReturn(expenses);
-        given(exchangeRateService.getRate(any(), any(), any()))
-                .willReturn(new BigDecimal("1472"));
 
         // when
         DiaryResponse response = diaryService.getDiary(userId, tripId, diaryId);
@@ -280,7 +273,6 @@ class DiaryServiceTest {
         assertThat(response.getExpenses().get(1).getId()).isEqualTo(2L);
 
         verify(expenseRepository).findByDiary(diary);
-        verify(exchangeRateService, times(2)).getRate(any(), any(), any());
     }
     
     @Test

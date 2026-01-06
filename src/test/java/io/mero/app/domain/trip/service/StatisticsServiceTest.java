@@ -1,6 +1,5 @@
 package io.mero.app.domain.trip.service;
 
-import io.mero.app.domain.exchange.service.ExchangeRateService;
 import io.mero.app.domain.expense.entity.Expense;
 import io.mero.app.domain.expense.repository.ExpenseRepository;
 import io.mero.app.domain.trip.dto.TripStatisticsResponse;
@@ -41,9 +40,6 @@ class StatisticsServiceTest {
 
     @Mock
     private ExpenseRepository expenseRepository;
-
-    @Mock
-    private ExchangeRateService exchangeRateService;
 
     @Mock
     private MessageUtil messageUtil;
@@ -112,14 +108,6 @@ class StatisticsServiceTest {
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
         given(expenseRepository.findByTripOrderByDateDesc(trip)).willReturn(expenses);
 
-        // USD → KRW: 1472
-        given(exchangeRateService.getRate(eq(Currency.USD), eq(Currency.KRW), any()))
-                .willReturn(new BigDecimal("1472"));
-
-        // JPY → KRW: 9.49
-        given(exchangeRateService.getRate(eq(Currency.JPY), eq(Currency.KRW), any()))
-                .willReturn(new BigDecimal("9.49"));
-
         // when
         TripStatisticsResponse response = statisticsService.getTripStatistics(userId, tripId);
 
@@ -129,8 +117,8 @@ class StatisticsServiceTest {
         assertThat(response.getCurrency()).isEqualTo(Currency.KRW);
         assertThat(response.getExpenseCount()).isEqualTo(3);
 
-        // 총 지출: (100 + 150) * 1472 + 5000 * 9.49 = 368000 + 47450 = 415450
-        assertThat(response.getTotalExpense()).isEqualByComparingTo(new BigDecimal("415450.00"));
+        // 총 지출: 100 + 150 + 5000 = 5250 (환율 미적용)
+        assertThat(response.getTotalExpense()).isEqualByComparingTo(new BigDecimal("5250.00"));
 
         // 예산 정보
 //        assertThat(response.getBudget()).isEqualByComparingTo(new BigDecimal("2000000"));
@@ -179,8 +167,6 @@ class StatisticsServiceTest {
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
         given(expenseRepository.findByTripOrderByDateDesc(trip)).willReturn(expenses);
-        given(exchangeRateService.getRate(any(), any(), any()))
-                .willReturn(new BigDecimal("1472"));
 
         // when
         TripStatisticsResponse response = statisticsService.getTripStatistics(userId, tripId);
@@ -190,14 +176,14 @@ class StatisticsServiceTest {
 
         assertThat(categories).hasSize(2);
 
-        // 숙박이 가장 많음 (200 * 1472 = 294400)
+        // 숙박이 가장 많음 (200, 환율 미적용)
         assertThat(categories.get(0).getCategory()).isEqualTo("숙박");
-        assertThat(categories.get(0).getAmount()).isEqualByComparingTo(new BigDecimal("294400.00"));
+        assertThat(categories.get(0).getAmount()).isEqualByComparingTo(new BigDecimal("200.00"));
         assertThat(categories.get(0).getCount()).isEqualTo(1);
 
-        // 식비가 두 번째 (150 * 1472 = 220800)
+        // 식비가 두 번째 (150, 환율 미적용)
         assertThat(categories.get(1).getCategory()).isEqualTo("식비");
-        assertThat(categories.get(1).getAmount()).isEqualByComparingTo(new BigDecimal("220800.00"));
+        assertThat(categories.get(1).getAmount()).isEqualByComparingTo(new BigDecimal("150.00"));
         assertThat(categories.get(1).getCount()).isEqualTo(2);
     }
 
@@ -241,12 +227,6 @@ class StatisticsServiceTest {
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
         given(expenseRepository.findByTripOrderByDateDesc(trip)).willReturn(expenses);
 
-        given(exchangeRateService.getRate(eq(Currency.USD), eq(Currency.KRW), any()))
-                .willReturn(new BigDecimal("1472"));
-
-        given(exchangeRateService.getRate(eq(Currency.JPY), eq(Currency.KRW), any()))
-                .willReturn(new BigDecimal("9.49"));
-
         // when
         TripStatisticsResponse response = statisticsService.getTripStatistics(userId, tripId);
 
@@ -255,17 +235,17 @@ class StatisticsServiceTest {
 
         assertThat(currencyExpenses).hasSize(2);
 
-        // USD가 가장 많음 (변환 금액 기준)
-        assertThat(currencyExpenses.get(0).getCurrency()).isEqualTo(Currency.USD);
-        assertThat(currencyExpenses.get(0).getOriginalAmount()).isEqualByComparingTo(new BigDecimal("150.00"));
-        assertThat(currencyExpenses.get(0).getConvertedAmount()).isEqualByComparingTo(new BigDecimal("220800.00"));
-        assertThat(currencyExpenses.get(0).getCount()).isEqualTo(2);
+        // JPY가 가장 많음 (환율 미적용, 원화 금액 기준)
+        assertThat(currencyExpenses.get(0).getCurrency()).isEqualTo(Currency.JPY);
+        assertThat(currencyExpenses.get(0).getOriginalAmount()).isEqualByComparingTo(new BigDecimal("10000.00"));
+        assertThat(currencyExpenses.get(0).getConvertedAmount()).isEqualByComparingTo(new BigDecimal("10000.00"));
+        assertThat(currencyExpenses.get(0).getCount()).isEqualTo(1);
 
-        // JPY가 두 번째
-        assertThat(currencyExpenses.get(1).getCurrency()).isEqualTo(Currency.JPY);
-        assertThat(currencyExpenses.get(1).getOriginalAmount()).isEqualByComparingTo(new BigDecimal("10000.00"));
-        assertThat(currencyExpenses.get(1).getConvertedAmount()).isEqualByComparingTo(new BigDecimal("94900.00"));
-        assertThat(currencyExpenses.get(1).getCount()).isEqualTo(1);
+        // USD가 두 번째
+        assertThat(currencyExpenses.get(1).getCurrency()).isEqualTo(Currency.USD);
+        assertThat(currencyExpenses.get(1).getOriginalAmount()).isEqualByComparingTo(new BigDecimal("150.00"));
+        assertThat(currencyExpenses.get(1).getConvertedAmount()).isEqualByComparingTo(new BigDecimal("150.00"));
+        assertThat(currencyExpenses.get(1).getCount()).isEqualTo(2);
     }
 
     @Test
@@ -333,8 +313,6 @@ class StatisticsServiceTest {
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
         given(expenseRepository.findByTripOrderByDateDesc(trip)).willReturn(expenses);
-        given(exchangeRateService.getRate(any(), any(), any()))
-                .willReturn(new BigDecimal("1472"));
 
         // when
         TripStatisticsResponse response = statisticsService.getTripStatistics(userId, tripId);

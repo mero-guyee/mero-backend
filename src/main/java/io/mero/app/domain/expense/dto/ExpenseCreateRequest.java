@@ -40,9 +40,4 @@ public class ExpenseCreateRequest {
 
     @Size(max = 500, message = "{expense.location.size}")
     private String location;
-
-    @DecimalMin(value = "0.0", inclusive = false, message = "{exchangeRate.rate.positive}")
-    private BigDecimal customExchangeRate;
-
-    private String exchangeRateSource;
 }

@@ -5,7 +5,6 @@ import io.mero.app.domain.diary.dto.DiaryResponse;
 import io.mero.app.domain.diary.dto.DiaryUpdateRequest;
 import io.mero.app.domain.diary.entity.Diary;
 import io.mero.app.domain.diary.repository.DiaryRepository;
-import io.mero.app.domain.exchange.service.ExchangeRateService;
 import io.mero.app.domain.expense.dto.ExpenseResponse;
 import io.mero.app.domain.expense.repository.ExpenseRepository;
 import io.mero.app.domain.trip.entity.Trip;
@@ -28,7 +27,6 @@ public class DiaryService {
     private final DiaryRepository diaryRepository;
     private final TripRepository tripRepository;
     private final ExpenseRepository expenseRepository;
-    private final ExchangeRateService exchangeRateService;
     private final MessageUtil messageUtil;
 
     @Transactional
@@ -69,20 +67,7 @@ public class DiaryService {
 
         List<ExpenseResponse> expenses = expenseRepository.findByDiary(diary)
                 .stream()
-                .map(expense -> {
-                    BigDecimal exchangeRate = exchangeRateService.getRate(
-                            expense.getCurrency(),
-                            expense.getTrip().getDefaultCurrency(),
-                            expense.getDate()
-                    );
-                    return ExpenseResponse.from(
-                            expense,
-                            exchangeRate,
-                            expense.getTrip().getDefaultCurrency(),
-                            false,
-                            null
-                    );
-                })
+                .map(ExpenseResponse::from)
                 .toList();
 
         return DiaryResponse.from(diary, expenses);

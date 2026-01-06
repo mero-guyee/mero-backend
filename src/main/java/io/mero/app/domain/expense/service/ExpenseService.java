@@ -2,7 +2,6 @@ package io.mero.app.domain.expense.service;
 
 import io.mero.app.domain.diary.entity.Diary;
 import io.mero.app.domain.diary.repository.DiaryRepository;
-import io.mero.app.domain.exchange.service.ExchangeRateService;
 import io.mero.app.domain.expense.dto.ExpenseCreateRequest;
 import io.mero.app.domain.expense.dto.ExpenseResponse;
 import io.mero.app.domain.expense.dto.ExpenseUpdateRequest;
@@ -32,7 +31,6 @@ public class ExpenseService {
     private final ExpenseRepository expenseRepository;
     private final TripRepository tripRepository;
     private final DiaryRepository diaryRepository;
-    private final ExchangeRateService exchangeRateService;
     private final MessageUtil messageUtil;
 
     @Transactional
@@ -45,23 +43,6 @@ public class ExpenseService {
         if (request.getDiaryId() != null) {
             diary = findDiaryById(request.getDiaryId());
             validateDiaryBelongsToTrip(diary, trip);
-        }
-
-        // 환율 결정
-        BigDecimal exchangeRate;
-        boolean isCustomRate = false;
-        String rateSource = null;
-
-        if (request.getCustomExchangeRate() != null) {
-            exchangeRate = request.getCustomExchangeRate();
-            isCustomRate = true;
-            rateSource = request.getExchangeRateSource();
-        } else {
-            exchangeRate = exchangeRateService.getRate(
-                    request.getCurrency(),
-                    trip.getDefaultCurrency(),
-                    request.getDate()
-            );
         }
 
         Expense expense = Expense.builder()
@@ -77,13 +58,7 @@ public class ExpenseService {
 
         Expense savedExpense = expenseRepository.save(expense);
 
-        return ExpenseResponse.from(
-                savedExpense,
-                exchangeRate,
-                trip.getDefaultCurrency(),
-                isCustomRate,
-                rateSource
-        );
+        return ExpenseResponse.from(savedExpense);
     }
 
     public List<ExpenseResponse> getExpensesByTrip(Long userId, Long tripId) {
@@ -93,20 +68,7 @@ public class ExpenseService {
         List<Expense> expenses = expenseRepository.findByTripOrderByDateDesc(trip);
 
         return expenses.stream()
-                .map(expense -> {
-                    BigDecimal exchangeRate = exchangeRateService.getRate(
-                            expense.getCurrency(),
-                            trip.getDefaultCurrency(),
-                            expense.getDate()
-                    );
-                    return ExpenseResponse.from(
-                            expense,
-                            exchangeRate,
-                            trip.getDefaultCurrency(),
-                            false,
-                            null
-                    );
-                })
+                .map(ExpenseResponse::from)
                 .collect(Collectors.toList());
     }
 
@@ -114,19 +76,7 @@ public class ExpenseService {
         Expense expense = findExpenseById(expenseId);
         validateOwner(expense.getTrip(), userId);
 
-        BigDecimal exchangeRate = exchangeRateService.getRate(
-                expense.getCurrency(),
-                expense.getTrip().getDefaultCurrency(),
-                expense.getDate()
-        );
-
-        return ExpenseResponse.from(
-                expense,
-                exchangeRate,
-                expense.getTrip().getDefaultCurrency(),
-                false,
-                null
-        );
+        return ExpenseResponse.from(expense);
     }
 
     @Transactional
@@ -143,23 +93,6 @@ public class ExpenseService {
             expense.unlinkFromDiary();
         }
 
-        // 환율 결정
-        BigDecimal exchangeRate;
-        boolean isCustomRate = false;
-        String rateSource = null;
-
-        if (request.getCustomExchangeRate() != null) {
-            exchangeRate = request.getCustomExchangeRate();
-            isCustomRate = true;
-            rateSource = request.getExchangeRateSource();
-        } else {
-            exchangeRate = exchangeRateService.getRate(
-                    request.getCurrency(),
-                    expense.getTrip().getDefaultCurrency(),
-                    request.getDate()
-            );
-        }
-
         expense.update(
                 request.getAmount(),
                 request.getCurrency(),
@@ -169,13 +102,7 @@ public class ExpenseService {
                 request.getLocation()
         );
 
-        return ExpenseResponse.from(
-                expense,
-                exchangeRate,
-                expense.getTrip().getDefaultCurrency(),
-                isCustomRate,
-                rateSource
-        );
+        return ExpenseResponse.from(expense);
     }
 
     @Transactional

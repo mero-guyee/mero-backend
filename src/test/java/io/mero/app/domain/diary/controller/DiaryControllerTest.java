@@ -140,12 +140,10 @@ class DiaryControllerTest {
         List<ExpenseResponse> expenses = List.of(
                 new ExpenseResponse(1L, 1L, 1L, new BigDecimal("100"), Currency.USD,
                         "식비", "스타벅스", LocalDate.now(), null,
-                        new BigDecimal("1472"), new BigDecimal("147200.00"),
-                        Currency.KRW, false, null, LocalDateTime.now()),
+                        LocalDateTime.now()),
                 new ExpenseResponse(2L, 1L, 1L, new BigDecimal("5000"), Currency.JPY,
                         "교통", "택시", LocalDate.now(), "신주쿠",
-                        new BigDecimal("9.49"), new BigDecimal("47450.00"),
-                        Currency.KRW, false, null, LocalDateTime.now())
+                        LocalDateTime.now())
         );
 
         DiaryResponse response = new DiaryResponse(

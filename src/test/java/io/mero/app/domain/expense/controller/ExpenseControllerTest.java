@@ -83,9 +83,7 @@ class ExpenseControllerTest {
                 "식비",
                 "스타벅스",
                 LocalDate.of(2024, 12, 8),
-                "도쿄",
-                null,
-                null
+                "도쿄"
         );
 
         ExpenseResponse response = new ExpenseResponse(
@@ -93,8 +91,7 @@ class ExpenseControllerTest {
                 new BigDecimal("100"), Currency.USD,
                 "식비", "스타벅스",
                 LocalDate.of(2024, 12, 8), "도쿄",
-                new BigDecimal("1472"), new BigDecimal("147200.00"),
-                Currency.KRW, false, null, LocalDateTime.now()
+                LocalDateTime.now()
         );
 
         given(expenseService.createExpense(anyLong(), any(ExpenseCreateRequest.class)))
@@ -123,9 +120,7 @@ class ExpenseControllerTest {
                 "식비",
                 "일기에 기록한 스타벅스",
                 LocalDate.of(2024, 12, 8),
-                "도쿄",
-                null,
-                null
+                "도쿄"
         );
 
         ExpenseResponse response = new ExpenseResponse(
@@ -133,8 +128,7 @@ class ExpenseControllerTest {
                 new BigDecimal("100"), Currency.USD,
                 "식비", "일기에 기록한 스타벅스",
                 LocalDate.of(2024, 12, 8), "도쿄",
-                new BigDecimal("1472"), new BigDecimal("147200.00"),
-                Currency.KRW, false, null, LocalDateTime.now()
+                LocalDateTime.now()
         );
 
         given(expenseService.createExpense(anyLong(), any(ExpenseCreateRequest.class)))
@@ -161,17 +155,14 @@ class ExpenseControllerTest {
                 "식비",
                 "수정된 설명",
                 LocalDate.now(),
-                "도쿄",
-                null,
-                null
+                "도쿄"
         );
 
         ExpenseResponse response = new ExpenseResponse(
                 1L, 1L, 1L,
                 new BigDecimal("150"), Currency.USD,
                 "식비", "수정된 설명", LocalDate.now(), "도쿄",
-                new BigDecimal("1472"), new BigDecimal("220800.00"),
-                Currency.KRW, false, null, LocalDateTime.now()
+                LocalDateTime.now()
         );
 
         given(expenseService.updateExpense(anyLong(), eq(1L), any(ExpenseUpdateRequest.class)))
@@ -198,17 +189,14 @@ class ExpenseControllerTest {
                 "식비",
                 "수정된 설명",
                 LocalDate.now(),
-                "도쿄",
-                null,
-                null
+                "도쿄"
         );
 
         ExpenseResponse response = new ExpenseResponse(
                 1L, 1L, null,  // diaryId null
                 new BigDecimal("150"), Currency.USD,
                 "식비", "수정된 설명", LocalDate.now(), "도쿄",
-                new BigDecimal("1472"), new BigDecimal("220800.00"),
-                Currency.KRW, false, null, LocalDateTime.now()
+                LocalDateTime.now()
         );
 
         given(expenseService.updateExpense(anyLong(), eq(1L), any(ExpenseUpdateRequest.class)))

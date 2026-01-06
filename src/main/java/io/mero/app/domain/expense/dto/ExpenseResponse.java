@@ -22,25 +22,9 @@ public class ExpenseResponse {
     private String description;
     private LocalDate date;
     private String location;
-
-    // 환율 정보
-    private BigDecimal exchangeRate;
-    private BigDecimal convertedAmount;
-    private Currency targetCurrency;
-    private boolean customRate;
-    private String exchangeRateSource;
-
     private LocalDateTime createdAt;
 
-    public static ExpenseResponse from(Expense expense,
-                                       BigDecimal exchangeRate,
-                                       Currency targetCurrency,
-                                       boolean customRate,
-                                       String exchangeRateSource) {
-        BigDecimal convertedAmount = expense.getAmount()
-                .multiply(exchangeRate)
-                .setScale(2, java.math.RoundingMode.HALF_UP);
-
+    public static ExpenseResponse from(Expense expense) {
         return new ExpenseResponse(
                 expense.getId(),
                 expense.getTrip().getId(),
@@ -51,11 +35,6 @@ public class ExpenseResponse {
                 expense.getDescription(),
                 expense.getDate(),
                 expense.getLocation(),
-                exchangeRate,
-                convertedAmount,
-                targetCurrency,
-                customRate,
-                exchangeRateSource,
                 expense.getCreatedAt()
         );
     }

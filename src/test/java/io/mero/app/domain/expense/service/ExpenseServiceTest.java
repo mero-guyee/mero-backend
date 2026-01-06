@@ -7,7 +7,6 @@ import io.mero.app.domain.expense.dto.ExpenseResponse;
 import io.mero.app.domain.expense.dto.ExpenseUpdateRequest;
 import io.mero.app.domain.expense.entity.Expense;
 import io.mero.app.domain.expense.repository.ExpenseRepository;
-import io.mero.app.domain.exchange.service.ExchangeRateService;
 import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.domain.trip.repository.TripRepository;
 import io.mero.app.domain.user.entity.User;
@@ -47,9 +46,6 @@ class ExpenseServiceTest {
     private DiaryRepository diaryRepository;
 
     @Mock
-    private ExchangeRateService exchangeRateService;
-
-    @Mock
     private MessageUtil messageUtil;
 
     @InjectMocks
@@ -58,7 +54,7 @@ class ExpenseServiceTest {
     // ===== 기존 테스트 =====
 
     @Test
-    @DisplayName("지출 생성 성공 - 공식 환율")
+    @DisplayName("지출 생성 성공")
     void createExpense_Success_OfficialRate() {
         // given
         Long userId = 1L;
@@ -70,9 +66,7 @@ class ExpenseServiceTest {
                 "식비",
                 "스타벅스",
                 LocalDate.of(2024, 12, 8),
-                "도쿄",
-                null,
-                null
+                "도쿄"
         );
 
         User user = User.builder()
@@ -104,8 +98,6 @@ class ExpenseServiceTest {
                 .build();
 
         given(tripRepository.findById(1L)).willReturn(Optional.of(trip));
-        given(exchangeRateService.getRate(Currency.USD, Currency.KRW, request.getDate()))
-                .willReturn(new BigDecimal("1472"));
         given(expenseRepository.save(any(Expense.class))).willReturn(expense);
 
         // when
@@ -116,9 +108,6 @@ class ExpenseServiceTest {
         assertThat(response.getAmount()).isEqualTo(new BigDecimal("100"));
         assertThat(response.getCurrency()).isEqualTo(Currency.USD);
         assertThat(response.getDiaryId()).isNull();
-        assertThat(response.getExchangeRate()).isEqualTo(new BigDecimal("1472"));
-        assertThat(response.getConvertedAmount()).isEqualTo(new BigDecimal("147200.00"));
-        assertThat(response.isCustomRate()).isFalse();
     }
 
     @Test
@@ -134,9 +123,7 @@ class ExpenseServiceTest {
                 "식비",
                 "일기에 기록한 스타벅스",
                 LocalDate.of(2024, 12, 8),
-                "도쿄",
-                null,
-                null
+                "도쿄"
         );
 
         User user = User.builder().id(userId).build();
@@ -166,8 +153,6 @@ class ExpenseServiceTest {
 
         given(tripRepository.findById(1L)).willReturn(Optional.of(trip));
         given(diaryRepository.findById(1L)).willReturn(Optional.of(diary));
-        given(exchangeRateService.getRate(any(), any(), any()))
-                .willReturn(new BigDecimal("1472"));
         given(expenseRepository.save(any(Expense.class))).willReturn(expense);
 
         // when
@@ -191,9 +176,7 @@ class ExpenseServiceTest {
                 "식비",
                 "스타벅스",
                 LocalDate.of(2024, 12, 8),
-                "도쿄",
-                null,
-                null
+                "도쿄"
         );
 
         User user = User.builder().id(userId).build();
@@ -223,51 +206,6 @@ class ExpenseServiceTest {
     }
 
     @Test
-    @DisplayName("지출 생성 성공 - 커스텀 환율")
-    void createExpense_Success_CustomRate() {
-        // given
-        Long userId = 1L;
-        ExpenseCreateRequest request = new ExpenseCreateRequest(
-                1L,
-                null,
-                new BigDecimal("100"),
-                Currency.USD,
-                "식비",
-                "현지 레스토랑",
-                LocalDate.of(2024, 12, 8),
-                "방콕",
-                new BigDecimal("1520.5"),
-                "명동 환전소"
-        );
-
-        User user = User.builder().id(userId).build();
-        Trip trip = Trip.builder()
-                .id(1L)
-                .user(user)
-                .defaultCurrency(Currency.KRW)
-                .build();
-
-        Expense expense = Expense.builder()
-                .id(1L)
-                .trip(trip)
-                .amount(request.getAmount())
-                .currency(request.getCurrency())
-                .build();
-
-        given(tripRepository.findById(1L)).willReturn(Optional.of(trip));
-        given(expenseRepository.save(any(Expense.class))).willReturn(expense);
-
-        // when
-        ExpenseResponse response = expenseService.createExpense(userId, request);
-
-        // then
-        assertThat(response.getExchangeRate()).isEqualTo(new BigDecimal("1520.5"));
-        assertThat(response.getConvertedAmount()).isEqualTo(new BigDecimal("152050.00"));
-        assertThat(response.isCustomRate()).isTrue();
-        assertThat(response.getExchangeRateSource()).isEqualTo("명동 환전소");
-    }
-
-    @Test
     @DisplayName("지출 생성 실패 - 권한 없음")
     void createExpense_Fail_NotOwner() {
         // given
@@ -276,7 +214,7 @@ class ExpenseServiceTest {
 
         ExpenseCreateRequest request = new ExpenseCreateRequest(
                 1L, null, new BigDecimal("100"), Currency.USD,
-                null, null, LocalDate.now(), null, null, null
+                null, null, LocalDate.now(), null
         );
 
         User otherUser = User.builder().id(otherUserId).build();
@@ -334,8 +272,6 @@ class ExpenseServiceTest {
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
         given(expenseRepository.findByTripOrderByDateDesc(trip)).willReturn(expenses);
-        given(exchangeRateService.getRate(any(), any(), any()))
-                .willReturn(new BigDecimal("1472"));
 
         // when
         List<ExpenseResponse> responses = expenseService.getExpensesByTrip(userId, tripId);
@@ -373,8 +309,6 @@ class ExpenseServiceTest {
                 .build();
 
         given(expenseRepository.findById(expenseId)).willReturn(Optional.of(expense));
-        given(exchangeRateService.getRate(any(), any(), any()))
-                .willReturn(new BigDecimal("1472"));
 
         // when
         ExpenseResponse response = expenseService.getExpense(userId, expenseId);
@@ -398,9 +332,7 @@ class ExpenseServiceTest {
                 "식비",
                 "수정된 설명",
                 LocalDate.now(),
-                "도쿄",
-                null,
-                null
+                "도쿄"
         );
 
         User user = User.builder().id(userId).build();
@@ -424,8 +356,6 @@ class ExpenseServiceTest {
 
         given(expenseRepository.findById(expenseId)).willReturn(Optional.of(expense));
         given(diaryRepository.findById(1L)).willReturn(Optional.of(diary));
-        given(exchangeRateService.getRate(any(), any(), any()))
-                .willReturn(new BigDecimal("1472"));
 
         // when
         ExpenseResponse response = expenseService.updateExpense(userId, expenseId, request);
@@ -450,9 +380,7 @@ class ExpenseServiceTest {
                 "식비",
                 "수정된 설명",
                 LocalDate.now(),
-                "도쿄",
-                null,
-                null
+                "도쿄"
         );
 
         User user = User.builder().id(userId).build();
@@ -475,8 +403,6 @@ class ExpenseServiceTest {
                 .build();
 
         given(expenseRepository.findById(expenseId)).willReturn(Optional.of(expense));
-        given(exchangeRateService.getRate(any(), any(), any()))
-                .willReturn(new BigDecimal("1472"));
 
         // when
         ExpenseResponse response = expenseService.updateExpense(userId, expenseId, request);
@@ -500,9 +426,7 @@ class ExpenseServiceTest {
                 "식비",
                 "수정된 설명",
                 LocalDate.now(),
-                "도쿄",
-                null,
-                null
+                "도쿄"
         );
 
         User user = User.builder().id(userId).build();
@@ -569,7 +493,7 @@ class ExpenseServiceTest {
         Long userId = 1L;
         ExpenseCreateRequest request = new ExpenseCreateRequest(
                 999L, null, new BigDecimal("100"), Currency.USD,
-                null, null, LocalDate.now(), null, null, null
+                null, null, LocalDate.now(), null
         );
 
         given(tripRepository.findById(999L)).willReturn(Optional.empty());
@@ -589,7 +513,7 @@ class ExpenseServiceTest {
         Long userId = 1L;
         ExpenseCreateRequest request = new ExpenseCreateRequest(
                 1L, 999L, new BigDecimal("100"), Currency.USD,
-                null, null, LocalDate.now(), null, null, null
+                null, null, LocalDate.now(), null
         );
 
         User user = User.builder().id(userId).build();
