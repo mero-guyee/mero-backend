@@ -35,27 +35,11 @@ public class ExchangeRateService {
 
     /**
      * 특정 날짜의 환율 조회
-     * 모든 환율은 USD 기준으로 저장되어 있으므로 USD 경유로 계산
+     * ExchangeRate 기능 비활성화 - 항상 1:1 비율 반환
      */
     public BigDecimal getRate(Currency fromCurrency, Currency toCurrency, LocalDate date) {
-        if (fromCurrency == toCurrency) {
-            return BigDecimal.ONE;
-        }
-
-        if (fromCurrency == Currency.USD) {
-            // USD → 다른 통화: 직접 조회
-            return getUsdRate(toCurrency, date);
-        } else if (toCurrency == Currency.USD) {
-            // 다른 통화 → USD: 역산
-            BigDecimal usdToFrom = getUsdRate(fromCurrency, date);
-            return BigDecimal.ONE.divide(usdToFrom, EXCHANGE_RATE_SCALE, RoundingMode.HALF_UP);
-        } else {
-            // 다른 통화 → 다른 통화: USD 경유
-            // 예: JPY → KRW = (USD → KRW) / (USD → JPY)
-            BigDecimal usdToTarget = getUsdRate(toCurrency, date);
-            BigDecimal usdToFrom = getUsdRate(fromCurrency, date);
-            return usdToTarget.divide(usdToFrom, EXCHANGE_RATE_SCALE, RoundingMode.HALF_UP);
-        }
+        // 환율 기능 비활성화 - 모든 통화를 1:1로 처리
+        return BigDecimal.ONE;
     }
 
     /**
@@ -70,15 +54,11 @@ public class ExchangeRateService {
 
     /**
      * 가장 최근 USD 환율 찾기
+     * ExchangeRate 기능 비활성화 - 사용하지 않음
      */
     private BigDecimal findLatestUsdRate(Currency targetCurrency, LocalDate date) {
-        return exchangeRateRepository
-                .findFirstByFromCurrencyAndToCurrencyAndDateLessThanEqualOrderByDateDesc(targetCurrency, date)
-                .map(ExchangeRate::getRate)
-                .orElseGet(() -> {
-                    log.warn("No USD rate found for {} before {}, fetching from API", targetCurrency, date);
-                    return fetchUsdRateFromApi(targetCurrency);
-                });
+        // 환율 기능 비활성화
+        return BigDecimal.ONE;
     }
 
     /**
@@ -190,11 +170,12 @@ public class ExchangeRateService {
 
     /**
      * 매일 자정 환율 자동 업데이트 (USD 기준만)
+     * ExchangeRate 기능 비활성화 - 스케줄러 비활성화
      */
-    @Scheduled(cron = "0 0 0 * * *")
+    // @Scheduled(cron = "0 0 0 * * *")
     public void scheduledDailyUpdate() {
-        log.info("Starting scheduled daily exchange rate update...");
-        updateDailyRates();
+        log.info("Exchange rate scheduler is disabled");
+        // updateDailyRates();
     }
 
     /**

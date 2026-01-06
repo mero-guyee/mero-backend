@@ -18,6 +18,7 @@ public interface ExchangeRateRepository extends JpaRepository<ExchangeRate, Long
 
     boolean existsByDate(LocalDate date);
 
-    Optional<ExchangeRate> findFirstByFromCurrencyAndToCurrencyAndDateLessThanEqualOrderByDateDesc(
-            Currency toCurrency, LocalDate date);
+    // 문제가 있는 메서드 제거 - ExchangeRate 기능 비활성화
+    // Optional<ExchangeRate> findFirstByFromCurrencyAndToCurrencyAndDateLessThanEqualOrderByDateDesc(
+    //         Currency fromCurrency, Currency toCurrency, LocalDate date);
 }

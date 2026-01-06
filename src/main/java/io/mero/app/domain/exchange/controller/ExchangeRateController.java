@@ -15,9 +15,10 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
-@Tag(name = "Exchange Rate", description = "환율 API")
-@RestController
-@RequestMapping("/api/exchange-rates")
+// ExchangeRate 기능 비활성화 - Controller 비활성화
+// @Tag(name = "Exchange Rate", description = "환율 API")
+// @RestController
+// @RequestMapping("/api/exchange-rates")
 @RequiredArgsConstructor
 public class ExchangeRateController {
 

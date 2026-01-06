@@ -36,7 +36,6 @@ public class SecurityConfig {
                         .requestMatchers(
                                 // Public 엔드포인트
                                 "/api/auth/**",
-                                "/api/exchange-rates/**",
                                 // Swagger 엔드포인트 허용
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
