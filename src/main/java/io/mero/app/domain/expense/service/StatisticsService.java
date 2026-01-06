@@ -1,4 +1,4 @@
-package io.mero.app.domain.trip.service;
+package io.mero.app.domain.expense.service;
 
 import io.mero.app.domain.expense.entity.Expense;
 import io.mero.app.domain.expense.repository.ExpenseRepository;

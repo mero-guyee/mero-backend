@@ -2,10 +2,10 @@ package io.mero.app.domain.trip.service;
 
 import io.mero.app.domain.expense.entity.Expense;
 import io.mero.app.domain.expense.repository.ExpenseRepository;
+import io.mero.app.domain.expense.service.StatisticsService;
 import io.mero.app.domain.trip.dto.TripStatisticsResponse;
 import io.mero.app.domain.trip.dto.TripStatisticsResponse.CategoryExpense;
 import io.mero.app.domain.trip.dto.TripStatisticsResponse.CurrencyExpense;
-import io.mero.app.domain.trip.dto.TripStatisticsResponse.DailyExpense;
 import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.domain.trip.repository.TripRepository;
 import io.mero.app.domain.user.entity.User;
