@@ -1,6 +1,7 @@
 package io.mero.app.domain.expense.controller;
 
 import io.mero.app.domain.expense.dto.ExpenseCreateRequest;
+import io.mero.app.domain.expense.dto.ExpenseListResponse;
 import io.mero.app.domain.expense.dto.ExpenseResponse;
 import io.mero.app.domain.expense.dto.ExpenseUpdateRequest;
 import io.mero.app.domain.expense.service.ExpenseService;
@@ -14,11 +15,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @Tag(name = "Expense", description = "경비 API")
 @SecurityRequirement(name = "Bearer Authentication")
 @RestController
-@RequestMapping("/api/expenses")
+@RequestMapping("/api/trips/{tripId}/expenses")
 @RequiredArgsConstructor
 public class ExpenseController {
 
@@ -33,11 +36,13 @@ public class ExpenseController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @Operation(summary = "경비 상세 조회", description = "특정 경비의 상세 정보를 조회합니다")
-    @GetMapping("/{expenseId}")
-    public ResponseEntity<ExpenseResponse> getExpense(@PathVariable Long expenseId) {
+    @Operation(summary = "경비 목록 조회", description = "여행의 경비 목록과 화폐별 사용량을 조회합니다")
+    @GetMapping
+    public ResponseEntity<ExpenseListResponse> getExpenses(
+        @PathVariable Long tripId
+    ) {
         Long userId = SecurityUtil.getCurrentUserId();
-        ExpenseResponse response = expenseService.getExpense(userId, expenseId);
+        ExpenseListResponse response = expenseService.getExpensesByTrip(userId, tripId);
         return ResponseEntity.ok(response);
     }
 
