@@ -1,7 +1,9 @@
 package io.mero.app.domain.expense.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.mero.app.domain.expense.dto.CurrencyUsageDto;
 import io.mero.app.domain.expense.dto.ExpenseCreateRequest;
+import io.mero.app.domain.expense.dto.ExpenseListResponse;
 import io.mero.app.domain.expense.dto.ExpenseResponse;
 import io.mero.app.domain.expense.dto.ExpenseUpdateRequest;
 import io.mero.app.domain.expense.service.ExpenseService;
@@ -26,6 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
@@ -98,7 +101,7 @@ class ExpenseControllerTest {
                 .willReturn(response);
 
         // when & then
-        mockMvc.perform(post("/api/expenses")
+        mockMvc.perform(post("/api/trips/1/expenses")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -135,7 +138,7 @@ class ExpenseControllerTest {
                 .willReturn(response);
 
         // when & then
-        mockMvc.perform(post("/api/expenses")
+        mockMvc.perform(post("/api/trips/1/expenses")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -169,7 +172,7 @@ class ExpenseControllerTest {
                 .willReturn(response);
 
         // when & then
-        mockMvc.perform(put("/api/expenses/1")
+        mockMvc.perform(put("/api/trips/1/expenses/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -203,7 +206,7 @@ class ExpenseControllerTest {
                 .willReturn(response);
 
         // when & then
-        mockMvc.perform(put("/api/expenses/1")
+        mockMvc.perform(put("/api/trips/1/expenses/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -216,9 +219,61 @@ class ExpenseControllerTest {
     @DisplayName("지출 삭제 API 성공")
     void deleteExpense_Success() throws Exception {
         // when & then
-        mockMvc.perform(delete("/api/expenses/1"))
+        mockMvc.perform(delete("/api/trips/1/expenses/1"))
                 .andDo(print())
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("지출 목록 조회 API 성공")
+    void getExpenses_Success() throws Exception {
+        // given
+        List<ExpenseResponse> expenses = List.of(
+                new ExpenseResponse(
+                        1L, 1L, null,
+                        new BigDecimal("50"), Currency.USD,
+                        "식비", "스타벅스",
+                        LocalDate.of(2024, 12, 8), "도쿄",
+                        LocalDateTime.now()
+                ),
+                new ExpenseResponse(
+                        2L, 1L, null,
+                        new BigDecimal("100000"), Currency.KRW,
+                        "쇼핑", "면세점",
+                        LocalDate.of(2024, 12, 7), "인천",
+                        LocalDateTime.now()
+                )
+        );
+
+        List<CurrencyUsageDto> currencyUsages = List.of(
+                CurrencyUsageDto.of(Currency.USD, new BigDecimal("80"), new BigDecimal("200")),
+                CurrencyUsageDto.of(Currency.KRW, new BigDecimal("100000"), new BigDecimal("500000"))
+        );
+
+        ExpenseListResponse response = new ExpenseListResponse(expenses, currencyUsages);
+
+        given(expenseService.getExpensesByTrip(anyLong(), eq(1L)))
+                .willReturn(response);
+
+        // when & then
+        mockMvc.perform(get("/api/trips/1/expenses"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.expenses").isArray())
+                .andExpect(jsonPath("$.expenses.length()").value(2))
+                .andExpect(jsonPath("$.expenses[0].id").value(1L))
+                .andExpect(jsonPath("$.expenses[0].amount").value(50))
+                .andExpect(jsonPath("$.expenses[0].currency").value("USD"))
+                .andExpect(jsonPath("$.currencyUsages").isArray())
+                .andExpect(jsonPath("$.currencyUsages.length()").value(2))
+                .andExpect(jsonPath("$.currencyUsages[0].currency").value("USD"))
+                .andExpect(jsonPath("$.currencyUsages[0].totalSpent").value(80))
+                .andExpect(jsonPath("$.currencyUsages[0].budget").value(200))
+                .andExpect(jsonPath("$.currencyUsages[0].usagePercent").value(40.00))
+                .andExpect(jsonPath("$.currencyUsages[1].currency").value("KRW"))
+                .andExpect(jsonPath("$.currencyUsages[1].totalSpent").value(100000))
+                .andExpect(jsonPath("$.currencyUsages[1].budget").value(500000))
+                .andExpect(jsonPath("$.currencyUsages[1].usagePercent").value(20.00));
     }
 
 }

@@ -1,14 +1,19 @@
 package io.mero.app.domain.expense.service;
 
+import io.mero.app.domain.budget.entity.Budget;
+import io.mero.app.domain.budget.repository.BudgetRepository;
 import io.mero.app.domain.diary.entity.Diary;
 import io.mero.app.domain.diary.repository.DiaryRepository;
+import io.mero.app.domain.expense.dto.CurrencyUsageDto;
 import io.mero.app.domain.expense.dto.ExpenseCreateRequest;
+import io.mero.app.domain.expense.dto.ExpenseListResponse;
 import io.mero.app.domain.expense.dto.ExpenseResponse;
 import io.mero.app.domain.expense.dto.ExpenseUpdateRequest;
 import io.mero.app.domain.expense.entity.Expense;
 import io.mero.app.domain.expense.repository.ExpenseRepository;
 import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.domain.trip.repository.TripRepository;
+import io.mero.app.global.enums.Currency;
 import io.mero.app.global.exception.BadRequestException;
 import io.mero.app.global.exception.ForbiddenException;
 import io.mero.app.global.exception.NotFoundException;
@@ -20,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -31,6 +37,7 @@ public class ExpenseService {
     private final ExpenseRepository expenseRepository;
     private final TripRepository tripRepository;
     private final DiaryRepository diaryRepository;
+    private final BudgetRepository budgetRepository;
     private final MessageUtil messageUtil;
 
     @Transactional
@@ -38,7 +45,6 @@ public class ExpenseService {
         Trip trip = findTripById(request.getTripId());
         validateOwner(trip, userId);
 
-        // Diary 연결 (선택)
         Diary diary = null;
         if (request.getDiaryId() != null) {
             diary = findDiaryById(request.getDiaryId());
@@ -47,7 +53,7 @@ public class ExpenseService {
 
         Expense expense = Expense.builder()
                 .trip(trip)
-                .diary(diary)  // ← 추가
+                .diary(diary)
                 .amount(request.getAmount())
                 .currency(request.getCurrency())
                 .category(request.getCategory())
@@ -61,14 +67,39 @@ public class ExpenseService {
         return ExpenseResponse.from(savedExpense);
     }
 
-    public List<ExpenseResponse> getExpensesByTrip(Long userId, Long tripId) {
+    public ExpenseListResponse getExpensesByTrip(Long userId, Long tripId) {
         Trip trip = findTripById(tripId);
         validateOwner(trip, userId);
 
         List<Expense> expenses = expenseRepository.findByTripOrderByDateDesc(trip);
-
-        return expenses.stream()
+        List<ExpenseResponse> expenseResponses = expenses.stream()
                 .map(ExpenseResponse::from)
+                .collect(Collectors.toList());
+
+        List<CurrencyUsageDto> currencyUsages = calculateCurrencyUsages(trip, expenses);
+
+        return new ExpenseListResponse(expenseResponses, currencyUsages);
+    }
+
+    private List<CurrencyUsageDto> calculateCurrencyUsages(Trip trip, List<Expense> expenses) {
+        List<Budget> budgets = budgetRepository.findByTripOrderByCreatedAtDesc(trip);
+
+        Map<Currency, BigDecimal> expensesByCurrency = expenses.stream()
+                .collect(Collectors.groupingBy(
+                        Expense::getCurrency,
+                        Collectors.reducing(
+                                BigDecimal.ZERO,
+                                Expense::getAmount,
+                                BigDecimal::add
+                        )
+                ));
+
+        return budgets.stream()
+                .map(budget -> {
+                    Currency currency = budget.getCurrency();
+                    BigDecimal totalSpent = expensesByCurrency.getOrDefault(currency, BigDecimal.ZERO);
+                    return CurrencyUsageDto.of(currency, totalSpent, budget.getAmount());
+                })
                 .collect(Collectors.toList());
     }
 

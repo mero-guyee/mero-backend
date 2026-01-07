@@ -1,8 +1,11 @@
 package io.mero.app.domain.expense.service;
 
+import io.mero.app.domain.budget.entity.Budget;
+import io.mero.app.domain.budget.repository.BudgetRepository;
 import io.mero.app.domain.diary.entity.Diary;
 import io.mero.app.domain.diary.repository.DiaryRepository;
 import io.mero.app.domain.expense.dto.ExpenseCreateRequest;
+import io.mero.app.domain.expense.dto.ExpenseListResponse;
 import io.mero.app.domain.expense.dto.ExpenseResponse;
 import io.mero.app.domain.expense.dto.ExpenseUpdateRequest;
 import io.mero.app.domain.expense.entity.Expense;
@@ -44,6 +47,9 @@ class ExpenseServiceTest {
 
     @Mock
     private DiaryRepository diaryRepository;
+
+    @Mock
+    private BudgetRepository budgetRepository;
 
     @Mock
     private MessageUtil messageUtil;
@@ -270,16 +276,97 @@ class ExpenseServiceTest {
                         .build()
         );
 
+        List<Budget> budgets = List.of();
+
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
         given(expenseRepository.findByTripOrderByDateDesc(trip)).willReturn(expenses);
+        given(budgetRepository.findByTripOrderByCreatedAtDesc(trip)).willReturn(budgets);
 
         // when
-        List<ExpenseResponse> responses = expenseService.getExpensesByTrip(userId, tripId);
+        ExpenseListResponse response = expenseService.getExpensesByTrip(userId, tripId);
 
         // then
-        assertThat(responses).hasSize(2);
-        assertThat(responses.get(0).getDiaryId()).isEqualTo(1L);
-        assertThat(responses.get(1).getDiaryId()).isNull();
+        assertThat(response.getExpenses()).hasSize(2);
+        assertThat(response.getExpenses().get(0).getDiaryId()).isEqualTo(1L);
+        assertThat(response.getExpenses().get(1).getDiaryId()).isNull();
+        assertThat(response.getCurrencyUsages()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("여행의 지출 목록 조회 성공 - 화폐별 사용량 포함")
+    void getExpensesByTrip_Success_WithCurrencyUsages() {
+        // given
+        Long userId = 1L;
+        Long tripId = 1L;
+
+        User user = User.builder().id(userId).build();
+        Trip trip = Trip.builder()
+                .id(tripId)
+                .user(user)
+                .defaultCurrency(Currency.KRW)
+                .build();
+
+        List<Expense> expenses = List.of(
+                Expense.builder()
+                        .id(1L)
+                        .trip(trip)
+                        .amount(new BigDecimal("50"))
+                        .currency(Currency.USD)
+                        .date(LocalDate.now())
+                        .build(),
+                Expense.builder()
+                        .id(2L)
+                        .trip(trip)
+                        .amount(new BigDecimal("30"))
+                        .currency(Currency.USD)
+                        .date(LocalDate.now())
+                        .build(),
+                Expense.builder()
+                        .id(3L)
+                        .trip(trip)
+                        .amount(new BigDecimal("100000"))
+                        .currency(Currency.KRW)
+                        .date(LocalDate.now())
+                        .build()
+        );
+
+        List<Budget> budgets = List.of(
+                Budget.builder()
+                        .id(1L)
+                        .trip(trip)
+                        .amount(new BigDecimal("200"))
+                        .currency(Currency.USD)
+                        .build(),
+                Budget.builder()
+                        .id(2L)
+                        .trip(trip)
+                        .amount(new BigDecimal("500000"))
+                        .currency(Currency.KRW)
+                        .build()
+        );
+
+        given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
+        given(expenseRepository.findByTripOrderByDateDesc(trip)).willReturn(expenses);
+        given(budgetRepository.findByTripOrderByCreatedAtDesc(trip)).willReturn(budgets);
+
+        // when
+        ExpenseListResponse response = expenseService.getExpensesByTrip(userId, tripId);
+
+        // then
+        assertThat(response.getExpenses()).hasSize(3);
+        assertThat(response.getCurrencyUsages()).hasSize(2);
+
+        // USD: 50 + 30 = 80, budget = 200, usage = 40%
+        assertThat(response.getCurrencyUsages().get(0).getCurrency()).isEqualTo(Currency.USD);
+        assertThat(response.getCurrencyUsages().get(0).getTotalSpent()).isEqualByComparingTo(new BigDecimal("80"));
+        assertThat(response.getCurrencyUsages().get(0).getBudget()).isEqualByComparingTo(new BigDecimal("200"));
+        assertThat(response.getCurrencyUsages().get(0).getUsagePercent()).isEqualByComparingTo(new BigDecimal("40.00"));
+
+        // KRW: 100000, budget = 500000, usage = 20%
+        assertThat(response.getCurrencyUsages().get(1).getCurrency()).isEqualTo(Currency.KRW);
+        assertThat(response.getCurrencyUsages().get(1).getTotalSpent()).isEqualByComparingTo(new BigDecimal("100000"));
+        assertThat(response.getCurrencyUsages().get(1).getBudget()).isEqualByComparingTo(new BigDecimal("500000"));
+        assertThat(response.getCurrencyUsages().get(1).getUsagePercent()).isEqualByComparingTo(new BigDecimal("20.00"));
     }
 
     @Test
