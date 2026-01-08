@@ -4,7 +4,10 @@ import io.mero.app.domain.diary.dto.DiaryCreateRequest;
 import io.mero.app.domain.diary.dto.DiaryResponse;
 import io.mero.app.domain.diary.dto.DiaryUpdateRequest;
 import io.mero.app.domain.diary.entity.Diary;
+import io.mero.app.domain.diary.entity.Photo;
 import io.mero.app.domain.diary.repository.DiaryRepository;
+import io.mero.app.domain.diary.repository.PhotoRepository;
+import io.mero.app.domain.diary.util.PhotoMapper;
 import io.mero.app.domain.expense.dto.ExpenseResponse;
 import io.mero.app.domain.expense.repository.ExpenseRepository;
 import io.mero.app.domain.trip.entity.Trip;
@@ -25,6 +28,7 @@ import java.util.List;
 public class DiaryService {
 
     private final DiaryRepository diaryRepository;
+    private final PhotoRepository photoRepository;
     private final TripRepository tripRepository;
     private final ExpenseRepository expenseRepository;
     private final MessageUtil messageUtil;
@@ -44,6 +48,9 @@ public class DiaryService {
                 .build();
 
         Diary savedDiary = diaryRepository.save(diary);
+
+        List<Photo> photos = PhotoMapper.fromUrls(request.getPhotoUrls(), savedDiary);
+        savedDiary.updatePhotos(photos);
 
         return DiaryResponse.from(savedDiary);
     }
@@ -85,9 +92,11 @@ public class DiaryService {
                 request.getTitle(),
                 request.getContent(),
                 request.getDate(),
-                request.getLocation(),
-                request.getPhotoUrls()
+                request.getLocation()
         );
+
+        List<Photo> newPhotos = PhotoMapper.fromUrls(request.getPhotoUrls(), diary);
+        diary.updatePhotos(newPhotos);
 
         return DiaryResponse.from(diary);
     }

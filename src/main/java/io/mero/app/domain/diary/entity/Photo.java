@@ -47,8 +47,12 @@ public class Photo extends BaseEntity {
         this.fileName = fileName;
         this.mimeType = mimeType;
         this.orderIndex = orderIndex;
-        this.uploadStatus = UploadStatus.PENDING;
+        this.uploadStatus = UploadStatus.COMPLETED;
         this.isSynced = false;
+    }
+
+    public void setDiary(Diary diary) {
+        this.diary = diary;
     }
 
     public void startUpload() {

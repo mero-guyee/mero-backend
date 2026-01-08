@@ -14,7 +14,9 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @Getter
@@ -44,10 +46,9 @@ public class Diary extends BaseEntity {
     @Column(name = "weather_info", length = 100)
     private String weatherInfo;
 
-    @ElementCollection
-    @CollectionTable(name = "diary_photos", joinColumns = @JoinColumn(name = "diary_id"))
-    @Column(name = "photo_url", length = 500)
-    private List<String> photoUrls = new ArrayList<>();
+    @OneToMany(mappedBy = "diary", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("orderIndex ASC")
+    private List<Photo> photos = new ArrayList<>();
 
 
     @Column(name = "is_synced", nullable = false)
@@ -74,16 +75,34 @@ public class Diary extends BaseEntity {
         this.weatherInfo = weatherInfo;
         this.isSynced = false;
         this.lastModifiedAt = LocalDateTime.now();
-        this.photoUrls = photoUrls != null ? photoUrls : new ArrayList<>();
+        this.photos = new ArrayList<>();
     }
 
     public void update(String title, String content, LocalDate date,
-                       Location location, List<String> photoUrls) {
+                       Location location) {
         this.title = title;
         this.content = content;
         this.date = date;
         this.location = location;
-        this.photoUrls = photoUrls != null ? photoUrls : new ArrayList<>();
+    }
+
+    // === 사진 관리 ===
+    public void updatePhotos(List<Photo> newPhotos) {
+        this.photos.clear();
+
+        if (newPhotos != null && !newPhotos.isEmpty()) {
+            for (Photo photo : newPhotos) {
+                photo.setDiary(this);
+                this.photos.add(photo);
+            }
+        }
+    }
+
+    public List<String> getPhotoUrls() {
+        return photos.stream()
+                .sorted(Comparator.comparing(Photo::getOrderIndex))
+                .map(Photo::getImageUrl)
+                .collect(Collectors.toList());
     }
 
     // === 동기화 관리 ===

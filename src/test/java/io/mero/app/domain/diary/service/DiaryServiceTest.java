@@ -4,7 +4,11 @@ import io.mero.app.domain.diary.dto.DiaryCreateRequest;
 import io.mero.app.domain.diary.dto.DiaryResponse;
 import io.mero.app.domain.diary.dto.DiaryUpdateRequest;
 import io.mero.app.domain.diary.entity.Diary;
+import io.mero.app.domain.diary.entity.Photo;
+import io.mero.app.domain.diary.entity.UploadStatus;
 import io.mero.app.domain.diary.repository.DiaryRepository;
+import io.mero.app.domain.diary.repository.PhotoRepository;
+import io.mero.app.domain.diary.util.PhotoMapper;
 import io.mero.app.domain.expense.entity.Expense;
 import io.mero.app.domain.expense.repository.ExpenseRepository;
 import io.mero.app.domain.trip.entity.Trip;
@@ -39,6 +43,9 @@ class DiaryServiceTest {
     
     @Mock
     private DiaryRepository diaryRepository;
+
+    @Mock
+    private PhotoRepository photoRepository;
 
     @Mock
     private TripRepository tripRepository;
@@ -351,6 +358,137 @@ class DiaryServiceTest {
 
         // then
         verify(diaryRepository).delete(diary);
+    }
+
+    @Test
+    @DisplayName("일기 생성 시 Photo 엔티티 생성 확인")
+    void 일기_생성_시_Photo_엔티티_생성_확인() {
+        // given
+        Long userId = 1L;
+        Long tripId = 1L;
+        DiaryCreateRequest request = new DiaryCreateRequest(
+                "12월 25일",
+                "오늘은 크리스마스",
+                LocalDate.of(2025, 12, 25),
+                new Location(new BigDecimal("37.5665"), new BigDecimal("126.9780"), "서울특별시"),
+                List.of("https://example.com/photo1.jpg", "https://example.com/photo2.png")
+        );
+
+        User user = User.builder()
+                .id(userId)
+                .email("test@example.com")
+                .passwordHash("password")
+                .nickname("테스트")
+                .defaultCurrency(Currency.KRW)
+                .timezone(Timezone.ASIA_SEOUL)
+                .build();
+
+        Trip trip = Trip.builder()
+                .id(tripId)
+                .user(user)
+                .title("서울 여행")
+                .build();
+
+        given(tripRepository.findById(1L)).willReturn(Optional.of(trip));
+        given(diaryRepository.save(any(Diary.class))).willAnswer(invocation -> {
+            Diary savedDiary = invocation.getArgument(0);
+            // Set ID for saved diary
+            return Diary.builder()
+                    .id(1L)
+                    .trip(savedDiary.getTrip())
+                    .title(savedDiary.getTitle())
+                    .content(savedDiary.getContent())
+                    .date(savedDiary.getDate())
+                    .location(savedDiary.getLocation())
+                    .photoUrls(null)
+                    .build();
+        });
+
+        // when
+        DiaryResponse response = diaryService.createDiary(userId, tripId, request);
+
+        // then
+        assertThat(response.getPhotoUrls()).hasSize(2);
+        assertThat(response.getPhotoUrls().get(0)).isEqualTo("https://example.com/photo1.jpg");
+        assertThat(response.getPhotoUrls().get(1)).isEqualTo("https://example.com/photo2.png");
+    }
+
+    @Test
+    @DisplayName("일기 수정 시 Photo 목록 업데이트 확인")
+    void 일기_수정_시_Photo_목록_업데이트_확인() {
+        // given
+        Long userId = 1L;
+        Long tripId  = 1L;
+        Long diaryId  = 1L;
+        User user = User.builder().id(userId).build();
+        Trip trip = Trip.builder().id(tripId).user(user).build();
+
+        Diary diary = Diary.builder()
+                .id(diaryId)
+                .trip(trip)
+                .content("첫째 날 일기")
+                .photoUrls(null)
+                .build();
+
+        // Initial photos
+        List<Photo> initialPhotos = PhotoMapper.fromUrls(List.of("url1", "url2"), diary);
+        diary.updatePhotos(initialPhotos);
+
+        DiaryUpdateRequest request = new DiaryUpdateRequest(
+                "title",
+                "첫째 날 일기 (수정)",
+                LocalDate.of(2025, 12, 26),
+                new Location(new BigDecimal("37.5665"), new BigDecimal("126.9780"), "서울특별시"),
+                List.of("url3", "url4", "url5") // 3 new photos
+        );
+
+        given(diaryRepository.findById(diaryId)).willReturn(Optional.of(diary));
+
+        // when
+        DiaryResponse response = diaryService.updateDiary(userId, tripId, diaryId, request);
+
+        // then
+        assertThat(diary.getPhotos()).hasSize(3); // Updated to 3 photos
+        assertThat(response.getPhotoUrls()).containsExactly("url3", "url4", "url5");
+    }
+
+    @Test
+    @DisplayName("일기 수정 시 빈 Photo 목록 처리")
+    void 일기_수정_시_빈_Photo_목록_처리() {
+        // given
+        Long userId = 1L;
+        Long tripId  = 1L;
+        Long diaryId  = 1L;
+        User user = User.builder().id(userId).build();
+        Trip trip = Trip.builder().id(tripId).user(user).build();
+
+        Diary diary = Diary.builder()
+                .id(diaryId)
+                .trip(trip)
+                .content("첫째 날 일기")
+                .photoUrls(null)
+                .build();
+
+        // Initial photos
+        List<Photo> initialPhotos = PhotoMapper.fromUrls(List.of("url1", "url2"), diary);
+        diary.updatePhotos(initialPhotos);
+
+        DiaryUpdateRequest request = new DiaryUpdateRequest(
+                "title",
+                "사진 없는 일기",
+                LocalDate.of(2025, 12, 26),
+                new Location(new BigDecimal("37.5665"), new BigDecimal("126.9780"), "서울특별시"),
+                null // No photos
+        );
+
+        given(diaryRepository.findById(diaryId)).willReturn(Optional.of(diary));
+
+        // when
+        DiaryResponse response = diaryService.updateDiary(userId, tripId, diaryId, request);
+
+        // then
+        assertThat(diary.getPhotos()).isEmpty(); // All photos removed
+        assertThat(response.getPhotoUrls()).isEmpty();
     }
 
 }
