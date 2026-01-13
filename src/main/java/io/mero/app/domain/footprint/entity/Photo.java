@@ -17,7 +17,7 @@ public class Photo extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "diary_id", nullable = false)
+    @JoinColumn(name = "footprint_id", nullable = false)
     private Footprint footprint;
 
     @Column(name = "image_url", nullable = false, length = 500)

@@ -29,7 +29,7 @@ public class Expense extends BaseEntity {
     private Trip trip;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "diary_id")  // ← Keep column name for DB compatibility
+    @JoinColumn(name = "footprint_id")
     private Footprint footprint;
 
     @Column(nullable = false, precision = 15, scale = 2)

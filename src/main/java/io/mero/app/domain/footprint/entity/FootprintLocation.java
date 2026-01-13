@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 @Entity
+@Table(name = "footprint_location")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class FootprintLocation extends BaseEntity {
@@ -19,7 +20,7 @@ public class FootprintLocation extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "diary_id", nullable = false)
+    @JoinColumn(name = "footprint_id", nullable = false)
     private Footprint footprint;
 
     @Column(name = "place_name", nullable = false)
