@@ -38,20 +38,20 @@ public class FootprintLocation extends BaseEntity {
     @Column(precision = 10, scale = 7)
     private BigDecimal longitude;
 
-    @Column(name = "order")
-    private Integer order;
+    @Column(name = "sort_order ")
+    private Integer sortOrder ;
 
     @Builder
     public FootprintLocation(Footprint footprint, String placeName, String country,
                              String city, BigDecimal latitude, BigDecimal longitude,
-                             Integer order) {
+                             Integer sortOrder) {
         this.footprint = footprint;
         this.placeName = placeName;
         this.country = country;
         this.city = city;
         this.latitude = latitude;
         this.longitude = longitude;
-        this.order = order;
+        this.sortOrder = sortOrder;
     }
 
     public void setFootprint(Footprint footprint) {

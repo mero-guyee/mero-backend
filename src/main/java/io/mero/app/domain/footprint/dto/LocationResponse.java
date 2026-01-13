@@ -36,7 +36,7 @@ public class LocationResponse {
             return List.of();
         }
         return locations.stream()
-                .sorted(Comparator.comparing(FootprintLocation::getOrder))
+                .sorted(Comparator.comparing(FootprintLocation::getSortOrder))
                 .map(LocationResponse::from)
                 .toList();
     }

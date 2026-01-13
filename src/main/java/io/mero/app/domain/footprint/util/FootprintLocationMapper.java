@@ -25,7 +25,7 @@ public class FootprintLocationMapper {
                     .city(request.getCity())
                     .latitude(request.getLatitude())
                     .longitude(request.getLongitude())
-                    .order(i)
+                    .sortOrder(i)
                     .build();
             locations.add(location);
         }
