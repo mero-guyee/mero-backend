@@ -2,8 +2,8 @@ package io.mero.app.domain.expense.service;
 
 import io.mero.app.domain.budget.entity.Budget;
 import io.mero.app.domain.budget.repository.BudgetRepository;
-import io.mero.app.domain.diary.entity.Diary;
-import io.mero.app.domain.diary.repository.DiaryRepository;
+import io.mero.app.domain.footprint.entity.Footprint;
+import io.mero.app.domain.footprint.repository.FootprintRepository;
 import io.mero.app.domain.expense.dto.CurrencyUsageDto;
 import io.mero.app.domain.expense.dto.ExpenseCreateRequest;
 import io.mero.app.domain.expense.dto.ExpenseListResponse;
@@ -36,7 +36,7 @@ public class ExpenseService {
 
     private final ExpenseRepository expenseRepository;
     private final TripRepository tripRepository;
-    private final DiaryRepository diaryRepository;
+    private final FootprintRepository footprintRepository;
     private final BudgetRepository budgetRepository;
     private final MessageUtil messageUtil;
 
@@ -45,15 +45,15 @@ public class ExpenseService {
         Trip trip = findTripById(request.getTripId());
         validateOwner(trip, userId);
 
-        Diary diary = null;
-        if (request.getDiaryId() != null) {
-            diary = findDiaryById(request.getDiaryId());
-            validateDiaryBelongsToTrip(diary, trip);
+        Footprint footprint = null;
+        if (request.getFootprintId() != null) {
+            footprint = findFootprintById(request.getFootprintId());
+            validateFootprintBelongsToTrip(footprint, trip);
         }
 
         Expense expense = Expense.builder()
                 .trip(trip)
-                .diary(diary)
+                .footprint(footprint)
                 .amount(request.getAmount())
                 .currency(request.getCurrency())
                 .category(request.getCategory())
@@ -116,12 +116,12 @@ public class ExpenseService {
         validateOwner(expense.getTrip(), userId);
 
         // Diary 연결/해제
-        if (request.getDiaryId() != null) {
-            Diary diary = findDiaryById(request.getDiaryId());
-            validateDiaryBelongsToTrip(diary, expense.getTrip());
-            expense.linkToDiary(diary);
+        if (request.getFootprintId() != null) {
+            Footprint footprint = findFootprintById(request.getFootprintId());
+            validateFootprintBelongsToTrip(footprint, expense.getTrip());
+            expense.linkToFootprint(footprint);
         } else {
-            expense.unlinkFromDiary();
+            expense.unlinkFromFootprint();
         }
 
         expense.update(
@@ -156,10 +156,10 @@ public class ExpenseService {
                         messageUtil.getMessage("error.expense.notFound")));
     }
 
-    private Diary findDiaryById(Long diaryId) {
-        return diaryRepository.findById(diaryId)
+    private Footprint findFootprintById(Long footprintId) {
+        return footprintRepository.findById(footprintId)
                 .orElseThrow(() -> new NotFoundException(
-                        messageUtil.getMessage("error.diary.notFound")));
+                        messageUtil.getMessage("error.footprint.notFound")));
     }
 
     private void validateOwner(Trip trip, Long userId) {
@@ -169,10 +169,10 @@ public class ExpenseService {
         }
     }
 
-    private void validateDiaryBelongsToTrip(Diary diary, Trip trip) {
-        if (!diary.getTrip().equals(trip)) {
+    private void validateFootprintBelongsToTrip(Footprint footprint, Trip trip) {
+        if (!footprint.getTrip().equals(trip)) {
             throw new BadRequestException(
-                    messageUtil.getMessage("error.diary.tripMismatch"));
+                    messageUtil.getMessage("error.footprint.tripMismatch"));
         }
     }
 }

@@ -1,6 +1,6 @@
-package io.mero.app.domain.diary.dto;
+package io.mero.app.domain.footprint.dto;
 
-import io.mero.app.global.embedded.Location;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -13,18 +13,20 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class DiaryUpdateRequest {
+public class FootprintCreateRequest {
 
-    @Size(max = 200, message = "{diary.title.size}")
+    @Size(max = 200, message = "{footprint.title.size}")
     private String title;
 
-    @Size(max = 5000, message = "{diary.content.size}")
+    @Size(max = 5000, message = "{footprint.content.size}")
     private String content;
 
-    @NotNull(message = "{diary.date.notNull}")
+    @NotNull(message = "{footprint.date.notNull}")
     private LocalDate date;
 
-    private Location location;
+    @Valid
+    private List<LocationRequest> locations;
+
     private List<String> photoUrls;
 
 }

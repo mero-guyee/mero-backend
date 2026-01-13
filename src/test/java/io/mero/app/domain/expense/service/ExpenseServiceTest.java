@@ -2,8 +2,8 @@ package io.mero.app.domain.expense.service;
 
 import io.mero.app.domain.budget.entity.Budget;
 import io.mero.app.domain.budget.repository.BudgetRepository;
-import io.mero.app.domain.diary.entity.Diary;
-import io.mero.app.domain.diary.repository.DiaryRepository;
+import io.mero.app.domain.footprint.entity.Footprint;
+import io.mero.app.domain.footprint.repository.FootprintRepository;
 import io.mero.app.domain.expense.dto.ExpenseCreateRequest;
 import io.mero.app.domain.expense.dto.ExpenseListResponse;
 import io.mero.app.domain.expense.dto.ExpenseResponse;
@@ -46,7 +46,7 @@ class ExpenseServiceTest {
     private TripRepository tripRepository;
 
     @Mock
-    private DiaryRepository diaryRepository;
+    private FootprintRepository diaryRepository;
 
     @Mock
     private BudgetRepository budgetRepository;
@@ -66,7 +66,7 @@ class ExpenseServiceTest {
         Long userId = 1L;
         ExpenseCreateRequest request = new ExpenseCreateRequest(
                 1L,
-                null,  // diaryId
+                null,  // footprintId
                 new BigDecimal("100"),
                 Currency.USD,
                 "식비",
@@ -94,7 +94,7 @@ class ExpenseServiceTest {
         Expense expense = Expense.builder()
                 .id(1L)
                 .trip(trip)
-                .diary(null)
+                .footprint(null)
                 .amount(request.getAmount())
                 .currency(request.getCurrency())
                 .category(request.getCategory())
@@ -113,17 +113,17 @@ class ExpenseServiceTest {
         assertThat(response.getId()).isEqualTo(1L);
         assertThat(response.getAmount()).isEqualTo(new BigDecimal("100"));
         assertThat(response.getCurrency()).isEqualTo(Currency.USD);
-        assertThat(response.getDiaryId()).isNull();
+        assertThat(response.getFootprintId()).isNull();
     }
 
     @Test
-    @DisplayName("지출 생성 성공 - Diary 연결")
+    @DisplayName("지출 생성 성공 - Footprint 연결")
     void createExpense_Success_WithDiary() {
         // given
         Long userId = 1L;
         ExpenseCreateRequest request = new ExpenseCreateRequest(
                 1L,
-                1L,  // diaryId
+                1L,  // footprintId
                 new BigDecimal("100"),
                 Currency.USD,
                 "식비",
@@ -139,7 +139,7 @@ class ExpenseServiceTest {
                 .defaultCurrency(Currency.KRW)
                 .build();
 
-        Diary diary = Diary.builder()
+        Footprint footprint = Footprint.builder()
                 .id(1L)
                 .trip(trip)
                 .date(LocalDate.of(2024, 12, 8))
@@ -148,7 +148,7 @@ class ExpenseServiceTest {
         Expense expense = Expense.builder()
                 .id(1L)
                 .trip(trip)
-                .diary(diary)
+                .footprint(footprint)
                 .amount(request.getAmount())
                 .currency(request.getCurrency())
                 .category(request.getCategory())
@@ -158,14 +158,14 @@ class ExpenseServiceTest {
                 .build();
 
         given(tripRepository.findById(1L)).willReturn(Optional.of(trip));
-        given(diaryRepository.findById(1L)).willReturn(Optional.of(diary));
+        given(diaryRepository.findById(1L)).willReturn(Optional.of(footprint));
         given(expenseRepository.save(any(Expense.class))).willReturn(expense);
 
         // when
         ExpenseResponse response = expenseService.createExpense(userId, request);
 
         // then
-        assertThat(response.getDiaryId()).isEqualTo(1L);
+        assertThat(response.getFootprintId()).isEqualTo(1L);
         verify(diaryRepository).findById(1L);
     }
 
@@ -176,7 +176,7 @@ class ExpenseServiceTest {
         Long userId = 1L;
         ExpenseCreateRequest request = new ExpenseCreateRequest(
                 1L,
-                2L,  // 다른 여행의 diaryId
+                2L,  // 다른 여행의 footprintId
                 new BigDecimal("100"),
                 Currency.USD,
                 "식비",
@@ -196,14 +196,14 @@ class ExpenseServiceTest {
                 .user(user)
                 .build();
 
-        Diary diary = Diary.builder()
+        Footprint footprint = Footprint.builder()
                 .id(2L)
                 .trip(trip2)  // 다른 여행!
                 .build();
 
         given(tripRepository.findById(1L)).willReturn(Optional.of(trip1));
-        given(diaryRepository.findById(2L)).willReturn(Optional.of(diary));
-        given(messageUtil.getMessage("error.diary.tripMismatch")).willReturn("같은 여행의 일기만 연결할 수 있습니다");
+        given(diaryRepository.findById(2L)).willReturn(Optional.of(footprint));
+        given(messageUtil.getMessage("error.footprint.tripMismatch")).willReturn("같은 여행의 일기만 연결할 수 있습니다");
 
         // when & then
         assertThatThrownBy(() -> expenseService.createExpense(userId, request))
@@ -252,7 +252,7 @@ class ExpenseServiceTest {
                 .defaultCurrency(Currency.KRW)
                 .build();
 
-        Diary diary = Diary.builder()
+        Footprint footprint = Footprint.builder()
                 .id(1L)
                 .trip(trip)
                 .build();
@@ -261,7 +261,7 @@ class ExpenseServiceTest {
                 Expense.builder()
                         .id(1L)
                         .trip(trip)
-                        .diary(diary)
+                        .footprint(footprint)
                         .amount(new BigDecimal("100"))
                         .currency(Currency.USD)
                         .date(LocalDate.now())
@@ -269,7 +269,7 @@ class ExpenseServiceTest {
                 Expense.builder()
                         .id(2L)
                         .trip(trip)
-                        .diary(null)
+                        .footprint(null)
                         .amount(new BigDecimal("5000"))
                         .currency(Currency.JPY)
                         .date(LocalDate.now())
@@ -287,8 +287,8 @@ class ExpenseServiceTest {
 
         // then
         assertThat(response.getExpenses()).hasSize(2);
-        assertThat(response.getExpenses().get(0).getDiaryId()).isEqualTo(1L);
-        assertThat(response.getExpenses().get(1).getDiaryId()).isNull();
+        assertThat(response.getExpenses().get(0).getFootprintId()).isEqualTo(1L);
+        assertThat(response.getExpenses().get(1).getFootprintId()).isNull();
         assertThat(response.getCurrencyUsages()).isEmpty();
     }
 
@@ -382,14 +382,14 @@ class ExpenseServiceTest {
                 .user(user)
                 .defaultCurrency(Currency.KRW)
                 .build();
-        Diary diary = Diary.builder()
+        Footprint footprint = Footprint.builder()
                 .id(1L)
                 .trip(trip)
                 .build();
         Expense expense = Expense.builder()
                 .id(expenseId)
                 .trip(trip)
-                .diary(diary)
+                .footprint(footprint)
                 .amount(new BigDecimal("100"))
                 .currency(Currency.USD)
                 .date(LocalDate.now())
@@ -402,18 +402,18 @@ class ExpenseServiceTest {
 
         // then
         assertThat(response.getId()).isEqualTo(expenseId);
-        assertThat(response.getDiaryId()).isEqualTo(1L);
+        assertThat(response.getFootprintId()).isEqualTo(1L);
     }
 
     @Test
-    @DisplayName("지출 수정 성공 - Diary 연결")
+    @DisplayName("지출 수정 성공 - Footprint 연결")
     void updateExpense_Success_LinkDiary() {
         // given
         Long userId = 1L;
         Long expenseId = 1L;
 
         ExpenseUpdateRequest request = new ExpenseUpdateRequest(
-                1L,  // diaryId 연결
+                1L,  // footprintId 연결
                 new BigDecimal("150"),
                 Currency.USD,
                 "식비",
@@ -428,21 +428,21 @@ class ExpenseServiceTest {
                 .user(user)
                 .defaultCurrency(Currency.KRW)
                 .build();
-        Diary diary = Diary.builder()
+        Footprint footprint = Footprint.builder()
                 .id(1L)
                 .trip(trip)
                 .build();
         Expense expense = Expense.builder()
                 .id(expenseId)
                 .trip(trip)
-                .diary(null)  // 처음엔 없음
+                .footprint(null)  // 처음엔 없음
                 .amount(new BigDecimal("100"))
                 .currency(Currency.USD)
                 .date(LocalDate.now())
                 .build();
 
         given(expenseRepository.findById(expenseId)).willReturn(Optional.of(expense));
-        given(diaryRepository.findById(1L)).willReturn(Optional.of(diary));
+        given(diaryRepository.findById(1L)).willReturn(Optional.of(footprint));
 
         // when
         ExpenseResponse response = expenseService.updateExpense(userId, expenseId, request);
@@ -454,14 +454,14 @@ class ExpenseServiceTest {
     }
 
     @Test
-    @DisplayName("지출 수정 성공 - Diary 연결 해제")
+    @DisplayName("지출 수정 성공 - Footprint 연결 해제")
     void updateExpense_Success_UnlinkDiary() {
         // given
         Long userId = 1L;
         Long expenseId = 1L;
 
         ExpenseUpdateRequest request = new ExpenseUpdateRequest(
-                null,  // diaryId null (연결 해제)
+                null,  // footprintId null (연결 해제)
                 new BigDecimal("150"),
                 Currency.USD,
                 "식비",
@@ -476,14 +476,14 @@ class ExpenseServiceTest {
                 .user(user)
                 .defaultCurrency(Currency.KRW)
                 .build();
-        Diary diary = Diary.builder()
+        Footprint footprint = Footprint.builder()
                 .id(1L)
                 .trip(trip)
                 .build();
         Expense expense = Expense.builder()
                 .id(expenseId)
                 .trip(trip)
-                .diary(diary)  // 처음엔 있음
+                .footprint(footprint)  // 처음엔 있음
                 .amount(new BigDecimal("100"))
                 .currency(Currency.USD)
                 .date(LocalDate.now())
@@ -496,7 +496,7 @@ class ExpenseServiceTest {
 
         // then
         assertThat(response.getAmount()).isEqualTo(new BigDecimal("150"));
-        // diary 연결 해제 확인은 expense.getDiary()가 null인지 확인
+        // footprint 연결 해제 확인은 expense.getDiary()가 null인지 확인
     }
 
     @Test
@@ -507,7 +507,7 @@ class ExpenseServiceTest {
         Long expenseId = 1L;
 
         ExpenseUpdateRequest request = new ExpenseUpdateRequest(
-                2L,  // 다른 여행의 diaryId
+                2L,  // 다른 여행의 footprintId
                 new BigDecimal("150"),
                 Currency.USD,
                 "식비",
@@ -525,7 +525,7 @@ class ExpenseServiceTest {
                 .id(2L)
                 .user(user)
                 .build();
-        Diary diary = Diary.builder()
+        Footprint footprint = Footprint.builder()
                 .id(2L)
                 .trip(trip2)  // 다른 여행!
                 .build();
@@ -538,8 +538,8 @@ class ExpenseServiceTest {
                 .build();
 
         given(expenseRepository.findById(expenseId)).willReturn(Optional.of(expense));
-        given(diaryRepository.findById(2L)).willReturn(Optional.of(diary));
-        given(messageUtil.getMessage("error.diary.tripMismatch")).willReturn("같은 여행의 일기만 연결할 수 있습니다");
+        given(diaryRepository.findById(2L)).willReturn(Optional.of(footprint));
+        given(messageUtil.getMessage("error.footprint.tripMismatch")).willReturn("같은 여행의 일기만 연결할 수 있습니다");
 
         // when & then
         assertThatThrownBy(() -> expenseService.updateExpense(userId, expenseId, request))
@@ -611,7 +611,7 @@ class ExpenseServiceTest {
 
         given(tripRepository.findById(1L)).willReturn(Optional.of(trip));
         given(diaryRepository.findById(999L)).willReturn(Optional.empty());
-        given(messageUtil.getMessage("error.diary.notFound"))
+        given(messageUtil.getMessage("error.footprint.notFound"))
                 .willReturn("일기를 찾을 수 없습니다");
 
         // when & then

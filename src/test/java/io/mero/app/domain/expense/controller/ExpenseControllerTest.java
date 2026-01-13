@@ -75,12 +75,12 @@ class ExpenseControllerTest {
 
 
     @Test
-    @DisplayName("지출 생성 API 성공 - Diary 없이")
+    @DisplayName("지출 생성 API 성공 - Footprint 없이")
     void createExpense_Success_WithoutDiary() throws Exception {
         // given
         ExpenseCreateRequest request = new ExpenseCreateRequest(
                 1L,
-                null,  // diaryId
+                null,  // footprintId
                 new BigDecimal("100"),
                 Currency.USD,
                 "식비",
@@ -107,17 +107,17 @@ class ExpenseControllerTest {
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.diaryId").isEmpty())
+                .andExpect(jsonPath("$.footprintId").isEmpty())
                 .andExpect(jsonPath("$.amount").value(100));
     }
 
     @Test
-    @DisplayName("지출 생성 API 성공 - Diary 연결")
+    @DisplayName("지출 생성 API 성공 - Footprint 연결")
     void createExpense_Success_WithDiary() throws Exception {
         // given
         ExpenseCreateRequest request = new ExpenseCreateRequest(
                 1L,
-                1L,  // diaryId
+                1L,  // footprintId
                 new BigDecimal("100"),
                 Currency.USD,
                 "식비",
@@ -127,7 +127,7 @@ class ExpenseControllerTest {
         );
 
         ExpenseResponse response = new ExpenseResponse(
-                1L, 1L, 1L,  // diaryId 포함
+                1L, 1L, 1L,  // footprintId 포함
                 new BigDecimal("100"), Currency.USD,
                 "식비", "일기에 기록한 스타벅스",
                 LocalDate.of(2024, 12, 8), "도쿄",
@@ -144,15 +144,15 @@ class ExpenseControllerTest {
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.diaryId").value(1L));
+                .andExpect(jsonPath("$.footprintId").value(1L));
     }
 
     @Test
-    @DisplayName("지출 수정 API 성공 - Diary 연결")
+    @DisplayName("지출 수정 API 성공 - Footprint 연결")
     void updateExpense_Success_LinkDiary() throws Exception {
         // given
         ExpenseUpdateRequest request = new ExpenseUpdateRequest(
-                1L,  // diaryId
+                1L,  // footprintId
                 new BigDecimal("150"),
                 Currency.USD,
                 "식비",
@@ -177,16 +177,16 @@ class ExpenseControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.diaryId").value(1L))
+                .andExpect(jsonPath("$.footprintId").value(1L))
                 .andExpect(jsonPath("$.amount").value(150));
     }
 
     @Test
-    @DisplayName("지출 수정 API 성공 - Diary 연결 해제")
+    @DisplayName("지출 수정 API 성공 - Footprint 연결 해제")
     void updateExpense_Success_UnlinkDiary() throws Exception {
         // given
         ExpenseUpdateRequest request = new ExpenseUpdateRequest(
-                null,  // diaryId null (연결 해제)
+                null,  // footprintId null (연결 해제)
                 new BigDecimal("150"),
                 Currency.USD,
                 "식비",
@@ -196,7 +196,7 @@ class ExpenseControllerTest {
         );
 
         ExpenseResponse response = new ExpenseResponse(
-                1L, 1L, null,  // diaryId null
+                1L, 1L, null,  // footprintId null
                 new BigDecimal("150"), Currency.USD,
                 "식비", "수정된 설명", LocalDate.now(), "도쿄",
                 LocalDateTime.now()
@@ -211,7 +211,7 @@ class ExpenseControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.diaryId").isEmpty())
+                .andExpect(jsonPath("$.footprintId").isEmpty())
                 .andExpect(jsonPath("$.amount").value(150));
     }
 

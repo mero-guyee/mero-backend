@@ -1,6 +1,6 @@
 package io.mero.app.domain.expense.repository;
 
-import io.mero.app.domain.diary.entity.Diary;
+import io.mero.app.domain.footprint.entity.Footprint;
 import io.mero.app.domain.expense.entity.Expense;
 import io.mero.app.domain.expense.entity.ExpenseCategory;
 import io.mero.app.domain.trip.entity.Trip;
@@ -16,7 +16,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 
     List<Expense> findByTripOrderByDateDesc(Trip trip);
 
-    List<Expense> findByDiary(Diary diary);
+    List<Expense> findByFootprint(Footprint footprint);
 
     List<Expense> findByCategory(ExpenseCategory category);
 

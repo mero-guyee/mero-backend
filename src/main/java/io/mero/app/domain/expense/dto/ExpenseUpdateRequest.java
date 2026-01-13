@@ -14,7 +14,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class ExpenseUpdateRequest {
 
-    private Long diaryId;
+    private Long footprintId;
 
     @NotNull(message = "{expense.amount.notNull}")
     @DecimalMin(value = "0.0", inclusive = false, message = "{expense.amount.positive}")

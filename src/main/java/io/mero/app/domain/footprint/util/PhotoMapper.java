@@ -1,7 +1,7 @@
-package io.mero.app.domain.diary.util;
+package io.mero.app.domain.footprint.util;
 
-import io.mero.app.domain.diary.entity.Diary;
-import io.mero.app.domain.diary.entity.Photo;
+import io.mero.app.domain.footprint.entity.Footprint;
+import io.mero.app.domain.footprint.entity.Photo;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,10 +13,10 @@ public class PhotoMapper {
     /**
      * Convert list of URL strings to Photo entities
      * @param photoUrls List of photo URLs
-     * @param diary Parent diary (can be null for new diary)
+     * @param footprint Parent footprint (can be null for new footprint)
      * @return List of Photo entities with auto-populated fields
      */
-    public static List<Photo> fromUrls(List<String> photoUrls, Diary diary) {
+    public static List<Photo> fromUrls(List<String> photoUrls, Footprint footprint) {
         if (photoUrls == null || photoUrls.isEmpty()) {
             return new ArrayList<>();
         }
@@ -25,7 +25,7 @@ public class PhotoMapper {
         for (int i = 0; i < photoUrls.size(); i++) {
             String url = photoUrls.get(i);
             Photo photo = Photo.builder()
-                    .diary(diary)
+                    .footprint(footprint)
                     .imageUrl(url)
                     .fileName(extractFileName(url))
                     .mimeType(extractMimeType(url))

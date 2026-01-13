@@ -1,6 +1,6 @@
 package io.mero.app.domain.expense.entity;
 
-import io.mero.app.domain.diary.entity.Diary;
+import io.mero.app.domain.footprint.entity.Footprint;
 import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.global.entity.BaseEntity;
 import io.mero.app.global.enums.Currency;
@@ -29,8 +29,8 @@ public class Expense extends BaseEntity {
     private Trip trip;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "diary_id")  // ← nullable!
-    private Diary diary;
+    @JoinColumn(name = "diary_id")  // ← Keep column name for DB compatibility
+    private Footprint footprint;
 
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal amount;
@@ -52,11 +52,11 @@ public class Expense extends BaseEntity {
     private String location;
 
     @Builder
-    public Expense(Long id, Trip trip,  Diary diary, BigDecimal amount, Currency currency,
+    public Expense(Long id, Trip trip,  Footprint footprint, BigDecimal amount, Currency currency,
                    String category, String description, LocalDate date, String location) {
         this.id = id;
         this.trip = trip;
-        this.diary = diary;
+        this.footprint = footprint;
         this.amount = amount;
         this.currency = currency;
         this.category = category;
@@ -79,15 +79,15 @@ public class Expense extends BaseEntity {
         this.location = location;
     }
 
-    public void linkToDiary(Diary diary) {
-        if (diary != null && !diary.getTrip().equals(this.trip)) {
-            throw new BadRequestException("같은 여행의 일기만 연결할 수 있습니다");
+    public void linkToFootprint(Footprint footprint) {
+        if (footprint != null && !footprint.getTrip().equals(this.trip)) {
+            throw new BadRequestException("같은 여행의 발자취만 연결할 수 있습니다");
         }
-        this.diary = diary;
+        this.footprint = footprint;
     }
 
-    public void unlinkFromDiary() {
-        this.diary = null;
+    public void unlinkFromFootprint() {
+        this.footprint = null;
     }
 
 

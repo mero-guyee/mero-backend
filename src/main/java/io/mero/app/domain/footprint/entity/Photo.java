@@ -1,4 +1,4 @@
-package io.mero.app.domain.diary.entity;
+package io.mero.app.domain.footprint.entity;
 
 import io.mero.app.global.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -18,7 +18,7 @@ public class Photo extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "diary_id", nullable = false)
-    private Diary diary;
+    private Footprint footprint;
 
     @Column(name = "image_url", nullable = false, length = 500)
     private String imageUrl;
@@ -40,9 +40,9 @@ public class Photo extends BaseEntity {
     private Boolean isSynced = false;
 
     @Builder
-    public Photo(Diary diary, String imageUrl, String fileName,
+    public Photo(Footprint footprint, String imageUrl, String fileName,
                  String mimeType, Integer orderIndex) {
-        this.diary = diary;
+        this.footprint = footprint;
         this.imageUrl = imageUrl;
         this.fileName = fileName;
         this.mimeType = mimeType;
@@ -51,8 +51,8 @@ public class Photo extends BaseEntity {
         this.isSynced = false;
     }
 
-    public void setDiary(Diary diary) {
-        this.diary = diary;
+    public void setFootprint(Footprint footprint) {
+        this.footprint = footprint;
     }
 
     public void startUpload() {

@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class ExpenseResponse {
     private Long id;
     private Long tripId;
-    private Long diaryId;
+    private Long footprintId;
     private BigDecimal amount;
     private Currency currency;
     private String category;
@@ -28,7 +28,7 @@ public class ExpenseResponse {
         return new ExpenseResponse(
                 expense.getId(),
                 expense.getTrip().getId(),
-                expense.getDiary() != null ? expense.getDiary().getId() : null,
+                expense.getFootprint() != null ? expense.getFootprint().getId() : null,
                 expense.getAmount(),
                 expense.getCurrency(),
                 expense.getCategory(),

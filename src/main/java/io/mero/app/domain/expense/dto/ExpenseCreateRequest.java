@@ -20,7 +20,7 @@ public class ExpenseCreateRequest {
     @NotNull(message = "{expense.tripId.notNull}")
     private Long tripId;
 
-    private Long diaryId;  // ← 추가 (nullable)
+    private Long footprintId;  // ← 추가 (nullable)
 
     @NotNull(message = "{expense.amount.notNull}")
     @DecimalMin(value = "0.0", inclusive = false, message = "{expense.amount.positive}")
