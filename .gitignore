@@ -71,6 +71,7 @@ Thumbs.db
 application-local.yml
 application-prod.yml
 application-secret.yml
+application-dev.yml
 
 ### Environment Variables ###
 .env
