@@ -1,6 +1,5 @@
 package io.mero.app.domain.trip.dto;
 
-import io.mero.app.domain.diary.entity.Diary;
 import io.mero.app.domain.file.dto.FileResponse;
 import io.mero.app.domain.file.entity.File;
 import io.mero.app.domain.trip.entity.Trip;

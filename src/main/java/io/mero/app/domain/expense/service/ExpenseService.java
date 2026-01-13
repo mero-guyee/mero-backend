@@ -115,7 +115,7 @@ public class ExpenseService {
         Expense expense = findExpenseById(expenseId);
         validateOwner(expense.getTrip(), userId);
 
-        // Diary 연결/해제
+        // Footprint 연결/해제
         if (request.getFootprintId() != null) {
             Footprint footprint = findFootprintById(request.getFootprintId());
             validateFootprintBelongsToTrip(footprint, expense.getTrip());

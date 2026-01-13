@@ -76,7 +76,7 @@ class ExpenseControllerTest {
 
     @Test
     @DisplayName("지출 생성 API 성공 - Footprint 없이")
-    void createExpense_Success_WithoutDiary() throws Exception {
+    void createExpense_Success_WithoutFootprint() throws Exception {
         // given
         ExpenseCreateRequest request = new ExpenseCreateRequest(
                 1L,
@@ -113,7 +113,7 @@ class ExpenseControllerTest {
 
     @Test
     @DisplayName("지출 생성 API 성공 - Footprint 연결")
-    void createExpense_Success_WithDiary() throws Exception {
+    void createExpense_Success_WithFootprint() throws Exception {
         // given
         ExpenseCreateRequest request = new ExpenseCreateRequest(
                 1L,
@@ -149,7 +149,7 @@ class ExpenseControllerTest {
 
     @Test
     @DisplayName("지출 수정 API 성공 - Footprint 연결")
-    void updateExpense_Success_LinkDiary() throws Exception {
+    void updateExpense_Success_LinkFootprint() throws Exception {
         // given
         ExpenseUpdateRequest request = new ExpenseUpdateRequest(
                 1L,  // footprintId
@@ -183,7 +183,7 @@ class ExpenseControllerTest {
 
     @Test
     @DisplayName("지출 수정 API 성공 - Footprint 연결 해제")
-    void updateExpense_Success_UnlinkDiary() throws Exception {
+    void updateExpense_Success_UnlinkFootprint() throws Exception {
         // given
         ExpenseUpdateRequest request = new ExpenseUpdateRequest(
                 null,  // footprintId null (연결 해제)

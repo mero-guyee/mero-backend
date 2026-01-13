@@ -46,7 +46,7 @@ class ExpenseServiceTest {
     private TripRepository tripRepository;
 
     @Mock
-    private FootprintRepository diaryRepository;
+    private FootprintRepository footprintRepository;
 
     @Mock
     private BudgetRepository budgetRepository;
@@ -118,7 +118,7 @@ class ExpenseServiceTest {
 
     @Test
     @DisplayName("지출 생성 성공 - Footprint 연결")
-    void createExpense_Success_WithDiary() {
+    void createExpense_Success_WithFootprint() {
         // given
         Long userId = 1L;
         ExpenseCreateRequest request = new ExpenseCreateRequest(
@@ -158,7 +158,7 @@ class ExpenseServiceTest {
                 .build();
 
         given(tripRepository.findById(1L)).willReturn(Optional.of(trip));
-        given(diaryRepository.findById(1L)).willReturn(Optional.of(footprint));
+        given(footprintRepository.findById(1L)).willReturn(Optional.of(footprint));
         given(expenseRepository.save(any(Expense.class))).willReturn(expense);
 
         // when
@@ -166,12 +166,12 @@ class ExpenseServiceTest {
 
         // then
         assertThat(response.getFootprintId()).isEqualTo(1L);
-        verify(diaryRepository).findById(1L);
+        verify(footprintRepository).findById(1L);
     }
 
     @Test
-    @DisplayName("지출 생성 실패 - 다른 여행의 일기 연결 시도")
-    void createExpense_Fail_DiaryFromDifferentTrip() {
+    @DisplayName("지출 생성 실패 - 다른 여행의 Footprint 연결 시도")
+    void createExpense_Fail_FootprintFromDifferentTrip() {
         // given
         Long userId = 1L;
         ExpenseCreateRequest request = new ExpenseCreateRequest(
@@ -202,13 +202,13 @@ class ExpenseServiceTest {
                 .build();
 
         given(tripRepository.findById(1L)).willReturn(Optional.of(trip1));
-        given(diaryRepository.findById(2L)).willReturn(Optional.of(footprint));
-        given(messageUtil.getMessage("error.footprint.tripMismatch")).willReturn("같은 여행의 일기만 연결할 수 있습니다");
+        given(footprintRepository.findById(2L)).willReturn(Optional.of(footprint));
+        given(messageUtil.getMessage("error.footprint.tripMismatch")).willReturn("같은 여행의 Footprint만 연결할 수 있습니다");
 
         // when & then
         assertThatThrownBy(() -> expenseService.createExpense(userId, request))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("같은 여행의 일기만 연결할 수 있습니다");
+                .hasMessage("같은 여행의 Footprint만 연결할 수 있습니다");
     }
 
     @Test
@@ -407,7 +407,7 @@ class ExpenseServiceTest {
 
     @Test
     @DisplayName("지출 수정 성공 - Footprint 연결")
-    void updateExpense_Success_LinkDiary() {
+    void updateExpense_Success_LinkFootprint() {
         // given
         Long userId = 1L;
         Long expenseId = 1L;
@@ -442,7 +442,7 @@ class ExpenseServiceTest {
                 .build();
 
         given(expenseRepository.findById(expenseId)).willReturn(Optional.of(expense));
-        given(diaryRepository.findById(1L)).willReturn(Optional.of(footprint));
+        given(footprintRepository.findById(1L)).willReturn(Optional.of(footprint));
 
         // when
         ExpenseResponse response = expenseService.updateExpense(userId, expenseId, request);
@@ -450,12 +450,12 @@ class ExpenseServiceTest {
         // then
         assertThat(response.getAmount()).isEqualTo(new BigDecimal("150"));
         assertThat(response.getDescription()).isEqualTo("수정된 설명");
-        verify(diaryRepository).findById(1L);
+        verify(footprintRepository).findById(1L);
     }
 
     @Test
     @DisplayName("지출 수정 성공 - Footprint 연결 해제")
-    void updateExpense_Success_UnlinkDiary() {
+    void updateExpense_Success_UnlinkFootprint() {
         // given
         Long userId = 1L;
         Long expenseId = 1L;
@@ -496,12 +496,12 @@ class ExpenseServiceTest {
 
         // then
         assertThat(response.getAmount()).isEqualTo(new BigDecimal("150"));
-        // footprint 연결 해제 확인은 expense.getDiary()가 null인지 확인
+        // footprint 연결 해제 확인은 expense.getFootprint()가 null인지 확인
     }
 
     @Test
-    @DisplayName("지출 수정 실패 - 다른 여행의 일기 연결 시도")
-    void updateExpense_Fail_DiaryFromDifferentTrip() {
+    @DisplayName("지출 수정 실패 - 다른 여행의 Footprint 연결 시도")
+    void updateExpense_Fail_FootprintFromDifferentTrip() {
         // given
         Long userId = 1L;
         Long expenseId = 1L;
@@ -538,13 +538,13 @@ class ExpenseServiceTest {
                 .build();
 
         given(expenseRepository.findById(expenseId)).willReturn(Optional.of(expense));
-        given(diaryRepository.findById(2L)).willReturn(Optional.of(footprint));
-        given(messageUtil.getMessage("error.footprint.tripMismatch")).willReturn("같은 여행의 일기만 연결할 수 있습니다");
+        given(footprintRepository.findById(2L)).willReturn(Optional.of(footprint));
+        given(messageUtil.getMessage("error.footprint.tripMismatch")).willReturn("같은 여행의 Footprint만 연결할 수 있습니다");
 
         // when & then
         assertThatThrownBy(() -> expenseService.updateExpense(userId, expenseId, request))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("같은 여행의 일기만 연결할 수 있습니다");
+                .hasMessage("같은 여행의 Footprint만 연결할 수 있습니다");
     }
 
     @Test
@@ -594,8 +594,8 @@ class ExpenseServiceTest {
     }
 
     @Test
-    @DisplayName("지출 생성 실패 - 일기를 찾을 수 없음")
-    void createExpense_Fail_DiaryNotFound() {
+    @DisplayName("지출 생성 실패 - Footprint를 찾을 수 없음")
+    void createExpense_Fail_FootprintNotFound() {
         // given
         Long userId = 1L;
         ExpenseCreateRequest request = new ExpenseCreateRequest(
@@ -610,13 +610,13 @@ class ExpenseServiceTest {
                 .build();
 
         given(tripRepository.findById(1L)).willReturn(Optional.of(trip));
-        given(diaryRepository.findById(999L)).willReturn(Optional.empty());
+        given(footprintRepository.findById(999L)).willReturn(Optional.empty());
         given(messageUtil.getMessage("error.footprint.notFound"))
-                .willReturn("일기를 찾을 수 없습니다");
+                .willReturn("Footprint를 찾을 수 없습니다");
 
         // when & then
         assertThatThrownBy(() -> expenseService.createExpense(userId, request))
                 .isInstanceOf(NotFoundException.class)
-                .hasMessage("일기를 찾을 수 없습니다");
+                .hasMessage("Footprint를 찾을 수 없습니다");
     }
 }
