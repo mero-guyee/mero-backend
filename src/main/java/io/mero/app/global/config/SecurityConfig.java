@@ -34,8 +34,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 인증 불필요 (누구나 접근 가능)
                         .requestMatchers(
+                                // health check
+                                "/",
+                                "/health",
+
                                 // Public 엔드포인트
                                 "/api/auth/**",
+
                                 // Swagger 엔드포인트 허용
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
