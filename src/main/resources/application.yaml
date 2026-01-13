@@ -5,7 +5,7 @@ spring:
     encoding: UTF-8
 
   profiles:
-    active: local
+    active: ${SPRING_PROFILES_ACTIVE:local}
 
   jpa:
     open-in-view: false
@@ -20,4 +20,8 @@ spring:
       force: true
 
 server:
-  port: 8080
+  port: ${PORT:8080}
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:3600000}

@@ -71,7 +71,6 @@ Thumbs.db
 application-local.yml
 application-prod.yml
 application-secret.yml
-application-dev.yml
 
 ### Environment Variables ###
 .env
@@ -85,3 +84,7 @@ files/
 *.db
 *.sqlite
 *.sqlite3
+
+### Claude 임시 파일 ###
+tmpclaude-*
+**/tmpclaude-*
