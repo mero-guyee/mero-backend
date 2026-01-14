@@ -22,7 +22,6 @@ public class TripDetailResponse {
     private LocalDate startDate;
     private LocalDate endDate;
     private List<String> countries;
-    private Currency defaultCurrency;
     private String imageUrl;
     private LocalDateTime createdAt;
 
@@ -35,7 +34,6 @@ public class TripDetailResponse {
                 trip.getStartDate(),
                 trip.getEndDate(),
                 trip.getCountries(),
-                trip.getDefaultCurrency(),
                 trip.getImageUrl(),
                 trip.getCreatedAt(),
                 files == null ? Collections.emptyList() :

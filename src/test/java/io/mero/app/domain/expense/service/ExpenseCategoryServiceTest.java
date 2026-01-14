@@ -160,7 +160,6 @@ class ExpenseCategoryServiceTest {
         Trip trip = Trip.builder()
                 .id(1L)
                 .user(user)
-                .defaultCurrency(Currency.KRW)
                 .build();
 
         ExpenseCategory categoryToDelete = ExpenseCategory.builder()

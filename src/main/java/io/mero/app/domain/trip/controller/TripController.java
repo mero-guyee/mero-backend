@@ -12,8 +12,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -27,10 +29,13 @@ public class TripController {
     private final TripService tripService;
 
     @Operation(summary = "여행 생성", description = "새로운 여행을 생성합니다")
-    @PostMapping
-    public ResponseEntity<TripResponse> createTrip(@Valid @RequestBody TripCreateRequest request) {
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<TripResponse> createTrip(
+            @RequestPart("data") @Valid TripCreateRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image
+    ) {
         Long userId = SecurityUtil.getCurrentUserId();
-        TripResponse response = tripService.createTrip(userId, request);
+        TripResponse response = tripService.createTrip(userId, request, image);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

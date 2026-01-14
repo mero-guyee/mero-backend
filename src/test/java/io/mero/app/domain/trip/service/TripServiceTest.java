@@ -58,9 +58,7 @@ class TripServiceTest {
                 "남미 여행",
                 LocalDate.of(2026,3,11),
                 LocalDate.of(2026,5,15),
-                List.of("브라질", "아르헨티나", "페루"),
-                Currency.KRW,
-                null
+                List.of("브라질", "아르헨티나", "페루")
         );
 
         User user = User.builder()
@@ -79,14 +77,13 @@ class TripServiceTest {
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .countries(request.getCountries())
-                .defaultCurrency(request.getDefaultCurrency())
                 .build();
 
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(tripRepository.save(any(Trip.class))).willReturn(trip);
 
         // when
-        TripResponse response = tripService.createTrip(userId, request);
+        TripResponse response = tripService.createTrip(userId, request, null);
 
         // then
         assertThat(response.getId()).isEqualTo(1L);
@@ -232,8 +229,7 @@ class TripServiceTest {
                 LocalDate.of(2026,3,10),
                 LocalDate.of(2026,5,16),
                 List.of("아르헨티나", "페루", "볼리비아"),
-                Currency.USD,
-                null
+                "https://example.com/image.jpg"
         );
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
@@ -245,7 +241,7 @@ class TripServiceTest {
         assertThat(response.getTitle()).isEqualTo("남미 여행 수정");
         assertThat(response.getStartDate()).isEqualTo(LocalDate.of(2026,3,10));
         assertThat(response.getEndDate()).isEqualTo(LocalDate.of(2026,5,16));
-        assertThat(response.getDefaultCurrency()).isEqualTo(Currency.USD);
+        assertThat(response.getImageUrl()).isEqualTo("https://example.com/image.jpg");
 
         verify(tripRepository).findById(tripId);
     }

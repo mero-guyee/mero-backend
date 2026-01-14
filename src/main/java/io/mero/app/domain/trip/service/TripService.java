@@ -16,6 +16,7 @@ import io.mero.app.global.util.MessageUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,11 +32,16 @@ public class TripService {
     private final MessageUtil messageUtil;
 
     @Transactional
-    public TripResponse createTrip(Long userId, TripCreateRequest request) {
+    public TripResponse createTrip(Long userId, TripCreateRequest request, MultipartFile image) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         messageUtil.getMessage("error.user.notFound")
                 ));
+
+        String imageUrl = null;
+        if (image != null && !image.isEmpty()) {
+//            imageUrl = s3Service.uploadTripImage(image);  // 경로: trips/{userId}/{uuid}
+        }
 
         Trip trip = Trip.builder()
                 .user(user)
@@ -43,7 +49,7 @@ public class TripService {
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .countries(request.getCountries())
-                .defaultCurrency(request.getDefaultCurrency())
+                .imageUrl(imageUrl)
                 .build();
 
 
@@ -78,7 +84,6 @@ public class TripService {
                 request.getStartDate(),
                 request.getEndDate(),
                 request.getCountries(),
-                request.getDefaultCurrency(),
                 request.getImageUrl()
         );
 

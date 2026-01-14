@@ -93,7 +93,6 @@ class ExpenseServiceTest {
                 .id(1L)
                 .user(user)
                 .title("일본 여행")
-                .defaultCurrency(Currency.KRW)
                 .build();
 
         ExpenseCategory category = ExpenseCategory.builder()
@@ -151,7 +150,6 @@ class ExpenseServiceTest {
         Trip trip = Trip.builder()
                 .id(1L)
                 .user(user)
-                .defaultCurrency(Currency.KRW)
                 .build();
 
         Footprint footprint = Footprint.builder()
@@ -274,7 +272,6 @@ class ExpenseServiceTest {
         Trip trip = Trip.builder()
                 .id(tripId)
                 .user(user)
-                .defaultCurrency(Currency.KRW)
                 .build();
 
         Footprint footprint = Footprint.builder()
@@ -339,7 +336,6 @@ class ExpenseServiceTest {
         Trip trip = Trip.builder()
                 .id(tripId)
                 .user(user)
-                .defaultCurrency(Currency.KRW)
                 .build();
 
         ExpenseCategory category = ExpenseCategory.builder()
@@ -428,7 +424,6 @@ class ExpenseServiceTest {
         Trip trip = Trip.builder()
                 .id(1L)
                 .user(user)
-                .defaultCurrency(Currency.KRW)
                 .build();
         Footprint footprint = Footprint.builder()
                 .id(1L)
@@ -483,7 +478,6 @@ class ExpenseServiceTest {
         Trip trip = Trip.builder()
                 .id(1L)
                 .user(user)
-                .defaultCurrency(Currency.KRW)
                 .build();
         Footprint footprint = Footprint.builder()
                 .id(1L)
@@ -541,7 +535,6 @@ class ExpenseServiceTest {
         Trip trip = Trip.builder()
                 .id(1L)
                 .user(user)
-                .defaultCurrency(Currency.KRW)
                 .build();
         Footprint footprint = Footprint.builder()
                 .id(1L)

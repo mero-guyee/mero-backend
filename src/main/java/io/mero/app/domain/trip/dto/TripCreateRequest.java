@@ -28,7 +28,5 @@ public class TripCreateRequest {
     private LocalDate endDate;
 
     private List<String> countries;
-    private Currency defaultCurrency;
-    private String imageUrl;
 
 }

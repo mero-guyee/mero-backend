@@ -20,10 +20,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -75,9 +79,7 @@ class TripControllerTest {
                 "남미 여행",
                 LocalDate.of(2026,03,11),
                 LocalDate.of(2026,05,15),
-                List.of("브라질", "아르헨티나", "페루"),
-                Currency.KRW,
-                null
+                List.of("브라질", "아르헨티나", "페루")
         );
 
         TripResponse response = new TripResponse(
@@ -86,17 +88,22 @@ class TripControllerTest {
                 LocalDate.of(2026,03,11),
                 LocalDate.of(2026,05,15),
                 List.of("브라질", "아르헨티나", "페루"),
-                Currency.KRW,
                 null,
                 LocalDateTime.now()
         );
 
-        given(tripService.createTrip(anyLong(), any(TripCreateRequest.class))).willReturn(response);
+        given(tripService.createTrip(anyLong(), any(TripCreateRequest.class), any())).willReturn(response);
+
+        MockMultipartFile dataPart = new MockMultipartFile(
+                "data",
+                "",
+                MediaType.APPLICATION_JSON_VALUE,
+                objectMapper.writeValueAsBytes(request)
+        );
 
         // when & then
-        mockMvc.perform(post("/api/trips")
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(multipart("/api/trips")
+                        .file(dataPart))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(response.getId()))
                 .andExpect(jsonPath("$.title").value(response.getTitle()))
@@ -105,8 +112,7 @@ class TripControllerTest {
                 .andExpect(jsonPath("$.countries").isArray())
                 .andExpect(jsonPath("$.countries[0]").value("브라질"))
                 .andExpect(jsonPath("$.countries[1]").value("아르헨티나"))
-                .andExpect(jsonPath("$.countries[2]").value("페루"))
-                .andExpect(jsonPath("$.defaultCurrency").value(response.getDefaultCurrency().toString()));
+                .andExpect(jsonPath("$.countries[2]").value("페루"));
     }
     
     @Test
@@ -119,7 +125,6 @@ class TripControllerTest {
                         LocalDate.of(2026, 3, 11),
                         LocalDate.of(2026, 5, 15),
                         List.of("브라질", "아르헨티나", "페루"),
-                        Currency.KRW,
                         null,
                         LocalDateTime.now()
                 ),
@@ -128,7 +133,6 @@ class TripControllerTest {
                         LocalDate.of(2026, 8, 10),
                         LocalDate.of(2026, 10, 16),
                         List.of("도쿄", "오사카", "교토"),
-                        Currency.KRW,
                         null,
                         LocalDateTime.now()
                 )
@@ -156,10 +160,9 @@ class TripControllerTest {
                 LocalDate.of(2026, 03, 11),
                 LocalDate.of(2026, 05, 15),
                 List.of("브라질", "아르헨티나", "페루"),
-                Currency.KRW,
                 null,
                 LocalDateTime.now(),
-                null
+                Collections.emptyList()
         );
 
         given(tripService.getTrip(anyLong(), eq(1L))).willReturn(response);
@@ -181,7 +184,6 @@ class TripControllerTest {
                 LocalDate.of(2026, 3, 10),
                 LocalDate.of(2026, 5, 16),
                 List.of("아르헨티나", "페루", "볼리비아"),
-                Currency.USD,
                 null
         );
 
@@ -191,7 +193,6 @@ class TripControllerTest {
                 LocalDate.of(2026, 3, 10),
                 LocalDate.of(2026, 5, 16),
                 List.of("아르헨티나", "페루", "볼리비아"),
-                Currency.KRW,
                 null,
                 LocalDateTime.now()
         );
