@@ -29,7 +29,10 @@ public class Expense extends BaseEntity {
     private Trip trip;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "footprint_id")
+    @JoinColumn(name = "footprint_id",
+            foreignKey = @ForeignKey(
+                    foreignKeyDefinition = "FOREIGN KEY (footprint_id) REFERENCES footprint(id) ON DELETE SET NULL"
+            ))
     private Footprint footprint;
 
     @Column(nullable = false, precision = 15, scale = 2)
@@ -51,6 +54,9 @@ public class Expense extends BaseEntity {
 
     @Column(length = 500)
     private String location;
+
+    @Column(name = "is_synced", nullable = false)
+    private Boolean isSynced = false;
 
     @Builder
     public Expense(Long id, Trip trip,  Footprint footprint, BigDecimal amount, Currency currency,

@@ -1,5 +1,6 @@
 package io.mero.app.domain.footprint.entity;
 
+import io.mero.app.domain.footprint.listener.PhotoEntityListener;
 import io.mero.app.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -8,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
+@EntityListeners(PhotoEntityListener.class)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Photo extends BaseEntity {
@@ -20,8 +22,11 @@ public class Photo extends BaseEntity {
     @JoinColumn(name = "footprint_id", nullable = false)
     private Footprint footprint;
 
-    @Column(name = "image_url", nullable = false, length = 500)
+    @Column(name = "image_url", length = 500)
     private String imageUrl;
+
+    @Column(name = "local_file_path", length = 500)
+    private String localFilePath;
 
     @Column(name = "file_name", nullable = false, length = 255)
     private String fileName;

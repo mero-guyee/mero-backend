@@ -57,7 +57,7 @@ public class Footprint extends BaseEntity {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    @Version
+    @Version // 충돌 해결용
     private Long version;
 
     @Column(name = "last_modified_at", nullable = false)

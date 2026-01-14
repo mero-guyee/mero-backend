@@ -1,5 +1,9 @@
 package io.mero.app.domain.trip.entity;
 
+import io.mero.app.domain.budget.entity.Budget;
+import io.mero.app.domain.expense.entity.Expense;
+import io.mero.app.domain.file.entity.File;
+import io.mero.app.domain.footprint.entity.Footprint;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.global.entity.BaseEntity;
 import io.mero.app.global.enums.Currency;
@@ -11,6 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -47,6 +52,24 @@ public class Trip extends BaseEntity {
 
     @Column(name = "imageUrl", length = 1000)
     private String imageUrl;
+
+    @Column(name = "is_synced", nullable = false)
+    private Boolean isSynced = false;
+
+    @Column(name = "last_synced_at")
+    private LocalDateTime lastSyncedAt;
+
+    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Budget> budgets = new ArrayList<>();
+
+    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Expense> expenses = new ArrayList<>();
+
+    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Footprint> footprints = new ArrayList<>();
+
+    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<File> files = new ArrayList<>();
 
     @Builder
     public Trip(Long id, User user, String title,

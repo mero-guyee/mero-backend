@@ -1,5 +1,6 @@
 package io.mero.app.domain.file.entity;
 
+import io.mero.app.domain.footprint.entity.UploadStatus;
 import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.global.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -28,14 +29,24 @@ public class File extends BaseEntity {
     @Column(nullable = false)
     private String storedFileName;
 
-    @Column(nullable = false)
+    @Column
     private String fileUrl;
+
+    @Column(name = "local_file_path", length = 500)
+    private String localFilePath;
 
     @Column(nullable = false)
     private Long fileSize;
 
     @Column(nullable = false)
     private String contentType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "upload_status", length = 20, nullable = false)
+    private UploadStatus uploadStatus;
+
+    @Column(name = "is_synced", nullable = false)
+    private Boolean isSynced = false;
 
     @Builder
     public File(Trip trip, String originalFileName,

@@ -37,6 +37,9 @@ public class ExpenseCategory extends BaseEntity {
     @Column(name = "display_order", nullable = false)
     private Integer displayOrder;
 
+    @Column(name = "is_synced", nullable = false)
+    private Boolean isSynced = false;
+
     @Builder
     public ExpenseCategory(User user, String name, String icon, String color,
                            Boolean isDefault, Integer displayOrder) {
