@@ -1,5 +1,6 @@
 package io.mero.app.domain.user.service;
 
+import io.mero.app.domain.expense.service.ExpenseCategoryService;
 import io.mero.app.domain.user.dto.*;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.UserRepository;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final ExpenseCategoryService categoryService;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final MessageUtil messageUtil;
@@ -32,6 +34,8 @@ public class UserService {
 
         User user = createUser(request);
         User savedUser = userRepository.save(user);
+
+        categoryService.createDefaultCategoriesForUser(savedUser);
 
         return UserResponse.from(savedUser);
     }

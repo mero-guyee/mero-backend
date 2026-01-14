@@ -1,5 +1,6 @@
 package io.mero.app.domain.user.service;
 
+import io.mero.app.domain.expense.service.ExpenseCategoryService;
 import io.mero.app.domain.user.dto.*;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.UserRepository;
@@ -31,6 +32,9 @@ class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private ExpenseCategoryService expenseCategoryService;
 
     @Mock
     private PasswordEncoder passwordEncoder;

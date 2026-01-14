@@ -42,13 +42,14 @@ public class ExpenseCategory extends BaseEntity {
 
     @Builder
     public ExpenseCategory(User user, String name, String icon, String color,
-                           Boolean isDefault, Integer displayOrder) {
+                           Boolean isDefault, Integer displayOrder, Boolean isSynced) {
         this.user = user;
         this.name = name;
         this.icon = icon;
         this.color = color;
         this.isDefault = isDefault != null ? isDefault : false;
         this.displayOrder = displayOrder;
+        this.isSynced = isSynced;
     }
 
     public void updateName(String name) {

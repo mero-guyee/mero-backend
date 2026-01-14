@@ -97,6 +97,9 @@ public class Expense extends BaseEntity {
         this.footprint = null;
     }
 
+    public void changeCategory(ExpenseCategory category) {
+        this.category = category;
+    }
 
     private void validateAmount(BigDecimal amount) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {

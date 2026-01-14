@@ -15,4 +15,8 @@ public interface ExpenseCategoryRepository extends JpaRepository<ExpenseCategory
 
     boolean existsByUserAndName(User user, String name);
 
+    Optional<ExpenseCategory> findByUserAndName(User user, String name);
+
+    int countByUser(User user);
+
 }
