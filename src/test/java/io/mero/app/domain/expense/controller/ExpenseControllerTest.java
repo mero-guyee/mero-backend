@@ -83,7 +83,7 @@ class ExpenseControllerTest {
                 null,  // footprintId
                 new BigDecimal("100"),
                 Currency.USD,
-                "식비",
+                1L,  // categoryId
                 "스타벅스",
                 LocalDate.of(2024, 12, 8),
                 "도쿄"
@@ -92,7 +92,8 @@ class ExpenseControllerTest {
         ExpenseResponse response = new ExpenseResponse(
                 1L, 1L, null,
                 new BigDecimal("100"), Currency.USD,
-                "식비", "스타벅스",
+                1L, "식비", "🍔", "#FF5733",
+                "스타벅스",
                 LocalDate.of(2024, 12, 8), "도쿄",
                 LocalDateTime.now()
         );
@@ -120,7 +121,7 @@ class ExpenseControllerTest {
                 1L,  // footprintId
                 new BigDecimal("100"),
                 Currency.USD,
-                "식비",
+                1L,  // categoryId
                 "일기에 기록한 스타벅스",
                 LocalDate.of(2024, 12, 8),
                 "도쿄"
@@ -129,7 +130,8 @@ class ExpenseControllerTest {
         ExpenseResponse response = new ExpenseResponse(
                 1L, 1L, 1L,  // footprintId 포함
                 new BigDecimal("100"), Currency.USD,
-                "식비", "일기에 기록한 스타벅스",
+                1L, "식비", "🍔", "#FF5733",
+                "일기에 기록한 스타벅스",
                 LocalDate.of(2024, 12, 8), "도쿄",
                 LocalDateTime.now()
         );
@@ -155,7 +157,7 @@ class ExpenseControllerTest {
                 1L,  // footprintId
                 new BigDecimal("150"),
                 Currency.USD,
-                "식비",
+                1L,  // categoryId
                 "수정된 설명",
                 LocalDate.now(),
                 "도쿄"
@@ -164,7 +166,8 @@ class ExpenseControllerTest {
         ExpenseResponse response = new ExpenseResponse(
                 1L, 1L, 1L,
                 new BigDecimal("150"), Currency.USD,
-                "식비", "수정된 설명", LocalDate.now(), "도쿄",
+                1L, "식비", "🍔", "#FF5733",
+                "수정된 설명", LocalDate.now(), "도쿄",
                 LocalDateTime.now()
         );
 
@@ -189,7 +192,7 @@ class ExpenseControllerTest {
                 null,  // footprintId null (연결 해제)
                 new BigDecimal("150"),
                 Currency.USD,
-                "식비",
+                1L,  // categoryId
                 "수정된 설명",
                 LocalDate.now(),
                 "도쿄"
@@ -198,7 +201,8 @@ class ExpenseControllerTest {
         ExpenseResponse response = new ExpenseResponse(
                 1L, 1L, null,  // footprintId null
                 new BigDecimal("150"), Currency.USD,
-                "식비", "수정된 설명", LocalDate.now(), "도쿄",
+                1L, "식비", "🍔", "#FF5733",
+                "수정된 설명", LocalDate.now(), "도쿄",
                 LocalDateTime.now()
         );
 
@@ -232,14 +236,16 @@ class ExpenseControllerTest {
                 new ExpenseResponse(
                         1L, 1L, null,
                         new BigDecimal("50"), Currency.USD,
-                        "식비", "스타벅스",
+                        1L, "식비", "🍔", "#FF5733",
+                        "스타벅스",
                         LocalDate.of(2024, 12, 8), "도쿄",
                         LocalDateTime.now()
                 ),
                 new ExpenseResponse(
                         2L, 1L, null,
                         new BigDecimal("100000"), Currency.KRW,
-                        "쇼핑", "면세점",
+                        2L, "쇼핑", "🛍️", "#33FF57",
+                        "면세점",
                         LocalDate.of(2024, 12, 7), "인천",
                         LocalDateTime.now()
                 )

@@ -9,6 +9,8 @@ import io.mero.app.domain.expense.dto.ExpenseListResponse;
 import io.mero.app.domain.expense.dto.ExpenseResponse;
 import io.mero.app.domain.expense.dto.ExpenseUpdateRequest;
 import io.mero.app.domain.expense.entity.Expense;
+import io.mero.app.domain.expense.entity.ExpenseCategory;
+import io.mero.app.domain.expense.repository.ExpenseCategoryRepository;
 import io.mero.app.domain.expense.repository.ExpenseRepository;
 import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.domain.trip.repository.TripRepository;
@@ -52,6 +54,9 @@ class ExpenseServiceTest {
     private BudgetRepository budgetRepository;
 
     @Mock
+    private ExpenseCategoryRepository expenseCategoryRepository;
+
+    @Mock
     private MessageUtil messageUtil;
 
     @InjectMocks
@@ -69,7 +74,7 @@ class ExpenseServiceTest {
                 null,  // footprintId
                 new BigDecimal("100"),
                 Currency.USD,
-                "식비",
+                1L,  // categoryId
                 "스타벅스",
                 LocalDate.of(2024, 12, 8),
                 "도쿄"
@@ -91,19 +96,29 @@ class ExpenseServiceTest {
                 .defaultCurrency(Currency.KRW)
                 .build();
 
+        ExpenseCategory category = ExpenseCategory.builder()
+                .user(user)
+                .name("식비")
+                .icon("🍔")
+                .color("#FF5733")
+                .isDefault(false)
+                .displayOrder(1)
+                .build();
+
         Expense expense = Expense.builder()
                 .id(1L)
                 .trip(trip)
                 .footprint(null)
                 .amount(request.getAmount())
                 .currency(request.getCurrency())
-                .category(request.getCategory())
+                .category(category)
                 .description(request.getDescription())
                 .date(request.getDate())
                 .location(request.getLocation())
                 .build();
 
         given(tripRepository.findById(1L)).willReturn(Optional.of(trip));
+        given(expenseCategoryRepository.findById(1L)).willReturn(Optional.of(category));
         given(expenseRepository.save(any(Expense.class))).willReturn(expense);
 
         // when
@@ -126,7 +141,7 @@ class ExpenseServiceTest {
                 1L,  // footprintId
                 new BigDecimal("100"),
                 Currency.USD,
-                "식비",
+                1L,  // categoryId
                 "일기에 기록한 스타벅스",
                 LocalDate.of(2024, 12, 8),
                 "도쿄"
@@ -145,13 +160,22 @@ class ExpenseServiceTest {
                 .date(LocalDate.of(2024, 12, 8))
                 .build();
 
+        ExpenseCategory category = ExpenseCategory.builder()
+                .user(user)
+                .name("식비")
+                .icon("🍔")
+                .color("#FF5733")
+                .isDefault(false)
+                .displayOrder(1)
+                .build();
+
         Expense expense = Expense.builder()
                 .id(1L)
                 .trip(trip)
                 .footprint(footprint)
                 .amount(request.getAmount())
                 .currency(request.getCurrency())
-                .category(request.getCategory())
+                .category(category)
                 .description(request.getDescription())
                 .date(request.getDate())
                 .location(request.getLocation())
@@ -159,6 +183,7 @@ class ExpenseServiceTest {
 
         given(tripRepository.findById(1L)).willReturn(Optional.of(trip));
         given(footprintRepository.findById(1L)).willReturn(Optional.of(footprint));
+        given(expenseCategoryRepository.findById(1L)).willReturn(Optional.of(category));
         given(expenseRepository.save(any(Expense.class))).willReturn(expense);
 
         // when
@@ -179,7 +204,7 @@ class ExpenseServiceTest {
                 2L,  // 다른 여행의 footprintId
                 new BigDecimal("100"),
                 Currency.USD,
-                "식비",
+                1L,  // categoryId
                 "스타벅스",
                 LocalDate.of(2024, 12, 8),
                 "도쿄"
@@ -257,6 +282,15 @@ class ExpenseServiceTest {
                 .trip(trip)
                 .build();
 
+        ExpenseCategory category = ExpenseCategory.builder()
+                .user(user)
+                .name("식비")
+                .icon("🍔")
+                .color("#FF5733")
+                .isDefault(false)
+                .displayOrder(1)
+                .build();
+
         List<Expense> expenses = List.of(
                 Expense.builder()
                         .id(1L)
@@ -264,6 +298,7 @@ class ExpenseServiceTest {
                         .footprint(footprint)
                         .amount(new BigDecimal("100"))
                         .currency(Currency.USD)
+                        .category(category)
                         .date(LocalDate.now())
                         .build(),
                 Expense.builder()
@@ -272,6 +307,7 @@ class ExpenseServiceTest {
                         .footprint(null)
                         .amount(new BigDecimal("5000"))
                         .currency(Currency.JPY)
+                        .category(category)
                         .date(LocalDate.now())
                         .build()
         );
@@ -306,12 +342,22 @@ class ExpenseServiceTest {
                 .defaultCurrency(Currency.KRW)
                 .build();
 
+        ExpenseCategory category = ExpenseCategory.builder()
+                .user(user)
+                .name("식비")
+                .icon("🍔")
+                .color("#FF5733")
+                .isDefault(false)
+                .displayOrder(1)
+                .build();
+
         List<Expense> expenses = List.of(
                 Expense.builder()
                         .id(1L)
                         .trip(trip)
                         .amount(new BigDecimal("50"))
                         .currency(Currency.USD)
+                        .category(category)
                         .date(LocalDate.now())
                         .build(),
                 Expense.builder()
@@ -319,6 +365,7 @@ class ExpenseServiceTest {
                         .trip(trip)
                         .amount(new BigDecimal("30"))
                         .currency(Currency.USD)
+                        .category(category)
                         .date(LocalDate.now())
                         .build(),
                 Expense.builder()
@@ -326,6 +373,7 @@ class ExpenseServiceTest {
                         .trip(trip)
                         .amount(new BigDecimal("100000"))
                         .currency(Currency.KRW)
+                        .category(category)
                         .date(LocalDate.now())
                         .build()
         );
@@ -386,12 +434,21 @@ class ExpenseServiceTest {
                 .id(1L)
                 .trip(trip)
                 .build();
+        ExpenseCategory category = ExpenseCategory.builder()
+                .user(user)
+                .name("식비")
+                .icon("🍔")
+                .color("#FF5733")
+                .isDefault(false)
+                .displayOrder(1)
+                .build();
         Expense expense = Expense.builder()
                 .id(expenseId)
                 .trip(trip)
                 .footprint(footprint)
                 .amount(new BigDecimal("100"))
                 .currency(Currency.USD)
+                .category(category)
                 .date(LocalDate.now())
                 .build();
 
@@ -416,7 +473,7 @@ class ExpenseServiceTest {
                 1L,  // footprintId 연결
                 new BigDecimal("150"),
                 Currency.USD,
-                "식비",
+                1L,  // categoryId
                 "수정된 설명",
                 LocalDate.now(),
                 "도쿄"
@@ -432,17 +489,27 @@ class ExpenseServiceTest {
                 .id(1L)
                 .trip(trip)
                 .build();
+        ExpenseCategory category = ExpenseCategory.builder()
+                .user(user)
+                .name("식비")
+                .icon("🍔")
+                .color("#FF5733")
+                .isDefault(false)
+                .displayOrder(1)
+                .build();
         Expense expense = Expense.builder()
                 .id(expenseId)
                 .trip(trip)
                 .footprint(null)  // 처음엔 없음
                 .amount(new BigDecimal("100"))
                 .currency(Currency.USD)
+                .category(category)
                 .date(LocalDate.now())
                 .build();
 
         given(expenseRepository.findById(expenseId)).willReturn(Optional.of(expense));
         given(footprintRepository.findById(1L)).willReturn(Optional.of(footprint));
+        given(expenseCategoryRepository.findById(1L)).willReturn(Optional.of(category));
 
         // when
         ExpenseResponse response = expenseService.updateExpense(userId, expenseId, request);
@@ -464,7 +531,7 @@ class ExpenseServiceTest {
                 null,  // footprintId null (연결 해제)
                 new BigDecimal("150"),
                 Currency.USD,
-                "식비",
+                1L,  // categoryId
                 "수정된 설명",
                 LocalDate.now(),
                 "도쿄"
@@ -480,16 +547,26 @@ class ExpenseServiceTest {
                 .id(1L)
                 .trip(trip)
                 .build();
+        ExpenseCategory category = ExpenseCategory.builder()
+                .user(user)
+                .name("식비")
+                .icon("🍔")
+                .color("#FF5733")
+                .isDefault(false)
+                .displayOrder(1)
+                .build();
         Expense expense = Expense.builder()
                 .id(expenseId)
                 .trip(trip)
                 .footprint(footprint)  // 처음엔 있음
                 .amount(new BigDecimal("100"))
                 .currency(Currency.USD)
+                .category(category)
                 .date(LocalDate.now())
                 .build();
 
         given(expenseRepository.findById(expenseId)).willReturn(Optional.of(expense));
+        given(expenseCategoryRepository.findById(1L)).willReturn(Optional.of(category));
 
         // when
         ExpenseResponse response = expenseService.updateExpense(userId, expenseId, request);
@@ -510,7 +587,7 @@ class ExpenseServiceTest {
                 2L,  // 다른 여행의 footprintId
                 new BigDecimal("150"),
                 Currency.USD,
-                "식비",
+                1L,  // categoryId
                 "수정된 설명",
                 LocalDate.now(),
                 "도쿄"

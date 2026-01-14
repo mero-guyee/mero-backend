@@ -18,7 +18,10 @@ public class ExpenseResponse {
     private Long footprintId;
     private BigDecimal amount;
     private Currency currency;
-    private String category;
+    private Long categoryId;
+    private String categoryName;
+    private String categoryIcon;
+    private String categoryColor;
     private String description;
     private LocalDate date;
     private String location;
@@ -31,7 +34,10 @@ public class ExpenseResponse {
                 expense.getFootprint() != null ? expense.getFootprint().getId() : null,
                 expense.getAmount(),
                 expense.getCurrency(),
-                expense.getCategory(),
+                expense.getCategory().getId(),
+                expense.getCategory().getName(),
+                expense.getCategory().getIcon(),
+                expense.getCategory().getColor(),
                 expense.getDescription(),
                 expense.getDate(),
                 expense.getLocation(),

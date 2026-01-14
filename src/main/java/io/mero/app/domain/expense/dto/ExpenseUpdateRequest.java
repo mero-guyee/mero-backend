@@ -23,8 +23,8 @@ public class ExpenseUpdateRequest {
     @NotNull(message = "{expense.currency.notNull}")
     private Currency currency;
 
-    @Size(max = 200, message = "{expense.category.size}")
-    private String category;
+    @NotNull(message = "{expense.categoryId.notNull}")
+    private Long categoryId;
 
     @Size(max = 1000, message = "{expense.description.size}")
     private String description;

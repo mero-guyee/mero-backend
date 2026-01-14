@@ -39,8 +39,9 @@ public class Expense extends BaseEntity {
     @Column(nullable = false, length = 20)
     private Currency currency;
 
-    @Column(length = 200)
-    private String category;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    private ExpenseCategory category;
 
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -53,7 +54,7 @@ public class Expense extends BaseEntity {
 
     @Builder
     public Expense(Long id, Trip trip,  Footprint footprint, BigDecimal amount, Currency currency,
-                   String category, String description, LocalDate date, String location) {
+                   ExpenseCategory category, String description, LocalDate date, String location) {
         this.id = id;
         this.trip = trip;
         this.footprint = footprint;
@@ -65,7 +66,7 @@ public class Expense extends BaseEntity {
         this.location = location;
     }
 
-    public void update(BigDecimal amount, Currency currency, String category,
+    public void update(BigDecimal amount, Currency currency, ExpenseCategory category,
                        String description, LocalDate date, String location) {
         validateAmount(amount);
         validateCurrency(currency);

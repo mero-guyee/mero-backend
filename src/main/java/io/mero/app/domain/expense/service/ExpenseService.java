@@ -10,6 +10,8 @@ import io.mero.app.domain.expense.dto.ExpenseListResponse;
 import io.mero.app.domain.expense.dto.ExpenseResponse;
 import io.mero.app.domain.expense.dto.ExpenseUpdateRequest;
 import io.mero.app.domain.expense.entity.Expense;
+import io.mero.app.domain.expense.entity.ExpenseCategory;
+import io.mero.app.domain.expense.repository.ExpenseCategoryRepository;
 import io.mero.app.domain.expense.repository.ExpenseRepository;
 import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.domain.trip.repository.TripRepository;
@@ -38,6 +40,7 @@ public class ExpenseService {
     private final TripRepository tripRepository;
     private final FootprintRepository footprintRepository;
     private final BudgetRepository budgetRepository;
+    private final ExpenseCategoryRepository expenseCategoryRepository;
     private final MessageUtil messageUtil;
 
     @Transactional
@@ -51,12 +54,15 @@ public class ExpenseService {
             validateFootprintBelongsToTrip(footprint, trip);
         }
 
+        ExpenseCategory category = findExpenseCategoryById(request.getCategoryId());
+        validateCategoryOwner(category, userId);
+
         Expense expense = Expense.builder()
                 .trip(trip)
                 .footprint(footprint)
                 .amount(request.getAmount())
                 .currency(request.getCurrency())
-                .category(request.getCategory())
+                .category(category)
                 .description(request.getDescription())
                 .date(request.getDate())
                 .location(request.getLocation())
@@ -124,10 +130,13 @@ public class ExpenseService {
             expense.unlinkFromFootprint();
         }
 
+        ExpenseCategory category = findExpenseCategoryById(request.getCategoryId());
+        validateCategoryOwner(category, userId);
+
         expense.update(
                 request.getAmount(),
                 request.getCurrency(),
-                request.getCategory(),
+                category,
                 request.getDescription(),
                 request.getDate(),
                 request.getLocation()
@@ -173,6 +182,19 @@ public class ExpenseService {
         if (!footprint.getTrip().equals(trip)) {
             throw new BadRequestException(
                     messageUtil.getMessage("error.footprint.tripMismatch"));
+        }
+    }
+
+    private ExpenseCategory findExpenseCategoryById(Long categoryId) {
+        return expenseCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException(
+                        messageUtil.getMessage("error.expenseCategory.notFound")));
+    }
+
+    private void validateCategoryOwner(ExpenseCategory category, Long userId) {
+        if (!category.getUser().getId().equals(userId)) {
+            throw new ForbiddenException(
+                    messageUtil.getMessage("error.forbidden"));
         }
     }
 }
