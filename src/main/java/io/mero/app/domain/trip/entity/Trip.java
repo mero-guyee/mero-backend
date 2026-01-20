@@ -85,7 +85,7 @@ public class Trip extends BaseEntity {
     }
 
     public void update(String title, LocalDate startDate, LocalDate endDate,
-                       List<String> countries, String imageUrl) {
+                       List<String> countries) {
         validateTitle(title);
         validatePeriod(startDate, endDate);
 
@@ -93,7 +93,14 @@ public class Trip extends BaseEntity {
         this.startDate = startDate;
         this.endDate = endDate;
         setCountries(countries);
+    }
+
+    public void updateImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public void removeImageUrl() {
+        this.imageUrl = null;
     }
 
     public List<String> getCountries() {
@@ -125,5 +132,7 @@ public class Trip extends BaseEntity {
             throw new BadRequestException("시작일은 종료일보다 이전이어야 합니다");
         }
     }
+
+
 
 }

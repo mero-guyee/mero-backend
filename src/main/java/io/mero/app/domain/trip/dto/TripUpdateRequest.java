@@ -28,6 +28,5 @@ public class TripUpdateRequest {
     private LocalDate endDate;
 
     private List<String> countries;
-    private String imageUrl;
 
 }

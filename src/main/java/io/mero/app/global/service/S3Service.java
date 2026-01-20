@@ -1,20 +1,26 @@
 package io.mero.app.global.service;
 
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+
 /**
  * S3 파일 관리 서비스 인터페이스
  */
 public interface S3Service {
 
-    /**
-     * S3에서 파일 삭제
-     * @param fileUrl 삭제할 파일의 URL
-     */
-    void deleteFile(String fileUrl);
+    // Trip
+    String uploadTripImage(Long userId, MultipartFile image);
+    void deleteTripImage(String imageUrl);
 
-    /**
-     * S3에 파일 업로드
-     * @param file 업로드할 파일
-     * @return 업로드된 파일의 URL
-     */
-    // String uploadFile(MultipartFile file);
+    // Footprint 사진
+    List<String> uploadFootprintPhotos(Long userId, Long tripId, Long footprintId, List<MultipartFile> photos);
+    void deleteFootprintPhoto(String photoUrl);
+    void deleteFootprintPhotos(List<String> photoUrls);
+
+    // 여행 관련 파일
+    String uploadTripDocument(Long userId, Long tripId, MultipartFile document);
+    void deleteTripDocument(String documentUrl);
 }
+
+

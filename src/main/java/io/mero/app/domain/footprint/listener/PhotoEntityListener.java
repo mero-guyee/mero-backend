@@ -33,7 +33,7 @@ public class PhotoEntityListener {
                 log.info("Deleting S3 file for photo: {}, url: {}", photo.getId(), photo.getImageUrl());
 
                 if (s3Service != null) {
-                    s3Service.deleteFile(photo.getImageUrl());
+                    s3Service.deleteFootprintPhoto(photo.getImageUrl());
                     log.info("Successfully deleted S3 file: {}", photo.getImageUrl());
                 } else {
                     log.warn("S3Service is not available. Skipping S3 file deletion for: {}", photo.getImageUrl());

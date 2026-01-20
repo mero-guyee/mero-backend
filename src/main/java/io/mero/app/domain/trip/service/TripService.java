@@ -12,6 +12,7 @@ import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.UserRepository;
 import io.mero.app.global.exception.ForbiddenException;
 import io.mero.app.global.exception.NotFoundException;
+import io.mero.app.global.service.S3Service;
 import io.mero.app.global.util.MessageUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ public class TripService {
     private final UserRepository userRepository;
     private final TripRepository tripRepository;
     private final FileRepository fileRepository;
+    private final S3Service s3Service;
     private final MessageUtil messageUtil;
 
     @Transactional
@@ -40,7 +42,7 @@ public class TripService {
 
         String imageUrl = null;
         if (image != null && !image.isEmpty()) {
-//            imageUrl = s3Service.uploadTripImage(image);  // 경로: trips/{userId}/{uuid}
+            imageUrl = s3Service.uploadTripImage(userId, image);  // 경로: trips/{userId}/{uuid}
         }
 
         Trip trip = Trip.builder()
@@ -83,11 +85,36 @@ public class TripService {
                 request.getTitle(),
                 request.getStartDate(),
                 request.getEndDate(),
-                request.getCountries(),
-                request.getImageUrl()
+                request.getCountries()
         );
 
         return TripResponse.from(trip);
+    }
+
+    @Transactional
+    public TripResponse updateTripImage(Long userId, Long tripId, MultipartFile image) {
+        Trip trip = findTripById(tripId);
+        validateOwner(userId, trip);
+
+        if (trip.getImageUrl() != null) {
+            s3Service.deleteTripImage(trip.getImageUrl());
+        }
+
+        String imageUrl = s3Service.uploadTripImage(userId, image);
+        trip.updateImageUrl(imageUrl);
+
+        return TripResponse.from(trip);
+    }
+
+    @Transactional
+    public void deleteTripImage(Long userId, Long tripId) {
+        Trip trip = findTripById(tripId);
+        validateOwner(userId, trip);
+
+        if (trip.getImageUrl() != null) {
+            s3Service.deleteTripImage(trip.getImageUrl());
+            trip.removeImageUrl();
+        }
     }
 
     @Transactional

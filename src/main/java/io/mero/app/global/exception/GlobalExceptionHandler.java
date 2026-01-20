@@ -64,6 +64,27 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
     }
 
+    @ExceptionHandler(FileUploadException.class)
+    public ResponseEntity<ErrorResponse> handleFileUploadException(FileUploadException e) {
+        log.error("FileUploadException: {}", e.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse("FILE_UPLOAD_ERROR", e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
+
+    @ExceptionHandler(FileDeleteException.class)
+    public ResponseEntity<ErrorResponse> handleFileDeleteException(FileDeleteException e) {
+        log.error("FileDeleteException: {}", e.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse("FILE_DELETE_ERROR", e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
+
+    @ExceptionHandler(InvalidFileException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidFileException(InvalidFileException e) {
+        log.error("InvalidFileException: {}", e.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse("INVALID_FILE", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception e) {
         log.error("Unexpected error occurred", e);

@@ -59,7 +59,8 @@ public class TripController {
     @PutMapping("/{tripId}")
     public ResponseEntity<TripResponse> updateTrip(
             @PathVariable Long tripId,
-            @Valid @RequestBody TripUpdateRequest request) {
+            @RequestBody @Valid TripUpdateRequest request
+    ) {
         Long userId = SecurityUtil.getCurrentUserId();
         TripResponse response = tripService.updateTrip(userId, tripId, request);
         return ResponseEntity.ok(response);
@@ -70,6 +71,25 @@ public class TripController {
     public ResponseEntity<Void> deleteTrip(@PathVariable Long tripId) {
         Long userId = SecurityUtil.getCurrentUserId();
         tripService.deleteTrip(userId, tripId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "여행 대표 이미지 업로드/수정", description = "여행의 대표 이미지를 업로드하거나 수정합니다")
+    @PostMapping(value = "/{tripId}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<TripResponse> uploadTripImage(
+            @PathVariable Long tripId,
+            @RequestPart("image") MultipartFile image
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        TripResponse response = tripService.updateTripImage(userId, tripId, image);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "여행 대표 이미지 삭제", description = "여행의 대표 이미지를 삭제합니다")
+    @DeleteMapping("/{tripId}/image")
+    public ResponseEntity<Void> deleteTripImage(@PathVariable Long tripId) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        tripService.deleteTripImage(userId, tripId);
         return ResponseEntity.noContent().build();
     }
 }
