@@ -1,5 +1,6 @@
 package io.mero.app.global.service;
 
+import io.mero.app.global.dto.S3UploadResult;
 import io.mero.app.global.exception.FileDeleteException;
 import io.mero.app.global.exception.FileUploadException;
 import io.mero.app.global.exception.InvalidFileException;
@@ -31,29 +32,33 @@ public class S3ServiceImpl implements S3Service {
     @Value("${cloud.aws.region.static}")
     private String region;
 
-    // Trip 이미지
     @Override
-    public String uploadTripImage(Long userId, MultipartFile image) {
+    public S3UploadResult uploadTripCoverImage(Long userId, MultipartFile image) {
         validateImageFile(image);
         String path = generateTripImagePath(userId);
         return upload(image, path);
     }
 
-    // Footprint 사진들
     @Override
-    public List<String> uploadFootprintPhotos(Long userId, Long tripId, Long footprintId,
-                                              List<MultipartFile> photos) {
-        return null;
+    public List<S3UploadResult> uploadFootprintPhotos(Long userId, Long tripId, Long footprintId,
+                                                       List<MultipartFile> photos) {
+        return photos.stream()
+                .peek(this::validateImageFile)
+                .map(photo -> {
+                    String path = generateFootprintPhotoPath(userId, tripId, footprintId);
+                    return upload(photo, path);
+                })
+                .collect(Collectors.toList());
     }
 
-    // 여행 문서
     @Override
-    public String uploadTripDocument(Long userId, Long tripId, MultipartFile document) {
-        return null;
+    public S3UploadResult uploadTripDocument(Long userId, Long tripId, MultipartFile document) {
+        validateDocumentFile(document);
+        String path = generateTripDocumentPath(userId, tripId);
+        return upload(document, path);
     }
 
-    // 공통 업로드 로직
-    private String upload(MultipartFile file, String path) {
+    private S3UploadResult upload(MultipartFile file, String path) {
         try {
             String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
             String fullPath = path + fileName;
@@ -67,7 +72,15 @@ public class S3ServiceImpl implements S3Service {
 
             s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
 
-            return generateS3Url(fullPath);
+            String s3Url = generateS3Url(fullPath);
+
+            return new S3UploadResult(
+                    fullPath,
+                    s3Url,
+                    file.getOriginalFilename(),
+                    file.getSize(),
+                    file.getContentType()
+            );
         } catch (IOException e) {
             log.error("파일 업로드 실패: {}", e.getMessage());
             throw new FileUploadException("파일 업로드 실패", e);
@@ -79,60 +92,55 @@ public class S3ServiceImpl implements S3Service {
     }
 
     @Override
-    public void deleteTripImage(String imageUrl) {
-        deleteFile(imageUrl);
+    public void deleteTripCoverImage(String s3Key) {
+        deleteByKey(s3Key);
     }
 
     @Override
-    public void deleteFootprintPhoto(String photoUrl) {
-        deleteFile(photoUrl);
+    public void deleteFootprintPhoto(String s3Key) {
+        deleteByKey(s3Key);
     }
 
     @Override
-    public void deleteFootprintPhotos(List<String> photoUrls) {
-        photoUrls.forEach(this::deleteFile);
+    public void deleteFootprintPhotos(List<String> s3Keys) {
+        s3Keys.forEach(this::deleteByKey);
     }
 
     @Override
-    public void deleteTripDocument(String documentUrl) {
-        deleteFile(documentUrl);
+    public void deleteTripDocument(String s3Key) {
+        deleteByKey(s3Key);
     }
 
-    // 공통 삭제 로직
-    private void deleteFile(String fileUrl) {
-        if (fileUrl == null || fileUrl.isEmpty()) {
+    private void deleteByKey(String s3Key) {
+        if (s3Key == null || s3Key.isEmpty()) {
             return;
         }
 
         try {
-            String key = extractKeyFromUrl(fileUrl);
             DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
                     .bucket(bucket)
-                    .key(key)
+                    .key(s3Key)
                     .build();
             s3Client.deleteObject(deleteObjectRequest);
-            log.info("S3 파일 삭제 완료: {}", key);
+            log.info("S3 파일 삭제 완료: {}", s3Key);
         } catch (Exception e) {
             log.error("파일 삭제 실패: {}", e.getMessage());
             throw new FileDeleteException("파일 삭제 실패", e);
         }
     }
 
-    // 경로 생성 헬퍼 메서드
     private String generateTripImagePath(Long userId) {
-        return String.format("users/%d/trips/images/", userId);
+        return String.format("users/%d/trips/cover/", userId);
     }
 
     private String generateFootprintPhotoPath(Long userId, Long tripId, Long footprintId) {
-        return String.format("users/%d/trips/%d/footprints/%d/photos/",
-                userId, tripId, footprintId);
+        return String.format("users/%d/trips/%d/footprints/%d/photos/", userId, tripId, footprintId);
     }
 
     private String generateTripDocumentPath(Long userId, Long tripId) {
         return String.format("users/%d/trips/%d/documents/", userId, tripId);
     }
 
-    // 검증 메서드
     private void validateImageFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new InvalidFileException("파일이 비어있습니다");
@@ -143,21 +151,18 @@ public class S3ServiceImpl implements S3Service {
             throw new InvalidFileException("이미지 파일만 업로드 가능합니다");
         }
 
-        if (file.getSize() > 10 * 1024 * 1024) { // 10MB
+        if (file.getSize() > 10 * 1024 * 1024) {
             throw new InvalidFileException("파일 크기는 10MB를 초과할 수 없습니다");
         }
     }
 
-    private String extractKeyFromUrl(String fileUrl) {
-        String prefix = String.format("https://%s.s3.%s.amazonaws.com/", bucket, region);
-        if (fileUrl.startsWith(prefix)) {
-            return fileUrl.substring(prefix.length());
+    private void validateDocumentFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new InvalidFileException("파일이 비어있습니다");
         }
 
-        String altPrefix = String.format("https://s3.%s.amazonaws.com/%s/", region, bucket);
-        if (fileUrl.startsWith(altPrefix)) {
-            return fileUrl.substring(altPrefix.length());
+        if (file.getSize() > 20 * 1024 * 1024) {
+            throw new InvalidFileException("파일 크기는 20MB를 초과할 수 없습니다");
         }
-        throw new IllegalArgumentException("잘못된 S3 URL 형식입니다: " + fileUrl);
     }
 }

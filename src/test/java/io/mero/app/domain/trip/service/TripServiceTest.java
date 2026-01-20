@@ -6,9 +6,12 @@ import io.mero.app.domain.trip.dto.TripDetailResponse;
 import io.mero.app.domain.trip.dto.TripResponse;
 import io.mero.app.domain.trip.dto.TripUpdateRequest;
 import io.mero.app.domain.trip.entity.Trip;
+import io.mero.app.domain.trip.entity.TripCoverImage;
+import io.mero.app.domain.trip.repository.TripCoverImageRepository;
 import io.mero.app.domain.trip.repository.TripRepository;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.UserRepository;
+import io.mero.app.global.dto.S3UploadResult;
 import io.mero.app.global.enums.Currency;
 import io.mero.app.global.enums.Timezone;
 import io.mero.app.global.exception.ForbiddenException;
@@ -46,6 +49,9 @@ class TripServiceTest {
     private TripRepository tripRepository;
 
     @Mock
+    private TripCoverImageRepository tripCoverImageRepository;
+
+    @Mock
     private FileRepository fileRepository;
 
     @Mock
@@ -70,7 +76,7 @@ class TripServiceTest {
         );
 
         User user = createUser(userId);
-        Trip trip = createTrip(1L, user, request.getTitle(), request.getStartDate(), request.getEndDate(), null);
+        Trip trip = createTrip(1L, user, request.getTitle(), request.getStartDate(), request.getEndDate());
 
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(tripRepository.save(any(Trip.class))).willReturn(trip);
@@ -85,7 +91,7 @@ class TripServiceTest {
 
         verify(userRepository).findById(userId);
         verify(tripRepository).save(any(Trip.class));
-        verify(s3Service, never()).uploadTripImage(any(), any());
+        verify(s3Service, never()).uploadTripCoverImage(any(), any());
     }
 
     @Test
@@ -107,14 +113,25 @@ class TripServiceTest {
                 "test image content".getBytes()
         );
 
-        String uploadedImageUrl = "https://s3.amazonaws.com/bucket/users/1/trips/images/uuid_test.jpg";
+        S3UploadResult uploadResult = new S3UploadResult(
+                "users/1/trips/cover/uuid_test.jpg",
+                "https://s3.amazonaws.com/bucket/users/1/trips/cover/uuid_test.jpg",
+                "test.jpg",
+                18L,
+                "image/jpeg"
+        );
 
         User user = createUser(userId);
-        Trip trip = createTrip(1L, user, request.getTitle(), request.getStartDate(), request.getEndDate(), uploadedImageUrl);
+        Trip trip = createTrip(1L, user, request.getTitle(), request.getStartDate(), request.getEndDate());
 
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        given(s3Service.uploadTripImage(eq(userId), any(MultipartFile.class))).willReturn(uploadedImageUrl);
         given(tripRepository.save(any(Trip.class))).willReturn(trip);
+        given(s3Service.uploadTripCoverImage(eq(userId), any(MultipartFile.class))).willReturn(uploadResult);
+        given(tripCoverImageRepository.save(any(TripCoverImage.class))).willAnswer(invocation -> {
+            TripCoverImage coverImage = invocation.getArgument(0);
+            trip.setCoverImage(coverImage);
+            return coverImage;
+        });
 
         // when
         TripResponse response = tripService.createTrip(userId, request, image);
@@ -122,9 +139,10 @@ class TripServiceTest {
         // then
         assertThat(response.getId()).isEqualTo(1L);
         assertThat(response.getTitle()).isEqualTo("남미 여행");
-        assertThat(response.getImageUrl()).isEqualTo(uploadedImageUrl);
+        assertThat(response.getImageUrl()).isEqualTo(uploadResult.getS3Url());
 
-        verify(s3Service).uploadTripImage(eq(userId), any(MultipartFile.class));
+        verify(s3Service).uploadTripCoverImage(eq(userId), any(MultipartFile.class));
+        verify(tripCoverImageRepository).save(any(TripCoverImage.class));
     }
 
     @Test
@@ -135,8 +153,8 @@ class TripServiceTest {
         User user = createUser(userId);
 
         List<Trip> trips = List.of(
-                createTrip(1L, user, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15), null),
-                createTrip(2L, user, "일본 여행", LocalDate.of(2026, 8, 11), LocalDate.of(2026, 10, 15), null)
+                createTrip(1L, user, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15)),
+                createTrip(2L, user, "일본 여행", LocalDate.of(2026, 8, 11), LocalDate.of(2026, 10, 15))
         );
 
         given(tripRepository.findByUserIdOrderByStartDateDesc(userId)).willReturn(trips);
@@ -159,7 +177,7 @@ class TripServiceTest {
         Long userId = 1L;
         Long tripId = 1L;
         User user = createUser(userId);
-        Trip trip = createTrip(tripId, user, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15), null);
+        Trip trip = createTrip(tripId, user, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15));
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
         given(fileRepository.findByTripId(tripId)).willReturn(Collections.emptyList());
@@ -183,7 +201,7 @@ class TripServiceTest {
         Long otherUserId = 2L;
         Long tripId = 1L;
         User otherUser = createUser(otherUserId);
-        Trip trip = createTrip(tripId, otherUser, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15), null);
+        Trip trip = createTrip(tripId, otherUser, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15));
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
         given(messageUtil.getMessage("error.forbidden")).willReturn("접근 권한이 없습니다");
@@ -204,7 +222,7 @@ class TripServiceTest {
         Long tripId = 1L;
 
         User user = createUser(userId);
-        Trip trip = createTrip(tripId, user, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15), null);
+        Trip trip = createTrip(tripId, user, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15));
 
         TripUpdateRequest request = new TripUpdateRequest(
                 "남미 여행 수정",
@@ -234,7 +252,7 @@ class TripServiceTest {
         Long tripId = 1L;
 
         User user = createUser(userId);
-        Trip trip = createTrip(tripId, user, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15), null);
+        Trip trip = createTrip(tripId, user, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15));
 
         MockMultipartFile image = new MockMultipartFile(
                 "image",
@@ -243,19 +261,31 @@ class TripServiceTest {
                 "test image content".getBytes()
         );
 
-        String uploadedImageUrl = "https://s3.amazonaws.com/bucket/users/1/trips/images/uuid_test.jpg";
+        S3UploadResult uploadResult = new S3UploadResult(
+                "users/1/trips/cover/uuid_test.jpg",
+                "https://s3.amazonaws.com/bucket/users/1/trips/cover/uuid_test.jpg",
+                "test.jpg",
+                18L,
+                "image/jpeg"
+        );
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
-        given(s3Service.uploadTripImage(eq(userId), any(MultipartFile.class))).willReturn(uploadedImageUrl);
+        given(s3Service.uploadTripCoverImage(eq(userId), any(MultipartFile.class))).willReturn(uploadResult);
+        given(tripCoverImageRepository.save(any(TripCoverImage.class))).willAnswer(invocation -> {
+            TripCoverImage coverImage = invocation.getArgument(0);
+            trip.setCoverImage(coverImage);
+            return coverImage;
+        });
 
         // when
         TripResponse response = tripService.updateTripImage(userId, tripId, image);
 
         // then
-        assertThat(response.getImageUrl()).isEqualTo(uploadedImageUrl);
+        assertThat(response.getImageUrl()).isEqualTo(uploadResult.getS3Url());
 
-        verify(s3Service).uploadTripImage(eq(userId), any(MultipartFile.class));
-        verify(s3Service, never()).deleteTripImage(any());
+        verify(s3Service).uploadTripCoverImage(eq(userId), any(MultipartFile.class));
+        verify(s3Service, never()).deleteTripCoverImage(any());
+        verify(tripCoverImageRepository).save(any(TripCoverImage.class));
     }
 
     @Test
@@ -264,10 +294,20 @@ class TripServiceTest {
         // given
         Long userId = 1L;
         Long tripId = 1L;
-        String existingImageUrl = "https://s3.amazonaws.com/bucket/users/1/trips/images/old_image.jpg";
 
         User user = createUser(userId);
-        Trip trip = createTrip(tripId, user, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15), existingImageUrl);
+        Trip trip = createTrip(tripId, user, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15));
+
+        // 기존 커버 이미지 설정
+        TripCoverImage existingCoverImage = TripCoverImage.builder()
+                .trip(trip)
+                .s3Key("users/1/trips/cover/old_image.jpg")
+                .s3Url("https://s3.amazonaws.com/bucket/users/1/trips/cover/old_image.jpg")
+                .originalFilename("old_image.jpg")
+                .fileSize(100L)
+                .mimeType("image/jpeg")
+                .build();
+        trip.setCoverImage(existingCoverImage);
 
         MockMultipartFile newImage = new MockMultipartFile(
                 "image",
@@ -276,19 +316,32 @@ class TripServiceTest {
                 "new test image content".getBytes()
         );
 
-        String newImageUrl = "https://s3.amazonaws.com/bucket/users/1/trips/images/uuid_new_test.jpg";
+        S3UploadResult uploadResult = new S3UploadResult(
+                "users/1/trips/cover/uuid_new_test.jpg",
+                "https://s3.amazonaws.com/bucket/users/1/trips/cover/uuid_new_test.jpg",
+                "new_test.jpg",
+                22L,
+                "image/jpeg"
+        );
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
-        given(s3Service.uploadTripImage(eq(userId), any(MultipartFile.class))).willReturn(newImageUrl);
+        given(s3Service.uploadTripCoverImage(eq(userId), any(MultipartFile.class))).willReturn(uploadResult);
+        given(tripCoverImageRepository.save(any(TripCoverImage.class))).willAnswer(invocation -> {
+            TripCoverImage coverImage = invocation.getArgument(0);
+            trip.setCoverImage(coverImage);
+            return coverImage;
+        });
 
         // when
         TripResponse response = tripService.updateTripImage(userId, tripId, newImage);
 
         // then
-        assertThat(response.getImageUrl()).isEqualTo(newImageUrl);
+        assertThat(response.getImageUrl()).isEqualTo(uploadResult.getS3Url());
 
-        verify(s3Service).deleteTripImage(existingImageUrl);
-        verify(s3Service).uploadTripImage(eq(userId), any(MultipartFile.class));
+        verify(s3Service).deleteTripCoverImage("users/1/trips/cover/old_image.jpg");
+        verify(tripCoverImageRepository).delete(existingCoverImage);
+        verify(s3Service).uploadTripCoverImage(eq(userId), any(MultipartFile.class));
+        verify(tripCoverImageRepository).save(any(TripCoverImage.class));
     }
 
     @Test
@@ -297,10 +350,20 @@ class TripServiceTest {
         // given
         Long userId = 1L;
         Long tripId = 1L;
-        String existingImageUrl = "https://s3.amazonaws.com/bucket/users/1/trips/images/test.jpg";
 
         User user = createUser(userId);
-        Trip trip = createTrip(tripId, user, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15), existingImageUrl);
+        Trip trip = createTrip(tripId, user, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15));
+
+        // 커버 이미지 설정
+        TripCoverImage coverImage = TripCoverImage.builder()
+                .trip(trip)
+                .s3Key("users/1/trips/cover/test.jpg")
+                .s3Url("https://s3.amazonaws.com/bucket/users/1/trips/cover/test.jpg")
+                .originalFilename("test.jpg")
+                .fileSize(100L)
+                .mimeType("image/jpeg")
+                .build();
+        trip.setCoverImage(coverImage);
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
 
@@ -308,8 +371,9 @@ class TripServiceTest {
         tripService.deleteTripImage(userId, tripId);
 
         // then
-        verify(s3Service).deleteTripImage(existingImageUrl);
-        assertThat(trip.getImageUrl()).isNull();
+        verify(s3Service).deleteTripCoverImage("users/1/trips/cover/test.jpg");
+        verify(tripCoverImageRepository).delete(coverImage);
+        assertThat(trip.getCoverImage()).isNull();
     }
 
     @Test
@@ -320,7 +384,7 @@ class TripServiceTest {
         Long tripId = 1L;
 
         User user = createUser(userId);
-        Trip trip = createTrip(tripId, user, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15), null);
+        Trip trip = createTrip(tripId, user, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15));
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
 
@@ -328,18 +392,30 @@ class TripServiceTest {
         tripService.deleteTripImage(userId, tripId);
 
         // then
-        verify(s3Service, never()).deleteTripImage(any());
+        verify(s3Service, never()).deleteTripCoverImage(any());
+        verify(tripCoverImageRepository, never()).delete(any());
     }
 
     @Test
-    @DisplayName("여행 삭제 성공")
-    void 여행_삭제_성공() {
+    @DisplayName("여행 삭제 성공 - 커버 이미지 있음")
+    void 여행_삭제_성공_이미지_있음() {
         // given
         Long userId = 1L;
         Long tripId = 1L;
 
         User user = createUser(userId);
-        Trip trip = createTrip(tripId, user, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15), null);
+        Trip trip = createTrip(tripId, user, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15));
+
+        // 커버 이미지 설정
+        TripCoverImage coverImage = TripCoverImage.builder()
+                .trip(trip)
+                .s3Key("users/1/trips/cover/test.jpg")
+                .s3Url("https://s3.amazonaws.com/bucket/users/1/trips/cover/test.jpg")
+                .originalFilename("test.jpg")
+                .fileSize(100L)
+                .mimeType("image/jpeg")
+                .build();
+        trip.setCoverImage(coverImage);
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
 
@@ -348,6 +424,28 @@ class TripServiceTest {
 
         // then
         verify(tripRepository).findById(tripId);
+        verify(s3Service).deleteTripCoverImage("users/1/trips/cover/test.jpg");
+        verify(tripRepository).delete(trip);
+    }
+
+    @Test
+    @DisplayName("여행 삭제 성공 - 커버 이미지 없음")
+    void 여행_삭제_성공_이미지_없음() {
+        // given
+        Long userId = 1L;
+        Long tripId = 1L;
+
+        User user = createUser(userId);
+        Trip trip = createTrip(tripId, user, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15));
+
+        given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
+
+        // when
+        tripService.deleteTrip(userId, tripId);
+
+        // then
+        verify(tripRepository).findById(tripId);
+        verify(s3Service, never()).deleteTripCoverImage(any());
         verify(tripRepository).delete(trip);
     }
 
@@ -362,14 +460,13 @@ class TripServiceTest {
                 .build();
     }
 
-    private Trip createTrip(Long tripId, User user, String title, LocalDate startDate, LocalDate endDate, String imageUrl) {
+    private Trip createTrip(Long tripId, User user, String title, LocalDate startDate, LocalDate endDate) {
         return Trip.builder()
                 .id(tripId)
                 .user(user)
                 .title(title)
                 .startDate(startDate)
                 .endDate(endDate)
-                .imageUrl(imageUrl)
                 .build();
     }
 }

@@ -34,7 +34,7 @@ public class TripDetailResponse {
                 trip.getStartDate(),
                 trip.getEndDate(),
                 trip.getCountries(),
-                trip.getImageUrl(),
+                trip.getCoverImageUrl(),
                 trip.getCreatedAt(),
                 files == null ? Collections.emptyList() :
                         files.stream()

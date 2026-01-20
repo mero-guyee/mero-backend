@@ -29,7 +29,7 @@ public class TripResponse {
                 trip.getStartDate(),
                 trip.getEndDate(),
                 trip.getCountries(),
-                trip.getImageUrl(),
+                trip.getCoverImageUrl(),
                 trip.getCreatedAt()
         );
     }

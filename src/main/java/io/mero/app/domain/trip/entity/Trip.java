@@ -6,7 +6,6 @@ import io.mero.app.domain.file.entity.File;
 import io.mero.app.domain.footprint.entity.Footprint;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.global.entity.BaseEntity;
-import io.mero.app.global.enums.Currency;
 import io.mero.app.global.exception.BadRequestException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -46,8 +45,8 @@ public class Trip extends BaseEntity {
     @Column(name = "countries", length = 1000)
     private String countriesStr;
 
-    @Column(name = "imageUrl", length = 1000)
-    private String imageUrl;
+    @OneToOne(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private TripCoverImage coverImage;
 
     @Column(name = "is_synced", nullable = false)
     private Boolean isSynced = false;
@@ -69,15 +68,13 @@ public class Trip extends BaseEntity {
 
     @Builder
     public Trip(Long id, User user, String title,
-                LocalDate startDate, LocalDate endDate, List<String> countries,
-                String imageUrl) {
+                LocalDate startDate, LocalDate endDate, List<String> countries) {
         this.id = id;
         this.user = user;
         this.title = title;
         this.startDate = startDate;
         this.endDate = endDate;
         setCountries(countries);
-        this.imageUrl = imageUrl;
     }
 
     public boolean isOwner(Long userId) {
@@ -95,12 +92,16 @@ public class Trip extends BaseEntity {
         setCountries(countries);
     }
 
-    public void updateImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+    public void setCoverImage(TripCoverImage coverImage) {
+        this.coverImage = coverImage;
     }
 
-    public void removeImageUrl() {
-        this.imageUrl = null;
+    public void removeCoverImage() {
+        this.coverImage = null;
+    }
+
+    public String getCoverImageUrl() {
+        return coverImage != null ? coverImage.getS3Url() : null;
     }
 
     public List<String> getCountries() {
@@ -132,7 +133,4 @@ public class Trip extends BaseEntity {
             throw new BadRequestException("시작일은 종료일보다 이전이어야 합니다");
         }
     }
-
-
-
 }
