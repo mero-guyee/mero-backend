@@ -1,7 +1,6 @@
-package io.mero.app.domain.file.entity;
+package io.mero.app.domain.trip.entity;
 
 import io.mero.app.domain.footprint.entity.UploadStatus;
-import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -12,8 +11,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "files")
-public class File extends BaseEntity {
+@Table(name = "trip_documents")
+public class TripDocument extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,9 +48,9 @@ public class File extends BaseEntity {
     private Boolean isSynced = false;
 
     @Builder
-    public File(Trip trip, String originalFileName,
-                String storedFileName, String fileUrl,
-                Long fileSize, String contentType) {
+    public TripDocument(Trip trip, String originalFileName,
+                        String storedFileName, String fileUrl,
+                        Long fileSize, String contentType) {
         this.trip = trip;
         this.originalFileName = originalFileName;
         this.storedFileName = storedFileName;

@@ -2,7 +2,6 @@ package io.mero.app.domain.trip.entity;
 
 import io.mero.app.domain.budget.entity.Budget;
 import io.mero.app.domain.expense.entity.Expense;
-import io.mero.app.domain.file.entity.File;
 import io.mero.app.domain.footprint.entity.Footprint;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.global.entity.BaseEntity;
@@ -64,7 +63,7 @@ public class Trip extends BaseEntity {
     private List<Footprint> footprints = new ArrayList<>();
 
     @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<File> files = new ArrayList<>();
+    private List<TripDocument> documents = new ArrayList<>();
 
     @Builder
     public Trip(Long id, User user, String title,

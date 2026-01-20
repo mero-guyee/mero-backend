@@ -1,7 +1,7 @@
 package io.mero.app.domain.trip.service;
 
-import io.mero.app.domain.file.entity.File;
-import io.mero.app.domain.file.repository.FileRepository;
+import io.mero.app.domain.trip.entity.TripDocument;
+import io.mero.app.domain.trip.repository.TripDocumentRepository;
 import io.mero.app.domain.trip.dto.TripCreateRequest;
 import io.mero.app.domain.trip.dto.TripDetailResponse;
 import io.mero.app.domain.trip.dto.TripResponse;
@@ -33,7 +33,7 @@ public class TripService {
     private final UserRepository userRepository;
     private final TripRepository tripRepository;
     private final TripCoverImageRepository tripCoverImageRepository;
-    private final FileRepository fileRepository;
+    private final TripDocumentRepository tripDocumentRepository;
     private final S3Service s3Service;
     private final MessageUtil messageUtil;
 
@@ -72,9 +72,9 @@ public class TripService {
         Trip trip = findTripById(tripId);
         validateOwner(userId, trip);
 
-        List<File> files = fileRepository.findByTripId(tripId);
+        List<TripDocument> documents = tripDocumentRepository.findByTripId(tripId);
 
-        return TripDetailResponse.from(trip, files);
+        return TripDetailResponse.from(trip, documents);
     }
 
     @Transactional

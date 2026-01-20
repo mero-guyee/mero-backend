@@ -1,9 +1,7 @@
 package io.mero.app.domain.trip.dto;
 
-import io.mero.app.domain.file.dto.FileResponse;
-import io.mero.app.domain.file.entity.File;
 import io.mero.app.domain.trip.entity.Trip;
-import io.mero.app.global.enums.Currency;
+import io.mero.app.domain.trip.entity.TripDocument;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -25,9 +23,9 @@ public class TripDetailResponse {
     private String imageUrl;
     private LocalDateTime createdAt;
 
-    private List<FileResponse> files;
+    private List<TripDocumentResponse> documents;
 
-    public static TripDetailResponse from(Trip trip, List<File> files) {
+    public static TripDetailResponse from(Trip trip, List<TripDocument> documents) {
         return new TripDetailResponse(
                 trip.getId(),
                 trip.getTitle(),
@@ -36,9 +34,9 @@ public class TripDetailResponse {
                 trip.getCountries(),
                 trip.getCoverImageUrl(),
                 trip.getCreatedAt(),
-                files == null ? Collections.emptyList() :
-                        files.stream()
-                        .map(FileResponse::from)
+                documents == null ? Collections.emptyList() :
+                        documents.stream()
+                        .map(TripDocumentResponse::from)
                         .collect(Collectors.toList())
         );
     }

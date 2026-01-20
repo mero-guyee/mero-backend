@@ -1,6 +1,6 @@
 package io.mero.app.domain.trip.service;
 
-import io.mero.app.domain.file.repository.FileRepository;
+import io.mero.app.domain.trip.repository.TripDocumentRepository;
 import io.mero.app.domain.trip.dto.TripCreateRequest;
 import io.mero.app.domain.trip.dto.TripDetailResponse;
 import io.mero.app.domain.trip.dto.TripResponse;
@@ -52,7 +52,7 @@ class TripServiceTest {
     private TripCoverImageRepository tripCoverImageRepository;
 
     @Mock
-    private FileRepository fileRepository;
+    private TripDocumentRepository tripDocumentRepository;
 
     @Mock
     private S3Service s3Service;
@@ -180,7 +180,7 @@ class TripServiceTest {
         Trip trip = createTrip(tripId, user, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15));
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
-        given(fileRepository.findByTripId(tripId)).willReturn(Collections.emptyList());
+        given(tripDocumentRepository.findByTripId(tripId)).willReturn(Collections.emptyList());
 
         // when
         TripDetailResponse response = tripService.getTrip(userId, tripId);
@@ -190,7 +190,7 @@ class TripServiceTest {
         assertThat(response.getTitle()).isEqualTo("남미 여행");
 
         verify(tripRepository).findById(tripId);
-        verify(fileRepository).findByTripId(tripId);
+        verify(tripDocumentRepository).findByTripId(tripId);
     }
 
     @Test
