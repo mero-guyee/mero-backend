@@ -2,6 +2,7 @@ package io.mero.app.domain.trip.controller;
 
 import io.mero.app.domain.trip.dto.TripCreateRequest;
 import io.mero.app.domain.trip.dto.TripDetailResponse;
+import io.mero.app.domain.trip.dto.TripDocumentResponse;
 import io.mero.app.domain.trip.dto.TripResponse;
 import io.mero.app.domain.trip.dto.TripUpdateRequest;
 import io.mero.app.domain.trip.service.TripService;
@@ -90,6 +91,28 @@ public class TripController {
     public ResponseEntity<Void> deleteTripImage(@PathVariable Long tripId) {
         Long userId = SecurityUtil.getCurrentUserId();
         tripService.deleteTripImage(userId, tripId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "여행 문서 업로드", description = "여행에 문서를 업로드합니다")
+    @PostMapping(value = "/{tripId}/documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<TripDocumentResponse> uploadTripDocument(
+            @PathVariable Long tripId,
+            @RequestPart("file") MultipartFile file
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        TripDocumentResponse response = tripService.uploadTripDocument(userId, tripId, file);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @Operation(summary = "여행 문서 삭제", description = "여행의 문서를 삭제합니다")
+    @DeleteMapping("/{tripId}/documents/{documentId}")
+    public ResponseEntity<Void> deleteTripDocument(
+            @PathVariable Long tripId,
+            @PathVariable Long documentId
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        tripService.deleteTripDocument(userId, tripId, documentId);
         return ResponseEntity.noContent().build();
     }
 }

@@ -4,6 +4,7 @@ import io.mero.app.domain.trip.entity.TripDocument;
 import io.mero.app.domain.trip.repository.TripDocumentRepository;
 import io.mero.app.domain.trip.dto.TripCreateRequest;
 import io.mero.app.domain.trip.dto.TripDetailResponse;
+import io.mero.app.domain.trip.dto.TripDocumentResponse;
 import io.mero.app.domain.trip.dto.TripResponse;
 import io.mero.app.domain.trip.dto.TripUpdateRequest;
 import io.mero.app.domain.trip.entity.Trip;
@@ -137,12 +138,55 @@ public class TripService {
     }
 
     @Transactional
+    public TripDocumentResponse uploadTripDocument(Long userId, Long tripId, MultipartFile file) {
+        Trip trip = findTripById(tripId);
+        validateOwner(userId, trip);
+
+        S3UploadResult uploadResult = s3Service.uploadTripDocument(userId, tripId, file);
+
+        TripDocument document = TripDocument.builder()
+                .trip(trip)
+                .originalFileName(uploadResult.getOriginalFilename())
+                .storedFileName(uploadResult.getS3Key())
+                .fileUrl(uploadResult.getS3Url())
+                .fileSize(uploadResult.getFileSize())
+                .contentType(uploadResult.getMimeType())
+                .build();
+
+        TripDocument savedDocument = tripDocumentRepository.save(document);
+        return TripDocumentResponse.from(savedDocument);
+    }
+
+    @Transactional
+    public void deleteTripDocument(Long userId, Long tripId, Long documentId) {
+        Trip trip = findTripById(tripId);
+        validateOwner(userId, trip);
+
+        TripDocument document = tripDocumentRepository.findById(documentId)
+                .orElseThrow(() -> new NotFoundException(
+                        messageUtil.getMessage("error.document.notFound")));
+
+        if (!document.getTrip().getId().equals(tripId)) {
+            throw new ForbiddenException(
+                    messageUtil.getMessage("error.forbidden"));
+        }
+
+        s3Service.deleteTripDocument(document.getS3Key());
+        tripDocumentRepository.delete(document);
+    }
+
+    @Transactional
     public void deleteTrip(Long userId, Long tripId) {
         Trip trip = findTripById(tripId);
         validateOwner(userId, trip);
 
         if (trip.getCoverImage() != null) {
             s3Service.deleteTripCoverImage(trip.getCoverImage().getS3Key());
+        }
+
+        List<TripDocument> documents = tripDocumentRepository.findByTripId(tripId);
+        for (TripDocument document : documents) {
+            s3Service.deleteTripDocument(document.getS3Key());
         }
 
         tripRepository.delete(trip);

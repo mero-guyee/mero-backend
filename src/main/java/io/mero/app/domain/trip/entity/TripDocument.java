@@ -57,5 +57,11 @@ public class TripDocument extends BaseEntity {
         this.fileUrl = fileUrl;
         this.fileSize = fileSize;
         this.contentType = contentType;
+        this.uploadStatus = UploadStatus.COMPLETED;
+        this.isSynced = true;
+    }
+
+    public String getS3Key() {
+        return storedFileName;
     }
 }
