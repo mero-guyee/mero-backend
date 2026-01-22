@@ -42,7 +42,6 @@ public class ExpenseCategoryService {
                         .color(defaultCategory.getColor())
                         .isDefault(true)
                         .displayOrder(defaultCategory.ordinal())
-                        .isSynced(true)
                         .build())
                 .toList();
 

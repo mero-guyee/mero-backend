@@ -44,9 +44,6 @@ public class TripDocument extends BaseEntity {
     @Column(name = "upload_status", length = 20, nullable = false)
     private UploadStatus uploadStatus;
 
-    @Column(name = "is_synced", nullable = false)
-    private Boolean isSynced = false;
-
     @Builder
     public TripDocument(Trip trip, String originalFileName,
                         String storedFileName, String fileUrl,
@@ -58,7 +55,6 @@ public class TripDocument extends BaseEntity {
         this.fileSize = fileSize;
         this.contentType = contentType;
         this.uploadStatus = UploadStatus.COMPLETED;
-        this.isSynced = true;
     }
 
     public String getS3Key() {

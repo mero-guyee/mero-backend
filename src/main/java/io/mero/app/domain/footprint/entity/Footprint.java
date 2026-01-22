@@ -49,9 +49,6 @@ public class Footprint extends BaseEntity {
     private List<FootprintLocation> locations = new ArrayList<>();
 
 
-    @Column(name = "is_synced", nullable = false)
-    private Boolean isSynced = false;
-
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
@@ -70,7 +67,6 @@ public class Footprint extends BaseEntity {
         this.content = content;
         this.date = date;
         this.weatherInfo = weatherInfo;
-        this.isSynced = false;
         this.lastModifiedAt = LocalDateTime.now();
         this.photos = photoUrls;
         this.locations = new ArrayList<>();
@@ -111,17 +107,6 @@ public class Footprint extends BaseEntity {
                 this.locations.add(location);
             }
         }
-    }
-
-    // === 동기화 관리 ===
-    public void markAsSynced() {
-        this.isSynced = true;
-        this.lastModifiedAt = LocalDateTime.now();
-    }
-
-    public void markAsUnsynced() {
-        this.isSynced = false;
-        this.lastModifiedAt = LocalDateTime.now();
     }
 
     // === Soft Delete ===

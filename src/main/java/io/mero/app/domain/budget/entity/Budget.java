@@ -33,9 +33,6 @@ public class Budget extends BaseEntity {
     @Column(nullable = false, length = 20)
     private Currency currency;
 
-    @Column(name = "is_synced", nullable = false)
-    private Boolean isSynced = false;
-
     @Builder
     public Budget(Long id, Trip trip, BigDecimal amount, Currency currency) {
         validateAmount(amount);

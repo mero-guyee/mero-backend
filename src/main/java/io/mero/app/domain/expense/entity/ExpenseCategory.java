@@ -37,19 +37,15 @@ public class ExpenseCategory extends BaseEntity {
     @Column(name = "display_order", nullable = false)
     private Integer displayOrder;
 
-    @Column(name = "is_synced", nullable = false)
-    private Boolean isSynced = false;
-
     @Builder
     public ExpenseCategory(User user, String name, String icon, String color,
-                           Boolean isDefault, Integer displayOrder, Boolean isSynced) {
+                           Boolean isDefault, Integer displayOrder) {
         this.user = user;
         this.name = name;
         this.icon = icon;
         this.color = color;
         this.isDefault = isDefault != null ? isDefault : false;
         this.displayOrder = displayOrder;
-        this.isSynced = isSynced;
     }
 
     public void updateName(String name) {

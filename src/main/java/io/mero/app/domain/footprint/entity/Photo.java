@@ -53,9 +53,6 @@ public class Photo extends BaseEntity {
     @Column(name = "upload_status", length = 20, nullable = false)
     private UploadStatus uploadStatus;
 
-    @Column(name = "is_synced", nullable = false)
-    private Boolean isSynced = false;
-
     @Builder
     public Photo(Footprint footprint, String s3Key, String s3Url,
                  String originalFilename, Long fileSize, String mimeType,
@@ -70,7 +67,6 @@ public class Photo extends BaseEntity {
         this.height = height;
         this.orderIndex = orderIndex;
         this.uploadStatus = UploadStatus.COMPLETED;
-        this.isSynced = false;
     }
 
     public void update(String s3Key, String s3Url, String originalFilename,
@@ -98,14 +94,6 @@ public class Photo extends BaseEntity {
 
     public void failUpload() {
         this.uploadStatus = UploadStatus.FAILED;
-    }
-
-    public void markAsSynced() {
-        this.isSynced = true;
-    }
-
-    public void markAsUnsynced() {
-        this.isSynced = false;
     }
 
     public void updateOrder(Integer orderIndex) {

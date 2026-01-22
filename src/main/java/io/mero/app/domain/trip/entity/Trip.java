@@ -13,7 +13,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,12 +45,6 @@ public class Trip extends BaseEntity {
 
     @OneToOne(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private TripCoverImage coverImage;
-
-    @Column(name = "is_synced", nullable = false)
-    private Boolean isSynced = false;
-
-    @Column(name = "last_synced_at")
-    private LocalDateTime lastSyncedAt;
 
     @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Budget> budgets = new ArrayList<>();

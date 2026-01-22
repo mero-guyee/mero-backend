@@ -13,8 +13,6 @@ public interface PhotoRepository extends JpaRepository<Photo, Long> {
 
     List<Photo> findByFootprintOrderByOrderIndexAsc(Footprint footprint);
 
-    List<Photo> findByIsSyncedFalse();
-
     long countByFootprint(Footprint footprint);
 
 }
