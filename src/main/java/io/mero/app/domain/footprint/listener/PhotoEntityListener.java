@@ -29,18 +29,18 @@ public class PhotoEntityListener {
     @PreRemove
     public void preRemove(Photo photo) {
         try {
-            if (photo.getImageUrl() != null && !photo.getImageUrl().isEmpty()) {
-                log.info("Deleting S3 file for photo: {}, url: {}", photo.getId(), photo.getImageUrl());
+            if (photo.getS3Key() != null && !photo.getS3Key().isEmpty()) {
+                log.info("Deleting S3 file for photo: {}, s3Key: {}", photo.getId(), photo.getS3Key());
 
                 if (s3Service != null) {
-                    s3Service.deleteFootprintPhoto(photo.getImageUrl());
-                    log.info("Successfully deleted S3 file: {}", photo.getImageUrl());
+                    s3Service.deleteFootprintPhoto(photo.getS3Key());
+                    log.info("Successfully deleted S3 file: {}", photo.getS3Key());
                 } else {
-                    log.warn("S3Service is not available. Skipping S3 file deletion for: {}", photo.getImageUrl());
+                    log.warn("S3Service is not available. Skipping S3 file deletion for: {}", photo.getS3Key());
                 }
             }
         } catch (Exception e) {
-            log.error("Failed to delete S3 file: {} - {}", photo.getImageUrl(), e.getMessage(), e);
+            log.error("Failed to delete S3 file: {} - {}", photo.getS3Key(), e.getMessage(), e);
             // S3 파일 삭제 실패 시에도 DB 레코드는 삭제되도록 예외를 던지지 않음
         }
     }

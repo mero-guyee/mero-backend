@@ -2,6 +2,7 @@ package io.mero.app.domain.footprint.util;
 
 import io.mero.app.domain.footprint.entity.Footprint;
 import io.mero.app.domain.footprint.entity.Photo;
+import io.mero.app.global.dto.S3UploadResult;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,24 +12,26 @@ import java.util.List;
 public class PhotoMapper {
 
     /**
-     * Convert list of URL strings to Photo entities
-     * @param photoUrls List of photo URLs
+     * Convert list of S3UploadResult to Photo entities
+     * @param uploadResults List of S3 upload results
      * @param footprint Parent footprint (can be null for new footprint)
-     * @return List of Photo entities with auto-populated fields
+     * @return List of Photo entities
      */
-    public static List<Photo> fromUrls(List<String> photoUrls, Footprint footprint) {
-        if (photoUrls == null || photoUrls.isEmpty()) {
+    public static List<Photo> fromUploadResults(List<S3UploadResult> uploadResults, Footprint footprint) {
+        if (uploadResults == null || uploadResults.isEmpty()) {
             return new ArrayList<>();
         }
 
         List<Photo> photos = new ArrayList<>();
-        for (int i = 0; i < photoUrls.size(); i++) {
-            String url = photoUrls.get(i);
+        for (int i = 0; i < uploadResults.size(); i++) {
+            S3UploadResult result = uploadResults.get(i);
             Photo photo = Photo.builder()
                     .footprint(footprint)
-                    .imageUrl(url)
-                    .fileName(extractFileName(url))
-                    .mimeType(extractMimeType(url))
+                    .s3Key(result.getS3Key())
+                    .s3Url(result.getS3Url())
+                    .originalFilename(result.getOriginalFilename())
+                    .fileSize(result.getFileSize())
+                    .mimeType(result.getMimeType())
                     .orderIndex(i)
                     .build();
             photos.add(photo);
@@ -45,49 +48,20 @@ public class PhotoMapper {
         }
         return photos.stream()
                 .sorted(Comparator.comparing(Photo::getOrderIndex))
-                .map(Photo::getImageUrl)
+                .map(Photo::getS3Url)
                 .toList();
     }
 
     /**
-     * Extract filename from URL
-     * Example: "https://example.com/photos/image.jpg" -> "image.jpg"
+     * Convert Photo entities to S3 key string list
      */
-    private static String extractFileName(String url) {
-        if (url == null || url.isEmpty()) {
-            return null;
+    public static List<String> toS3Keys(List<Photo> photos) {
+        if (photos == null || photos.isEmpty()) {
+            return Collections.emptyList();
         }
-        try {
-            int lastSlash = url.lastIndexOf('/');
-            if (lastSlash >= 0 && lastSlash < url.length() - 1) {
-                return url.substring(lastSlash + 1);
-            }
-        } catch (Exception e) {
-            // If parsing fails, return null
-        }
-        return null;
-    }
-
-    /**
-     * Extract MIME type from URL extension
-     * Example: "image.jpg" -> "image/jpeg"
-     */
-    private static String extractMimeType(String url) {
-        if (url == null || url.isEmpty()) {
-            return null;
-        }
-
-        String lowerUrl = url.toLowerCase();
-        if (lowerUrl.endsWith(".jpg") || lowerUrl.endsWith(".jpeg")) {
-            return "image/jpeg";
-        } else if (lowerUrl.endsWith(".png")) {
-            return "image/png";
-        } else if (lowerUrl.endsWith(".gif")) {
-            return "image/gif";
-        } else if (lowerUrl.endsWith(".webp")) {
-            return "image/webp";
-        }
-
-        return null; // Unknown or no extension
+        return photos.stream()
+                .sorted(Comparator.comparing(Photo::getOrderIndex))
+                .map(Photo::getS3Key)
+                .toList();
     }
 }

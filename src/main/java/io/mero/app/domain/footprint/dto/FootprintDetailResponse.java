@@ -1,34 +1,37 @@
 package io.mero.app.domain.footprint.dto;
 
+import io.mero.app.domain.expense.dto.ExpenseResponse;
 import io.mero.app.domain.footprint.entity.Footprint;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 
 @Getter
 @AllArgsConstructor
-public class FootprintResponse {
+public class FootprintDetailResponse {
 
     private Long id;
     private Long tripId;
     private String content;
     private LocalDate date;
     private List<LocationResponse> locations;
-    private String thumbnailUrl;
+    private String weatherInfo;
+    private List<String> photoUrls;
+    private List<ExpenseResponse> expenses;
 
-    public static FootprintResponse from(Footprint footprint) {
-        List<String> photoUrls = footprint.getPhotoUrls();
-        String thumbnailUrl = photoUrls.isEmpty() ? null : photoUrls.get(0);
-
-        return new FootprintResponse(
+    public static FootprintDetailResponse from(Footprint footprint, List<ExpenseResponse> expenses) {
+        return new FootprintDetailResponse(
                 footprint.getId(),
                 footprint.getTrip().getId(),
                 footprint.getContent(),
                 footprint.getDate(),
                 LocationResponse.fromList(footprint.getLocations()),
-                thumbnailUrl
+                footprint.getWeatherInfo(),
+                footprint.getPhotoUrls(),
+                expenses == null ? Collections.emptyList() : expenses
         );
     }
 }

@@ -1,9 +1,7 @@
 package io.mero.app.domain.footprint.entity;
 
 import io.mero.app.domain.trip.entity.Trip;
-import io.mero.app.domain.user.entity.User;
 import io.mero.app.global.entity.BaseEntity;
-import io.mero.app.global.exception.ForbiddenException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -57,15 +55,15 @@ public class Footprint extends BaseEntity {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    @Version // 충돌 해결용
-    private Long version;
+//    @Version // 충돌 해결용
+//    private Long version;
 
     @Column(name = "last_modified_at", nullable = false)
     private LocalDateTime lastModifiedAt;
 
     @Builder
     public Footprint(Long id, Trip trip, String title, String content,
-                     LocalDate date, String weatherInfo, List<String> photoUrls) {
+                     LocalDate date, String weatherInfo, List<Photo> photoUrls) {
         this.id = id;
         this.trip = trip;
         this.title = title;
@@ -74,7 +72,7 @@ public class Footprint extends BaseEntity {
         this.weatherInfo = weatherInfo;
         this.isSynced = false;
         this.lastModifiedAt = LocalDateTime.now();
-        this.photos = new ArrayList<>();
+        this.photos = photoUrls;
         this.locations = new ArrayList<>();
     }
 
@@ -99,7 +97,7 @@ public class Footprint extends BaseEntity {
     public List<String> getPhotoUrls() {
         return photos.stream()
                 .sorted(Comparator.comparing(Photo::getOrderIndex))
-                .map(Photo::getImageUrl)
+                .map(Photo::getS3Url)
                 .collect(Collectors.toList());
     }
 

@@ -1,8 +1,10 @@
 package io.mero.app.domain.footprint.controller;
 
 import io.mero.app.domain.footprint.dto.FootprintCreateRequest;
+import io.mero.app.domain.footprint.dto.FootprintDetailResponse;
 import io.mero.app.domain.footprint.dto.FootprintResponse;
 import io.mero.app.domain.footprint.dto.FootprintUpdateRequest;
+import io.mero.app.domain.footprint.dto.PhotoResponse;
 import io.mero.app.domain.footprint.service.FootprintService;
 import io.mero.app.global.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,8 +13,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -43,13 +47,13 @@ public class FootprintController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "발자취 상세 조회", description = "특정 발자취의 상세 정보를 조회합니다 (연결된 경비 포함)")
+    @Operation(summary = "발자취 상세 조회", description = "특정 발자취의 상세 정보를 조회합니다 (사진, 경비 포함)")
     @GetMapping("/{footprintId}")
-    public ResponseEntity<FootprintResponse> getFootprint(
+    public ResponseEntity<FootprintDetailResponse> getFootprint(
             @PathVariable Long tripId,
             @PathVariable Long footprintId) {
         Long userId = SecurityUtil.getCurrentUserId();
-        FootprintResponse response = footprintService.getFootprint(userId, tripId, footprintId);
+        FootprintDetailResponse response = footprintService.getFootprint(userId, tripId, footprintId);
         return ResponseEntity.ok(response);
     }
 
@@ -71,6 +75,30 @@ public class FootprintController {
             @PathVariable Long footprintId) {
         Long userId = SecurityUtil.getCurrentUserId();
         footprintService.deleteFootprint(userId, tripId, footprintId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // === 사진 관리 ===
+
+    @Operation(summary = "발자취 사진 업로드", description = "발자취에 사진을 업로드합니다")
+    @PostMapping(value = "/{footprintId}/photos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<List<PhotoResponse>> uploadPhotos(
+            @PathVariable Long tripId,
+            @PathVariable Long footprintId,
+            @RequestPart("photos") List<MultipartFile> photos) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        List<PhotoResponse> response = footprintService.uploadPhotos(userId, tripId, footprintId, photos);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @Operation(summary = "발자취 사진 삭제", description = "발자취의 특정 사진을 삭제합니다")
+    @DeleteMapping("/{footprintId}/photos/{photoId}")
+    public ResponseEntity<Void> deletePhoto(
+            @PathVariable Long tripId,
+            @PathVariable Long footprintId,
+            @PathVariable Long photoId) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        footprintService.deletePhoto(userId, tripId, footprintId, photoId);
         return ResponseEntity.noContent().build();
     }
 }

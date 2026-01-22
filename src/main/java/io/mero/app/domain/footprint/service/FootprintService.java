@@ -1,8 +1,10 @@
 package io.mero.app.domain.footprint.service;
 
 import io.mero.app.domain.footprint.dto.FootprintCreateRequest;
+import io.mero.app.domain.footprint.dto.FootprintDetailResponse;
 import io.mero.app.domain.footprint.dto.FootprintResponse;
 import io.mero.app.domain.footprint.dto.FootprintUpdateRequest;
+import io.mero.app.domain.footprint.dto.PhotoResponse;
 import io.mero.app.domain.footprint.entity.Footprint;
 import io.mero.app.domain.footprint.entity.FootprintLocation;
 import io.mero.app.domain.footprint.entity.Photo;
@@ -14,14 +16,16 @@ import io.mero.app.domain.expense.dto.ExpenseResponse;
 import io.mero.app.domain.expense.repository.ExpenseRepository;
 import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.domain.trip.repository.TripRepository;
+import io.mero.app.global.dto.S3UploadResult;
 import io.mero.app.global.exception.ForbiddenException;
 import io.mero.app.global.exception.NotFoundException;
+import io.mero.app.global.service.S3Service;
 import io.mero.app.global.util.MessageUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -33,6 +37,7 @@ public class FootprintService {
     private final PhotoRepository photoRepository;
     private final TripRepository tripRepository;
     private final ExpenseRepository expenseRepository;
+    private final S3Service s3Service;
     private final MessageUtil messageUtil;
 
     @Transactional
@@ -45,13 +50,9 @@ public class FootprintService {
                 .title(request.getTitle())
                 .content(request.getContent())
                 .date(request.getDate())
-                .photoUrls(request.getPhotoUrls())
                 .build();
 
         Footprint savedFootprint = footprintRepository.save(footprint);
-
-        List<Photo> photos = PhotoMapper.fromUrls(request.getPhotoUrls(), savedFootprint);
-        savedFootprint.updatePhotos(photos);
 
         List<FootprintLocation> locations = FootprintLocationMapper.fromRequests(request.getLocations(), savedFootprint);
         savedFootprint.updateLocations(locations);
@@ -69,7 +70,7 @@ public class FootprintService {
                 .toList();
     }
 
-    public FootprintResponse getFootprint(Long userId, Long tripId, Long footprintId) {
+    public FootprintDetailResponse getFootprint(Long userId, Long tripId, Long footprintId) {
         Footprint footprint = findFootprintById(footprintId);
         Trip trip = footprint.getTrip();
 
@@ -81,7 +82,7 @@ public class FootprintService {
                 .map(ExpenseResponse::from)
                 .toList();
 
-        return FootprintResponse.from(footprint, expenses);
+        return FootprintDetailResponse.from(footprint, expenses);
     }
 
     @Transactional
@@ -97,9 +98,6 @@ public class FootprintService {
                 request.getContent(),
                 request.getDate()
         );
-
-        List<Photo> newPhotos = PhotoMapper.fromUrls(request.getPhotoUrls(), footprint);
-        footprint.updatePhotos(newPhotos);
 
         List<FootprintLocation> newLocations = FootprintLocationMapper.fromRequests(request.getLocations(), footprint);
         footprint.updateLocations(newLocations);
@@ -142,5 +140,52 @@ public class FootprintService {
             throw new ForbiddenException(
                     messageUtil.getMessage("error.forbidden"));
         }
+    }
+
+    // === 사진 관리 ===
+
+    @Transactional
+    public List<PhotoResponse> uploadPhotos(Long userId, Long tripId, Long footprintId, List<MultipartFile> photos) {
+        Footprint footprint = findFootprintById(footprintId);
+        Trip trip = footprint.getTrip();
+
+        validateTripMatch(trip, tripId);
+        validateOwner(trip, userId);
+
+        List<S3UploadResult> uploadResults = s3Service.uploadFootprintPhotos(userId, tripId, footprintId, photos);
+
+        int startOrderIndex = footprint.getPhotos().size();
+        List<Photo> newPhotos = PhotoMapper.fromUploadResults(uploadResults, footprint);
+        for (int i = 0; i < newPhotos.size(); i++) {
+            newPhotos.get(i).updateOrder(startOrderIndex + i);
+        }
+
+        List<Photo> savedPhotos = photoRepository.saveAll(newPhotos);
+        footprint.getPhotos().addAll(savedPhotos);
+
+        return savedPhotos.stream()
+                .map(PhotoResponse::from)
+                .toList();
+    }
+
+    @Transactional
+    public void deletePhoto(Long userId, Long tripId, Long footprintId, Long photoId) {
+        Footprint footprint = findFootprintById(footprintId);
+        Trip trip = footprint.getTrip();
+
+        validateTripMatch(trip, tripId);
+        validateOwner(trip, userId);
+
+        Photo photo = photoRepository.findById(photoId)
+                .orElseThrow(() -> new NotFoundException(
+                        messageUtil.getMessage("error.photo.notFound")));
+
+        if (!photo.getFootprint().getId().equals(footprintId)) {
+            throw new ForbiddenException(
+                    messageUtil.getMessage("error.forbidden"));
+        }
+
+        footprint.getPhotos().remove(photo);
+        photoRepository.delete(photo);
     }
 }

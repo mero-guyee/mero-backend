@@ -22,17 +22,29 @@ public class Photo extends BaseEntity {
     @JoinColumn(name = "footprint_id", nullable = false)
     private Footprint footprint;
 
-    @Column(name = "image_url", length = 500)
-    private String imageUrl;
+    @Column(name = "s3_key", nullable = false)
+    private String s3Key;
+
+    @Column(name = "s3_url", nullable = false, length = 1000)
+    private String s3Url;
 
     @Column(name = "local_file_path", length = 500)
     private String localFilePath;
 
-    @Column(name = "file_name", nullable = false, length = 255)
-    private String fileName;
+    @Column(name = "original_filename", length = 500)
+    private String originalFilename;
 
-    @Column(name = "mime_type", length = 50)
+    @Column(name = "file_size")
+    private Long fileSize;
+
+    @Column(name = "mime_type", length = 100)
     private String mimeType;
+
+    @Column(name = "width")
+    private Integer width;
+
+    @Column(name = "height")
+    private Integer height;
 
     @Column(name = "order_index", nullable = false)
     private Integer orderIndex;
@@ -45,15 +57,31 @@ public class Photo extends BaseEntity {
     private Boolean isSynced = false;
 
     @Builder
-    public Photo(Footprint footprint, String imageUrl, String fileName,
-                 String mimeType, Integer orderIndex) {
+    public Photo(Footprint footprint, String s3Key, String s3Url,
+                 String originalFilename, Long fileSize, String mimeType,
+                 Integer width, Integer height, Integer orderIndex) {
         this.footprint = footprint;
-        this.imageUrl = imageUrl;
-        this.fileName = fileName;
+        this.s3Key = s3Key;
+        this.s3Url = s3Url;
+        this.originalFilename = originalFilename;
+        this.fileSize = fileSize;
         this.mimeType = mimeType;
+        this.width = width;
+        this.height = height;
         this.orderIndex = orderIndex;
         this.uploadStatus = UploadStatus.COMPLETED;
         this.isSynced = false;
+    }
+
+    public void update(String s3Key, String s3Url, String originalFilename,
+                       Long fileSize, String mimeType, Integer width, Integer height) {
+        this.s3Key = s3Key;
+        this.s3Url = s3Url;
+        this.originalFilename = originalFilename;
+        this.fileSize = fileSize;
+        this.mimeType = mimeType;
+        this.width = width;
+        this.height = height;
     }
 
     public void setFootprint(Footprint footprint) {
