@@ -3,6 +3,9 @@ package io.mero.app.domain.trip.controller;
 import io.mero.app.domain.trip.dto.TripCreateRequest;
 import io.mero.app.domain.trip.dto.TripDetailResponse;
 import io.mero.app.domain.trip.dto.TripDocumentResponse;
+import io.mero.app.domain.trip.dto.TripMemoCreateRequest;
+import io.mero.app.domain.trip.dto.TripMemoResponse;
+import io.mero.app.domain.trip.dto.TripMemoUpdateRequest;
 import io.mero.app.domain.trip.dto.TripResponse;
 import io.mero.app.domain.trip.dto.TripUpdateRequest;
 import io.mero.app.domain.trip.service.TripService;
@@ -113,6 +116,59 @@ public class TripController {
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
         tripService.deleteTripDocument(userId, tripId, documentId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "여행 메모 생성", description = "여행에 메모를 생성합니다")
+    @PostMapping("/{tripId}/memos")
+    public ResponseEntity<TripMemoResponse> createTripMemo(
+            @PathVariable Long tripId,
+            @RequestBody @Valid TripMemoCreateRequest request
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        TripMemoResponse response = tripService.createTripMemo(userId, tripId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @Operation(summary = "여행 메모 목록 조회", description = "여행의 모든 메모를 조회합니다")
+    @GetMapping("/{tripId}/memos")
+    public ResponseEntity<List<TripMemoResponse>> getTripMemos(@PathVariable Long tripId) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        List<TripMemoResponse> responses = tripService.getTripMemos(userId, tripId);
+        return ResponseEntity.ok(responses);
+    }
+
+    @Operation(summary = "여행 메모 상세 조회", description = "특정 메모의 상세 정보를 조회합니다")
+    @GetMapping("/{tripId}/memos/{memoId}")
+    public ResponseEntity<TripMemoResponse> getTripMemo(
+            @PathVariable Long tripId,
+            @PathVariable Long memoId
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        TripMemoResponse response = tripService.getTripMemo(userId, tripId, memoId);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "여행 메모 수정", description = "메모를 수정합니다")
+    @PutMapping("/{tripId}/memos/{memoId}")
+    public ResponseEntity<TripMemoResponse> updateTripMemo(
+            @PathVariable Long tripId,
+            @PathVariable Long memoId,
+            @RequestBody @Valid TripMemoUpdateRequest request
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        TripMemoResponse response = tripService.updateTripMemo(userId, tripId, memoId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "여행 메모 삭제", description = "메모를 삭제합니다")
+    @DeleteMapping("/{tripId}/memos/{memoId}")
+    public ResponseEntity<Void> deleteTripMemo(
+            @PathVariable Long tripId,
+            @PathVariable Long memoId
+    ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        tripService.deleteTripMemo(userId, tripId, memoId);
         return ResponseEntity.noContent().build();
     }
 }

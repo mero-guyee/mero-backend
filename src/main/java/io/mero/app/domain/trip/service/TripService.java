@@ -1,10 +1,15 @@
 package io.mero.app.domain.trip.service;
 
 import io.mero.app.domain.trip.entity.TripDocument;
+import io.mero.app.domain.trip.entity.TripMemo;
 import io.mero.app.domain.trip.repository.TripDocumentRepository;
+import io.mero.app.domain.trip.repository.TripMemoRepository;
 import io.mero.app.domain.trip.dto.TripCreateRequest;
 import io.mero.app.domain.trip.dto.TripDetailResponse;
 import io.mero.app.domain.trip.dto.TripDocumentResponse;
+import io.mero.app.domain.trip.dto.TripMemoCreateRequest;
+import io.mero.app.domain.trip.dto.TripMemoResponse;
+import io.mero.app.domain.trip.dto.TripMemoUpdateRequest;
 import io.mero.app.domain.trip.dto.TripResponse;
 import io.mero.app.domain.trip.dto.TripUpdateRequest;
 import io.mero.app.domain.trip.entity.Trip;
@@ -37,6 +42,7 @@ public class TripService {
     private final TripRepository tripRepository;
     private final TripCoverImageRepository tripCoverImageRepository;
     private final TripDocumentRepository tripDocumentRepository;
+    private final TripMemoRepository tripMemoRepository;
     private final S3Service s3Service;
     private final MessageUtil messageUtil;
 
@@ -210,6 +216,83 @@ public class TripService {
 
     private void validateOwner(Long userId, Trip trip) {
         if (!trip.isOwner(userId)) {
+            throw new ForbiddenException(
+                    messageUtil.getMessage("error.forbidden"));
+        }
+    }
+
+    @Transactional
+    public TripMemoResponse createTripMemo(Long userId, Long tripId, TripMemoCreateRequest request) {
+        Trip trip = findTripById(tripId);
+        validateOwner(userId, trip);
+
+        return tripMemoRepository.findByClientIdAndTripId(request.getClientId(), tripId)
+                .map(TripMemoResponse::from)
+                .orElseGet(() -> createNewTripMemo(trip, request));
+    }
+
+    private TripMemoResponse createNewTripMemo(Trip trip, TripMemoCreateRequest request) {
+        TripMemo memo = TripMemo.builder()
+                .trip(trip)
+                .clientId(request.getClientId())
+                .title(request.getTitle())
+                .content(request.getContent())
+                .build();
+
+        TripMemo savedMemo = tripMemoRepository.save(memo);
+        return TripMemoResponse.from(savedMemo);
+    }
+
+    public List<TripMemoResponse> getTripMemos(Long userId, Long tripId) {
+        Trip trip = findTripById(tripId);
+        validateOwner(userId, trip);
+
+        return tripMemoRepository.findByTripIdOrderByCreatedAtDesc(tripId).stream()
+                .map(TripMemoResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    public TripMemoResponse getTripMemo(Long userId, Long tripId, Long memoId) {
+        Trip trip = findTripById(tripId);
+        validateOwner(userId, trip);
+
+        TripMemo memo = findMemoById(memoId);
+        validateMemoOwnership(tripId, memo);
+
+        return TripMemoResponse.from(memo);
+    }
+
+    @Transactional
+    public TripMemoResponse updateTripMemo(Long userId, Long tripId, Long memoId, TripMemoUpdateRequest request) {
+        Trip trip = findTripById(tripId);
+        validateOwner(userId, trip);
+
+        TripMemo memo = findMemoById(memoId);
+        validateMemoOwnership(tripId, memo);
+
+        memo.update(request.getTitle(), request.getContent());
+        return TripMemoResponse.from(memo);
+    }
+
+    @Transactional
+    public void deleteTripMemo(Long userId, Long tripId, Long memoId) {
+        Trip trip = findTripById(tripId);
+        validateOwner(userId, trip);
+
+        TripMemo memo = findMemoById(memoId);
+        validateMemoOwnership(tripId, memo);
+
+        tripMemoRepository.delete(memo);
+    }
+
+    private TripMemo findMemoById(Long memoId) {
+        return tripMemoRepository.findById(memoId)
+                .orElseThrow(() -> new NotFoundException(
+                        messageUtil.getMessage("error.memo.notFound")));
+    }
+
+    private void validateMemoOwnership(Long tripId, TripMemo memo) {
+        if (!memo.getTrip().getId().equals(tripId)) {
             throw new ForbiddenException(
                     messageUtil.getMessage("error.forbidden"));
         }
