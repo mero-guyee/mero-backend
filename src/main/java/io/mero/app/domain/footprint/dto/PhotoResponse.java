@@ -9,6 +9,7 @@ import lombok.Getter;
 public class PhotoResponse {
 
     private Long id;
+    private String clientId;
     private String s3Url;
     private String originalFilename;
     private Long fileSize;
@@ -20,6 +21,7 @@ public class PhotoResponse {
     public static PhotoResponse from(Photo photo) {
         return PhotoResponse.builder()
                 .id(photo.getId())
+                .clientId(photo.getClientId())
                 .s3Url(photo.getS3Url())
                 .originalFilename(photo.getOriginalFilename())
                 .fileSize(photo.getFileSize())

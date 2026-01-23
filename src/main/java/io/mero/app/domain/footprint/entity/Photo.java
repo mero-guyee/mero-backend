@@ -53,10 +53,13 @@ public class Photo extends BaseEntity {
     @Column(name = "upload_status", length = 20, nullable = false)
     private UploadStatus uploadStatus;
 
+    @Column(name = "client_id", length = 36, unique = true)
+    private String clientId;
+
     @Builder
     public Photo(Footprint footprint, String s3Key, String s3Url,
                  String originalFilename, Long fileSize, String mimeType,
-                 Integer width, Integer height, Integer orderIndex) {
+                 Integer width, Integer height, Integer orderIndex, String clientId) {
         this.footprint = footprint;
         this.s3Key = s3Key;
         this.s3Url = s3Url;
@@ -67,6 +70,7 @@ public class Photo extends BaseEntity {
         this.height = height;
         this.orderIndex = orderIndex;
         this.uploadStatus = UploadStatus.COMPLETED;
+        this.clientId = clientId;
     }
 
     public void update(String s3Key, String s3Url, String originalFilename,

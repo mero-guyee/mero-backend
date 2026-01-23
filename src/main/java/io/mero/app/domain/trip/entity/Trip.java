@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "trips")
@@ -43,6 +44,9 @@ public class Trip extends BaseEntity {
     @Column(name = "countries", length = 1000)
     private String countriesStr;
 
+    @Column(name = "client_id", length = 36, unique = true)
+    private String clientId;
+
     @OneToOne(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private TripCoverImage coverImage;
 
@@ -60,13 +64,14 @@ public class Trip extends BaseEntity {
 
     @Builder
     public Trip(Long id, User user, String title,
-                LocalDate startDate, LocalDate endDate, List<String> countries) {
+                LocalDate startDate, LocalDate endDate, List<String> countries, String clientId) {
         this.id = id;
         this.user = user;
         this.title = title;
         this.startDate = startDate;
         this.endDate = endDate;
         setCountries(countries);
+        this.clientId = clientId;
     }
 
     public boolean isOwner(Long userId) {

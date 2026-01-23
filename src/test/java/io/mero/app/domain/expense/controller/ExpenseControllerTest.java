@@ -79,6 +79,7 @@ class ExpenseControllerTest {
     void createExpense_Success_WithoutFootprint() throws Exception {
         // given
         ExpenseCreateRequest request = new ExpenseCreateRequest(
+                "test-client-id-1",
                 1L,
                 null,  // footprintId
                 new BigDecimal("100"),
@@ -90,7 +91,7 @@ class ExpenseControllerTest {
         );
 
         ExpenseResponse response = new ExpenseResponse(
-                1L, 1L, null,
+                1L, "test-client-id-1", 1L, null,
                 new BigDecimal("100"), Currency.USD,
                 1L, "식비", "🍔", "#FF5733",
                 "스타벅스",
@@ -117,6 +118,7 @@ class ExpenseControllerTest {
     void createExpense_Success_WithFootprint() throws Exception {
         // given
         ExpenseCreateRequest request = new ExpenseCreateRequest(
+                "test-client-id-2",
                 1L,
                 1L,  // footprintId
                 new BigDecimal("100"),
@@ -128,7 +130,7 @@ class ExpenseControllerTest {
         );
 
         ExpenseResponse response = new ExpenseResponse(
-                1L, 1L, 1L,  // footprintId 포함
+                1L, "test-client-id-2", 1L, 1L,  // footprintId 포함
                 new BigDecimal("100"), Currency.USD,
                 1L, "식비", "🍔", "#FF5733",
                 "일기에 기록한 스타벅스",
@@ -164,7 +166,7 @@ class ExpenseControllerTest {
         );
 
         ExpenseResponse response = new ExpenseResponse(
-                1L, 1L, 1L,
+                1L, "client-id-1", 1L, 1L,
                 new BigDecimal("150"), Currency.USD,
                 1L, "식비", "🍔", "#FF5733",
                 "수정된 설명", LocalDate.now(), "도쿄",
@@ -199,7 +201,7 @@ class ExpenseControllerTest {
         );
 
         ExpenseResponse response = new ExpenseResponse(
-                1L, 1L, null,  // footprintId null
+                1L, "client-id-1", 1L, null,  // footprintId null
                 new BigDecimal("150"), Currency.USD,
                 1L, "식비", "🍔", "#FF5733",
                 "수정된 설명", LocalDate.now(), "도쿄",
@@ -234,7 +236,7 @@ class ExpenseControllerTest {
         // given
         List<ExpenseResponse> expenses = List.of(
                 new ExpenseResponse(
-                        1L, 1L, null,
+                        1L, "client-id-1", 1L, null,
                         new BigDecimal("50"), Currency.USD,
                         1L, "식비", "🍔", "#FF5733",
                         "스타벅스",
@@ -242,7 +244,7 @@ class ExpenseControllerTest {
                         LocalDateTime.now()
                 ),
                 new ExpenseResponse(
-                        2L, 1L, null,
+                        2L, "client-id-2", 1L, null,
                         new BigDecimal("100000"), Currency.KRW,
                         2L, "쇼핑", "🛍️", "#33FF57",
                         "면세점",

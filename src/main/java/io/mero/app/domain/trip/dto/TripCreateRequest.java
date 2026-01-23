@@ -17,6 +17,10 @@ import java.util.List;
 @AllArgsConstructor
 public class TripCreateRequest {
 
+    @NotBlank(message = "{trip.clientId.notBlank}")
+    @Size(max = 36, message = "{trip.clientId.size}")
+    private String clientId;
+
     @NotBlank(message = "{trip.title.notBlank}")
     @Size(max = 100, message = "{trip.title.size}")
     private String title;

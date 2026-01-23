@@ -68,7 +68,9 @@ class TripServiceTest {
     void 여행_등록_성공_이미지_없음() {
         // given
         Long userId = 1L;
+        String clientId = "test-client-id-1";
         TripCreateRequest request = new TripCreateRequest(
+                clientId,
                 "남미 여행",
                 LocalDate.of(2026, 3, 11),
                 LocalDate.of(2026, 5, 15),
@@ -78,6 +80,7 @@ class TripServiceTest {
         User user = createUser(userId);
         Trip trip = createTrip(1L, user, request.getTitle(), request.getStartDate(), request.getEndDate());
 
+        given(tripRepository.findByClientIdAndUserId(clientId, userId)).willReturn(Optional.empty());
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(tripRepository.save(any(Trip.class))).willReturn(trip);
 
@@ -89,6 +92,7 @@ class TripServiceTest {
         assertThat(response.getTitle()).isEqualTo("남미 여행");
         assertThat(response.getImageUrl()).isNull();
 
+        verify(tripRepository).findByClientIdAndUserId(clientId, userId);
         verify(userRepository).findById(userId);
         verify(tripRepository).save(any(Trip.class));
         verify(s3Service, never()).uploadTripCoverImage(any(), any());
@@ -99,7 +103,9 @@ class TripServiceTest {
     void 여행_등록_성공_이미지_포함() {
         // given
         Long userId = 1L;
+        String clientId = "test-client-id-2";
         TripCreateRequest request = new TripCreateRequest(
+                clientId,
                 "남미 여행",
                 LocalDate.of(2026, 3, 11),
                 LocalDate.of(2026, 5, 15),
@@ -124,6 +130,7 @@ class TripServiceTest {
         User user = createUser(userId);
         Trip trip = createTrip(1L, user, request.getTitle(), request.getStartDate(), request.getEndDate());
 
+        given(tripRepository.findByClientIdAndUserId(clientId, userId)).willReturn(Optional.empty());
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(tripRepository.save(any(Trip.class))).willReturn(trip);
         given(s3Service.uploadTripCoverImage(eq(userId), any(MultipartFile.class))).willReturn(uploadResult);

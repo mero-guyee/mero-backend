@@ -75,12 +75,13 @@ class BudgetControllerTest {
     void createBudget_Success() throws Exception {
         // given
         BudgetCreateRequest request = new BudgetCreateRequest(
+                "test-client-id-1",
                 new BigDecimal("4000"),
                 Currency.USD
         );
 
         BudgetResponse response = new BudgetResponse(
-                1L, 1L,
+                1L, "test-client-id-1", 1L,
                 new BigDecimal("4000"), Currency.USD,
                 LocalDateTime.now(), LocalDateTime.now()
         );
@@ -104,9 +105,9 @@ class BudgetControllerTest {
     void getBudgets_Success() throws Exception {
         // given
         List<BudgetResponse> responses = List.of(
-                new BudgetResponse(1L, 1L, new BigDecimal("4000"), Currency.USD,
+                new BudgetResponse(1L, "client-id-1", 1L, new BigDecimal("4000"), Currency.USD,
                         LocalDateTime.now(), LocalDateTime.now()),
-                new BudgetResponse(2L, 1L, new BigDecimal("1000000"), Currency.KRW,
+                new BudgetResponse(2L, "client-id-2", 1L, new BigDecimal("1000000"), Currency.KRW,
                         LocalDateTime.now(), LocalDateTime.now())
         );
 
@@ -132,7 +133,7 @@ class BudgetControllerTest {
         );
 
         BudgetResponse response = new BudgetResponse(
-                1L, 1L,
+                1L, "client-id-1", 1L,
                 new BigDecimal("5000"), Currency.USD,
                 LocalDateTime.now(), LocalDateTime.now()
         );

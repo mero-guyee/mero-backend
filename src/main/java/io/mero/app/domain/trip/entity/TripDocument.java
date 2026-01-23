@@ -44,10 +44,13 @@ public class TripDocument extends BaseEntity {
     @Column(name = "upload_status", length = 20, nullable = false)
     private UploadStatus uploadStatus;
 
+    @Column(name = "client_id", length = 36, unique = true)
+    private String clientId;
+
     @Builder
     public TripDocument(Trip trip, String originalFileName,
                         String storedFileName, String fileUrl,
-                        Long fileSize, String contentType) {
+                        Long fileSize, String contentType, String clientId) {
         this.trip = trip;
         this.originalFileName = originalFileName;
         this.storedFileName = storedFileName;
@@ -55,6 +58,7 @@ public class TripDocument extends BaseEntity {
         this.fileSize = fileSize;
         this.contentType = contentType;
         this.uploadStatus = UploadStatus.COMPLETED;
+        this.clientId = clientId;
     }
 
     public String getS3Key() {

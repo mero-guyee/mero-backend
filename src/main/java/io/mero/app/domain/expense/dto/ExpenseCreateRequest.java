@@ -17,6 +17,10 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class ExpenseCreateRequest {
 
+    @NotNull(message = "{expense.clientId.notNull}")
+    @Size(max = 36, message = "{expense.clientId.size}")
+    private String clientId;
+
     @NotNull(message = "{expense.tripId.notNull}")
     private Long tripId;
 

@@ -75,7 +75,9 @@ class TripControllerTest {
     @DisplayName("여행 생성 성공 - 이미지 없음")
     void 여행_생성_성공_이미지_없음() throws Exception {
         // given
+        String clientId = "test-client-id-1";
         TripCreateRequest request = new TripCreateRequest(
+                clientId,
                 "남미 여행",
                 LocalDate.of(2026, 3, 11),
                 LocalDate.of(2026, 5, 15),
@@ -84,6 +86,7 @@ class TripControllerTest {
 
         TripResponse response = new TripResponse(
                 1L,
+                clientId,
                 "남미 여행",
                 LocalDate.of(2026, 3, 11),
                 LocalDate.of(2026, 5, 15),
@@ -106,6 +109,7 @@ class TripControllerTest {
                         .file(dataPart))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(response.getId()))
+                .andExpect(jsonPath("$.clientId").value(clientId))
                 .andExpect(jsonPath("$.title").value(response.getTitle()))
                 .andExpect(jsonPath("$.startDate").value(response.getStartDate().toString()))
                 .andExpect(jsonPath("$.endDate").value(response.getEndDate().toString()))
@@ -118,7 +122,9 @@ class TripControllerTest {
     @DisplayName("여행 생성 성공 - 이미지 포함")
     void 여행_생성_성공_이미지_포함() throws Exception {
         // given
+        String clientId = "test-client-id-2";
         TripCreateRequest request = new TripCreateRequest(
+                clientId,
                 "남미 여행",
                 LocalDate.of(2026, 3, 11),
                 LocalDate.of(2026, 5, 15),
@@ -129,6 +135,7 @@ class TripControllerTest {
 
         TripResponse response = new TripResponse(
                 1L,
+                clientId,
                 "남미 여행",
                 LocalDate.of(2026, 3, 11),
                 LocalDate.of(2026, 5, 15),
@@ -169,7 +176,7 @@ class TripControllerTest {
         // given
         List<TripResponse> tripResponses = List.of(
                 new TripResponse(
-                        1L, "남미 여행",
+                        1L, "client-id-1", "남미 여행",
                         LocalDate.of(2026, 3, 11),
                         LocalDate.of(2026, 5, 15),
                         List.of("브라질", "아르헨티나", "페루"),
@@ -177,7 +184,7 @@ class TripControllerTest {
                         LocalDateTime.now()
                 ),
                 new TripResponse(
-                        2L, "일본 여행",
+                        2L, "client-id-2", "일본 여행",
                         LocalDate.of(2026, 8, 10),
                         LocalDate.of(2026, 10, 16),
                         List.of("도쿄", "오사카", "교토"),
@@ -236,6 +243,7 @@ class TripControllerTest {
 
         TripResponse response = new TripResponse(
                 1L,
+                "client-id-1",
                 "남미 여행 수정",
                 LocalDate.of(2026, 3, 10),
                 LocalDate.of(2026, 5, 16),
@@ -274,6 +282,7 @@ class TripControllerTest {
 
         TripResponse response = new TripResponse(
                 1L,
+                "client-id-1",
                 "남미 여행",
                 LocalDate.of(2026, 3, 11),
                 LocalDate.of(2026, 5, 15),

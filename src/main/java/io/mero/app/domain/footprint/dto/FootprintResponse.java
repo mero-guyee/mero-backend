@@ -12,6 +12,7 @@ import java.util.List;
 public class FootprintResponse {
 
     private Long id;
+    private String clientId;
     private Long tripId;
     private String content;
     private LocalDate date;
@@ -24,6 +25,7 @@ public class FootprintResponse {
 
         return new FootprintResponse(
                 footprint.getId(),
+                footprint.getClientId(),
                 footprint.getTrip().getId(),
                 footprint.getContent(),
                 footprint.getDate(),

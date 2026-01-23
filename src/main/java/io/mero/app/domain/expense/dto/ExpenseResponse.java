@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ExpenseResponse {
     private Long id;
+    private String clientId;
     private Long tripId;
     private Long footprintId;
     private BigDecimal amount;
@@ -30,6 +31,7 @@ public class ExpenseResponse {
     public static ExpenseResponse from(Expense expense) {
         return new ExpenseResponse(
                 expense.getId(),
+                expense.getClientId(),
                 expense.getTrip().getId(),
                 expense.getFootprint() != null ? expense.getFootprint().getId() : null,
                 expense.getAmount(),

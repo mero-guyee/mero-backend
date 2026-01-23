@@ -37,15 +37,19 @@ public class ExpenseCategory extends BaseEntity {
     @Column(name = "display_order", nullable = false)
     private Integer displayOrder;
 
+    @Column(name = "client_id", length = 36, unique = true)
+    private String clientId;
+
     @Builder
     public ExpenseCategory(User user, String name, String icon, String color,
-                           Boolean isDefault, Integer displayOrder) {
+                           Boolean isDefault, Integer displayOrder, String clientId) {
         this.user = user;
         this.name = name;
         this.icon = icon;
         this.color = color;
         this.isDefault = isDefault != null ? isDefault : false;
         this.displayOrder = displayOrder;
+        this.clientId = clientId;
     }
 
     public void updateName(String name) {

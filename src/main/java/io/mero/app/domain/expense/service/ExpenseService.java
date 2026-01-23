@@ -48,6 +48,13 @@ public class ExpenseService {
         Trip trip = findTripById(request.getTripId());
         validateOwner(trip, userId);
 
+        // 멱등성 체크: 동일한 clientId로 이미 생성된 Expense가 있으면 해당 Expense 반환
+        return expenseRepository.findByClientIdAndTripId(request.getClientId(), request.getTripId())
+                .map(ExpenseResponse::from)
+                .orElseGet(() -> createNewExpense(userId, trip, request));
+    }
+
+    private ExpenseResponse createNewExpense(Long userId, Trip trip, ExpenseCreateRequest request) {
         Footprint footprint = null;
         if (request.getFootprintId() != null) {
             footprint = findFootprintById(request.getFootprintId());
@@ -59,6 +66,7 @@ public class ExpenseService {
 
         Expense expense = Expense.builder()
                 .trip(trip)
+                .clientId(request.getClientId())
                 .footprint(footprint)
                 .amount(request.getAmount())
                 .currency(request.getCurrency())

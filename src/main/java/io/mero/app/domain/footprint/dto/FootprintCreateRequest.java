@@ -15,6 +15,10 @@ import java.util.List;
 @AllArgsConstructor
 public class FootprintCreateRequest {
 
+    @NotNull(message = "{footprint.clientId.notNull}")
+    @Size(max = 36, message = "{footprint.clientId.size}")
+    private String clientId;
+
     @Size(max = 200, message = "{footprint.title.size}")
     private String title;
 

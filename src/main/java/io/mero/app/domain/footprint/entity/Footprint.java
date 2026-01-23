@@ -40,6 +40,9 @@ public class Footprint extends BaseEntity {
     @Column(name = "weather_info", length = 100)
     private String weatherInfo;
 
+    @Column(name = "client_id", length = 36, unique = true)
+    private String clientId;
+
     @OneToMany(mappedBy = "footprint", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("orderIndex ASC")
     private List<Photo> photos = new ArrayList<>();
@@ -60,13 +63,14 @@ public class Footprint extends BaseEntity {
 
     @Builder
     public Footprint(Long id, Trip trip, String title, String content,
-                     LocalDate date, String weatherInfo, List<Photo> photoUrls) {
+                     LocalDate date, String weatherInfo, List<Photo> photoUrls, String clientId) {
         this.id = id;
         this.trip = trip;
         this.title = title;
         this.content = content;
         this.date = date;
         this.weatherInfo = weatherInfo;
+        this.clientId = clientId;
         this.lastModifiedAt = LocalDateTime.now();
         this.photos = photoUrls;
         this.locations = new ArrayList<>();

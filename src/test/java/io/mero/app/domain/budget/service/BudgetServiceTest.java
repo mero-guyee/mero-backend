@@ -52,6 +52,7 @@ class BudgetServiceTest {
         Long tripId = 1L;
 
         BudgetCreateRequest request = new BudgetCreateRequest(
+                "test-client-id-1",
                 new BigDecimal("4000"),
                 Currency.USD
         );
@@ -70,6 +71,7 @@ class BudgetServiceTest {
                 .build();
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
+        given(budgetRepository.findByClientIdAndTripId("test-client-id-1", tripId)).willReturn(Optional.empty());
         given(budgetRepository.findByTripAndCurrency(trip, Currency.USD)).willReturn(Optional.empty());
         given(budgetRepository.save(any(Budget.class))).willReturn(budget);
 
@@ -91,6 +93,7 @@ class BudgetServiceTest {
         Long tripId = 1L;
 
         BudgetCreateRequest request = new BudgetCreateRequest(
+                "test-client-id-2",
                 new BigDecimal("1000000"),
                 Currency.KRW
         );
@@ -109,6 +112,7 @@ class BudgetServiceTest {
                 .build();
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
+        given(budgetRepository.findByClientIdAndTripId("test-client-id-2", tripId)).willReturn(Optional.empty());
         given(budgetRepository.findByTripAndCurrency(trip, Currency.KRW)).willReturn(Optional.empty());
         given(budgetRepository.save(any(Budget.class))).willReturn(budget);
 
@@ -128,6 +132,7 @@ class BudgetServiceTest {
         Long tripId = 1L;
 
         BudgetCreateRequest request = new BudgetCreateRequest(
+                "test-client-id-1",
                 new BigDecimal("4000"),
                 Currency.USD
         );
@@ -146,6 +151,7 @@ class BudgetServiceTest {
                 .build();
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
+        given(budgetRepository.findByClientIdAndTripId("test-client-id-1", tripId)).willReturn(Optional.empty());
         given(budgetRepository.findByTripAndCurrency(trip, Currency.USD))
                 .willReturn(Optional.of(existingBudget));
         given(messageUtil.getMessage("error.budget.duplicateCurrency"))
@@ -166,6 +172,7 @@ class BudgetServiceTest {
         Long tripId = 1L;
 
         BudgetCreateRequest request = new BudgetCreateRequest(
+                "test-client-id-1",
                 new BigDecimal("4000"),
                 Currency.USD
         );
@@ -193,6 +200,7 @@ class BudgetServiceTest {
         Long tripId = 999L;
 
         BudgetCreateRequest request = new BudgetCreateRequest(
+                "test-client-id-1",
                 new BigDecimal("4000"),
                 Currency.USD
         );

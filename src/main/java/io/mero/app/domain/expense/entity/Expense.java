@@ -55,9 +55,12 @@ public class Expense extends BaseEntity {
     @Column(length = 500)
     private String location;
 
+    @Column(name = "client_id", length = 36, unique = true)
+    private String clientId;
+
     @Builder
-    public Expense(Long id, Trip trip,  Footprint footprint, BigDecimal amount, Currency currency,
-                   ExpenseCategory category, String description, LocalDate date, String location) {
+    public Expense(Long id, Trip trip, Footprint footprint, BigDecimal amount, Currency currency,
+                   ExpenseCategory category, String description, LocalDate date, String location, String clientId) {
         this.id = id;
         this.trip = trip;
         this.footprint = footprint;
@@ -67,6 +70,7 @@ public class Expense extends BaseEntity {
         this.description = description;
         this.date = date;
         this.location = location;
+        this.clientId = clientId;
     }
 
     public void update(BigDecimal amount, Currency currency, ExpenseCategory category,

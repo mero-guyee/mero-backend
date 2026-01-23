@@ -70,6 +70,7 @@ class ExpenseServiceTest {
         // given
         Long userId = 1L;
         ExpenseCreateRequest request = new ExpenseCreateRequest(
+                "test-client-id-1",
                 1L,
                 null,  // footprintId
                 new BigDecimal("100"),
@@ -117,6 +118,7 @@ class ExpenseServiceTest {
                 .build();
 
         given(tripRepository.findById(1L)).willReturn(Optional.of(trip));
+        given(expenseRepository.findByClientIdAndTripId("test-client-id-1", 1L)).willReturn(Optional.empty());
         given(expenseCategoryRepository.findById(1L)).willReturn(Optional.of(category));
         given(expenseRepository.save(any(Expense.class))).willReturn(expense);
 
@@ -136,6 +138,7 @@ class ExpenseServiceTest {
         // given
         Long userId = 1L;
         ExpenseCreateRequest request = new ExpenseCreateRequest(
+                "test-client-id-2",
                 1L,
                 1L,  // footprintId
                 new BigDecimal("100"),
@@ -180,6 +183,7 @@ class ExpenseServiceTest {
                 .build();
 
         given(tripRepository.findById(1L)).willReturn(Optional.of(trip));
+        given(expenseRepository.findByClientIdAndTripId("test-client-id-2", 1L)).willReturn(Optional.empty());
         given(footprintRepository.findById(1L)).willReturn(Optional.of(footprint));
         given(expenseCategoryRepository.findById(1L)).willReturn(Optional.of(category));
         given(expenseRepository.save(any(Expense.class))).willReturn(expense);
@@ -198,6 +202,7 @@ class ExpenseServiceTest {
         // given
         Long userId = 1L;
         ExpenseCreateRequest request = new ExpenseCreateRequest(
+                "test-client-id-3",
                 1L,
                 2L,  // 다른 여행의 footprintId
                 new BigDecimal("100"),
@@ -225,6 +230,7 @@ class ExpenseServiceTest {
                 .build();
 
         given(tripRepository.findById(1L)).willReturn(Optional.of(trip1));
+        given(expenseRepository.findByClientIdAndTripId("test-client-id-3", 1L)).willReturn(Optional.empty());
         given(footprintRepository.findById(2L)).willReturn(Optional.of(footprint));
         given(messageUtil.getMessage("error.footprint.tripMismatch")).willReturn("같은 여행의 Footprint만 연결할 수 있습니다");
 
@@ -242,7 +248,7 @@ class ExpenseServiceTest {
         Long otherUserId = 2L;
 
         ExpenseCreateRequest request = new ExpenseCreateRequest(
-                1L, null, new BigDecimal("100"), Currency.USD,
+                "test-client-id-4", 1L, null, new BigDecimal("100"), Currency.USD,
                 null, null, LocalDate.now(), null
         );
 
@@ -649,7 +655,7 @@ class ExpenseServiceTest {
         // given
         Long userId = 1L;
         ExpenseCreateRequest request = new ExpenseCreateRequest(
-                999L, null, new BigDecimal("100"), Currency.USD,
+                "test-client-id-5", 999L, null, new BigDecimal("100"), Currency.USD,
                 null, null, LocalDate.now(), null
         );
 
@@ -669,7 +675,7 @@ class ExpenseServiceTest {
         // given
         Long userId = 1L;
         ExpenseCreateRequest request = new ExpenseCreateRequest(
-                1L, 999L, new BigDecimal("100"), Currency.USD,
+                "test-client-id-6", 1L, 999L, new BigDecimal("100"), Currency.USD,
                 null, null, LocalDate.now(), null
         );
 

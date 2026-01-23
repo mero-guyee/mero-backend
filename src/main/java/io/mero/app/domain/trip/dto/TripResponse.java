@@ -15,6 +15,7 @@ import java.util.List;
 public class TripResponse {
 
     private Long id;
+    private String clientId;
     private String title;
     private LocalDate startDate;
     private LocalDate endDate;
@@ -25,6 +26,7 @@ public class TripResponse {
     public static TripResponse from(Trip trip) {
         return new TripResponse(
                 trip.getId(),
+                trip.getClientId(),
                 trip.getTitle(),
                 trip.getStartDate(),
                 trip.getEndDate(),

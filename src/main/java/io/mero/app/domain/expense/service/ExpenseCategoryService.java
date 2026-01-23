@@ -50,6 +50,11 @@ public class ExpenseCategoryService {
 
     @Transactional
     public void createExpenseCategory(Long userId, ExpenseCategoryCreateRequest request) {
+        // 멱등성 체크: 동일한 clientId로 이미 생성된 ExpenseCategory가 있으면 리턴
+        if (expenseCategoryRepository.findByClientIdAndUserId(request.getClientId(), userId).isPresent()) {
+            return;
+        }
+
         User user = findUserById(userId);
 
         validateDuplicateCategoryName(user, request.getName());
@@ -58,6 +63,7 @@ public class ExpenseCategoryService {
 
         ExpenseCategory category = ExpenseCategory.builder()
                 .user(user)
+                .clientId(request.getClientId())
                 .name(request.getName())
                 .icon(request.getIcon())
                 .color(request.getColor())

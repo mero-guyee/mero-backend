@@ -33,8 +33,11 @@ public class Budget extends BaseEntity {
     @Column(nullable = false, length = 20)
     private Currency currency;
 
+    @Column(name = "client_id", length = 36, unique = true)
+    private String clientId;
+
     @Builder
-    public Budget(Long id, Trip trip, BigDecimal amount, Currency currency) {
+    public Budget(Long id, Trip trip, BigDecimal amount, Currency currency, String clientId) {
         validateAmount(amount);
         validateCurrency(currency);
 
@@ -42,6 +45,7 @@ public class Budget extends BaseEntity {
         this.trip = trip;
         this.amount = amount;
         this.currency = currency;
+        this.clientId = clientId;
     }
 
     public void update(BigDecimal amount, Currency currency) {

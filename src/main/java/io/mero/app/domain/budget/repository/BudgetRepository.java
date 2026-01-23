@@ -15,4 +15,6 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
     List<Budget> findByTripOrderByCreatedAtDesc(Trip trip);
 
     Optional<Budget> findByTripAndCurrency(Trip trip, Currency currency);
+
+    Optional<Budget> findByClientIdAndTripId(String clientId, Long tripId);
 }

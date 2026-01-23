@@ -31,6 +31,13 @@ public class BudgetService {
         Trip trip = findTripById(tripId);
         validateOwner(trip, userId);
 
+        // 멱등성 체크: 동일한 clientId로 이미 생성된 Budget이 있으면 해당 Budget 반환
+        return budgetRepository.findByClientIdAndTripId(request.getClientId(), tripId)
+                .map(BudgetResponse::from)
+                .orElseGet(() -> createNewBudget(trip, request));
+    }
+
+    private BudgetResponse createNewBudget(Trip trip, BudgetCreateRequest request) {
         if (budgetRepository.findByTripAndCurrency(trip, request.getCurrency()).isPresent()) {
             throw new BadRequestException(
                     messageUtil.getMessage("error.budget.duplicateCurrency"));
@@ -38,6 +45,7 @@ public class BudgetService {
 
         Budget budget = Budget.builder()
                 .trip(trip)
+                .clientId(request.getClientId())
                 .amount(request.getAmount())
                 .currency(request.getCurrency())
                 .build();

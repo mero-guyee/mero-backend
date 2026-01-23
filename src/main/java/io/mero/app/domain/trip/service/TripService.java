@@ -40,6 +40,13 @@ public class TripService {
 
     @Transactional
     public TripResponse createTrip(Long userId, TripCreateRequest request, MultipartFile image) {
+        // 멱등성 체크: 동일한 clientId로 이미 생성된 Trip이 있으면 해당 Trip 반환
+        return tripRepository.findByClientIdAndUserId(request.getClientId(), userId)
+                .map(TripResponse::from)
+                .orElseGet(() -> createNewTrip(userId, request, image));
+    }
+
+    private TripResponse createNewTrip(Long userId, TripCreateRequest request, MultipartFile image) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         messageUtil.getMessage("error.user.notFound")
@@ -47,6 +54,7 @@ public class TripService {
 
         Trip trip = Trip.builder()
                 .user(user)
+                .clientId(request.getClientId())
                 .title(request.getTitle())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())

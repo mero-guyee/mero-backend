@@ -87,9 +87,10 @@ class ExpenseCategoryServiceTest {
         Long userId = 1L;
         User user = User.builder().id(userId).build();
         ExpenseCategoryCreateRequest request = new ExpenseCategoryCreateRequest(
-                userId, "새 카테고리", "🎯", "#FF0000"
+                "test-client-id-1", userId, "새 카테고리", "🎯", "#FF0000"
         );
 
+        given(expenseCategoryRepository.findByClientIdAndUserId("test-client-id-1", userId)).willReturn(Optional.empty());
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(expenseCategoryRepository.existsByUserAndName(user, request.getName())).willReturn(false);
         given(expenseCategoryRepository.countByUser(user)).willReturn(6);
@@ -116,9 +117,10 @@ class ExpenseCategoryServiceTest {
         Long userId = 1L;
         User user = User.builder().id(userId).build();
         ExpenseCategoryCreateRequest request = new ExpenseCategoryCreateRequest(
-                userId, "식비", "🍔", "#FF0000"
+                "test-client-id-2", userId, "식비", "🍔", "#FF0000"
         );
 
+        given(expenseCategoryRepository.findByClientIdAndUserId("test-client-id-2", userId)).willReturn(Optional.empty());
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(expenseCategoryRepository.existsByUserAndName(user, request.getName())).willReturn(true);
         given(messageUtil.getMessage("error.expenseCategory.duplicateName"))
@@ -136,9 +138,10 @@ class ExpenseCategoryServiceTest {
         // given
         Long userId = 999L;
         ExpenseCategoryCreateRequest request = new ExpenseCategoryCreateRequest(
-                userId, "새 카테고리", "🎯", "#FF0000"
+                "test-client-id-3", userId, "새 카테고리", "🎯", "#FF0000"
         );
 
+        given(expenseCategoryRepository.findByClientIdAndUserId("test-client-id-3", userId)).willReturn(Optional.empty());
         given(userRepository.findById(userId)).willReturn(Optional.empty());
         given(messageUtil.getMessage("error.user.notFound"))
                 .willReturn("사용자를 찾을 수 없습니다");

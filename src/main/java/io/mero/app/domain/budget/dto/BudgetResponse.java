@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 public class BudgetResponse {
 
     private Long id;
+    private String clientId;
     private Long tripId;
     private BigDecimal amount;
     private Currency currency;
@@ -22,6 +23,7 @@ public class BudgetResponse {
     public static BudgetResponse from(Budget budget) {
         return new BudgetResponse(
                 budget.getId(),
+                budget.getClientId(),
                 budget.getTrip().getId(),
                 budget.getAmount(),
                 budget.getCurrency(),

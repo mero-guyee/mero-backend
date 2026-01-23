@@ -19,4 +19,6 @@ public interface ExpenseCategoryRepository extends JpaRepository<ExpenseCategory
 
     int countByUser(User user);
 
+    Optional<ExpenseCategory> findByClientIdAndUserId(String clientId, Long userId);
+
 }

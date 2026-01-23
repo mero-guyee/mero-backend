@@ -8,6 +8,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class TripDocumentResponse {
     private Long id;
+    private String clientId;
     private String fileName;
     private String fileUrl;
     private Long fileSize;
@@ -15,6 +16,7 @@ public class TripDocumentResponse {
     public static TripDocumentResponse from(TripDocument document) {
         return new TripDocumentResponse(
                 document.getId(),
+                document.getClientId(),
                 document.getOriginalFileName(),
                 document.getFileUrl(),
                 document.getFileSize()

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ExpenseRepository extends JpaRepository<Expense, Long> {
@@ -19,5 +20,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     List<Expense> findByFootprint(Footprint footprint);
 
     List<Expense> findByCategory(ExpenseCategory category);
+
+    Optional<Expense> findByClientIdAndTripId(String clientId, Long tripId);
 
 }

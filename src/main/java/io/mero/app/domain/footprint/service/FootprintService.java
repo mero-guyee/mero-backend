@@ -45,8 +45,16 @@ public class FootprintService {
         Trip trip = findTripById(tripId);
         validateOwner(trip, userId);
 
+        // 멱등성 체크: 동일한 clientId로 이미 생성된 Footprint가 있으면 해당 Footprint 반환
+        return footprintRepository.findByClientIdAndTripId(request.getClientId(), tripId)
+                .map(FootprintResponse::from)
+                .orElseGet(() -> createNewFootprint(trip, request));
+    }
+
+    private FootprintResponse createNewFootprint(Trip trip, FootprintCreateRequest request) {
         Footprint footprint = Footprint.builder()
                 .trip(trip)
+                .clientId(request.getClientId())
                 .title(request.getTitle())
                 .content(request.getContent())
                 .date(request.getDate())
