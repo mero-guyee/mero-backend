@@ -14,6 +14,8 @@ import io.mero.app.domain.trip.repository.TripRepository;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.UserRepository;
 import io.mero.app.global.dto.S3UploadResult;
+import io.mero.app.global.enums.DocumentMimeType;
+import io.mero.app.global.enums.ImageMimeType;
 import io.mero.app.global.exception.ForbiddenException;
 import io.mero.app.global.exception.NotFoundException;
 import io.mero.app.global.service.S3Service;
@@ -127,7 +129,7 @@ public class TripService {
                 .s3Url(uploadResult.getS3Url())
                 .originalFilename(uploadResult.getOriginalFilename())
                 .fileSize(uploadResult.getFileSize())
-                .mimeType(uploadResult.getMimeType())
+                .mimeType(ImageMimeType.fromMimeType(uploadResult.getMimeType()))
                 .build();
         tripCoverImageRepository.save(coverImage);
         trip.setCoverImage(coverImage);
@@ -158,7 +160,7 @@ public class TripService {
                 .storedFileName(uploadResult.getS3Key())
                 .fileUrl(uploadResult.getS3Url())
                 .fileSize(uploadResult.getFileSize())
-                .contentType(uploadResult.getMimeType())
+                .contentType(DocumentMimeType.fromMimeType(uploadResult.getMimeType()))
                 .build();
 
         TripDocument savedDocument = tripDocumentRepository.save(document);

@@ -3,6 +3,7 @@ package io.mero.app.domain.footprint.util;
 import io.mero.app.domain.footprint.entity.Footprint;
 import io.mero.app.domain.footprint.entity.Photo;
 import io.mero.app.global.dto.S3UploadResult;
+import io.mero.app.global.enums.ImageMimeType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,7 +32,7 @@ public class PhotoMapper {
                     .s3Url(result.getS3Url())
                     .originalFilename(result.getOriginalFilename())
                     .fileSize(result.getFileSize())
-                    .mimeType(result.getMimeType())
+                    .mimeType(ImageMimeType.fromMimeType(result.getMimeType()))
                     .orderIndex(i)
                     .build();
             photos.add(photo);

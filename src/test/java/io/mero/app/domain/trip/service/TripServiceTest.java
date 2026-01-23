@@ -13,6 +13,7 @@ import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.UserRepository;
 import io.mero.app.global.dto.S3UploadResult;
 import io.mero.app.global.enums.Currency;
+import io.mero.app.global.enums.ImageMimeType;
 import io.mero.app.global.enums.Timezone;
 import io.mero.app.global.exception.ForbiddenException;
 import io.mero.app.global.service.S3Service;
@@ -312,7 +313,7 @@ class TripServiceTest {
                 .s3Url("https://s3.amazonaws.com/bucket/users/1/trips/cover/old_image.jpg")
                 .originalFilename("old_image.jpg")
                 .fileSize(100L)
-                .mimeType("image/jpeg")
+                .mimeType(ImageMimeType.JPEG)
                 .build();
         trip.setCoverImage(existingCoverImage);
 
@@ -368,7 +369,7 @@ class TripServiceTest {
                 .s3Url("https://s3.amazonaws.com/bucket/users/1/trips/cover/test.jpg")
                 .originalFilename("test.jpg")
                 .fileSize(100L)
-                .mimeType("image/jpeg")
+                .mimeType(ImageMimeType.JPEG)
                 .build();
         trip.setCoverImage(coverImage);
 
@@ -420,7 +421,7 @@ class TripServiceTest {
                 .s3Url("https://s3.amazonaws.com/bucket/users/1/trips/cover/test.jpg")
                 .originalFilename("test.jpg")
                 .fileSize(100L)
-                .mimeType("image/jpeg")
+                .mimeType(ImageMimeType.JPEG)
                 .build();
         trip.setCoverImage(coverImage);
 

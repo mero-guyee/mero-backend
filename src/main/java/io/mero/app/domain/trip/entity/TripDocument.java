@@ -2,6 +2,7 @@ package io.mero.app.domain.trip.entity;
 
 import io.mero.app.domain.footprint.entity.UploadStatus;
 import io.mero.app.global.entity.BaseEntity;
+import io.mero.app.global.enums.DocumentMimeType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -37,8 +38,9 @@ public class TripDocument extends BaseEntity {
     @Column(nullable = false)
     private Long fileSize;
 
-    @Column(nullable = false)
-    private String contentType;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "content_type", length = 20, nullable = false)
+    private DocumentMimeType contentType;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "upload_status", length = 20, nullable = false)
@@ -50,7 +52,7 @@ public class TripDocument extends BaseEntity {
     @Builder
     public TripDocument(Trip trip, String originalFileName,
                         String storedFileName, String fileUrl,
-                        Long fileSize, String contentType, String clientId) {
+                        Long fileSize, DocumentMimeType contentType, String clientId) {
         this.trip = trip;
         this.originalFileName = originalFileName;
         this.storedFileName = storedFileName;

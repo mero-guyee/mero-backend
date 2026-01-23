@@ -25,7 +25,7 @@ public class PhotoResponse {
                 .s3Url(photo.getS3Url())
                 .originalFilename(photo.getOriginalFilename())
                 .fileSize(photo.getFileSize())
-                .mimeType(photo.getMimeType())
+                .mimeType(photo.getMimeType() != null ? photo.getMimeType().getMimeType() : null)
                 .width(photo.getWidth())
                 .height(photo.getHeight())
                 .orderIndex(photo.getOrderIndex())

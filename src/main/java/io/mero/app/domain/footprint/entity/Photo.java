@@ -2,6 +2,7 @@ package io.mero.app.domain.footprint.entity;
 
 import io.mero.app.domain.footprint.listener.PhotoEntityListener;
 import io.mero.app.global.entity.BaseEntity;
+import io.mero.app.global.enums.ImageMimeType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -37,8 +38,9 @@ public class Photo extends BaseEntity {
     @Column(name = "file_size")
     private Long fileSize;
 
-    @Column(name = "mime_type", length = 100)
-    private String mimeType;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "mime_type", length = 20)
+    private ImageMimeType mimeType;
 
     @Column(name = "width")
     private Integer width;
@@ -58,7 +60,7 @@ public class Photo extends BaseEntity {
 
     @Builder
     public Photo(Footprint footprint, String s3Key, String s3Url,
-                 String originalFilename, Long fileSize, String mimeType,
+                 String originalFilename, Long fileSize, ImageMimeType mimeType,
                  Integer width, Integer height, Integer orderIndex, String clientId) {
         this.footprint = footprint;
         this.s3Key = s3Key;
@@ -74,7 +76,7 @@ public class Photo extends BaseEntity {
     }
 
     public void update(String s3Key, String s3Url, String originalFilename,
-                       Long fileSize, String mimeType, Integer width, Integer height) {
+                       Long fileSize, ImageMimeType mimeType, Integer width, Integer height) {
         this.s3Key = s3Key;
         this.s3Url = s3Url;
         this.originalFilename = originalFilename;
