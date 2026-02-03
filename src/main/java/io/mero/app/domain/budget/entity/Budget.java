@@ -36,24 +36,31 @@ public class Budget extends BaseEntity {
     @Column(name = "client_id", length = 36, unique = true)
     private String clientId;
 
+    @Column(name = "exchange_rate", precision = 15, scale = 6)
+    private BigDecimal exchangeRate;
+
     @Builder
-    public Budget(Long id, Trip trip, BigDecimal amount, Currency currency, String clientId) {
+    public Budget(Long id, Trip trip, BigDecimal amount, Currency currency, String clientId, BigDecimal exchangeRate) {
         validateAmount(amount);
         validateCurrency(currency);
+        validateExchangeRate(exchangeRate);
 
         this.id = id;
         this.trip = trip;
         this.amount = amount;
         this.currency = currency;
         this.clientId = clientId;
+        this.exchangeRate = exchangeRate;
     }
 
-    public void update(BigDecimal amount, Currency currency) {
+    public void update(BigDecimal amount, Currency currency, BigDecimal exchangeRate) {
         validateAmount(amount);
         validateCurrency(currency);
+        validateExchangeRate(exchangeRate);
 
         this.amount = amount;
         this.currency = currency;
+        this.exchangeRate = exchangeRate;
     }
 
     private void validateAmount(BigDecimal amount) {
@@ -65,6 +72,12 @@ public class Budget extends BaseEntity {
     private void validateCurrency(Currency currency) {
         if (currency == null) {
             throw new BadRequestException("Currency is required");
+        }
+    }
+
+    private void validateExchangeRate(BigDecimal exchangeRate) {
+        if (exchangeRate != null && exchangeRate.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BadRequestException("Exchange rate must be greater than 0");
         }
     }
 }

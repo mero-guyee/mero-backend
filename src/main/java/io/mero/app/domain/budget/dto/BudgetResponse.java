@@ -17,6 +17,7 @@ public class BudgetResponse {
     private Long tripId;
     private BigDecimal amount;
     private Currency currency;
+    private BigDecimal exchangeRate;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -27,6 +28,7 @@ public class BudgetResponse {
                 budget.getTrip().getId(),
                 budget.getAmount(),
                 budget.getCurrency(),
+                budget.getExchangeRate(),
                 budget.getCreatedAt(),
                 budget.getUpdatedAt()
         );

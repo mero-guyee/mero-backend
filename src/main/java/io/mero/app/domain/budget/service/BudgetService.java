@@ -48,6 +48,7 @@ public class BudgetService {
                 .clientId(request.getClientId())
                 .amount(request.getAmount())
                 .currency(request.getCurrency())
+                .exchangeRate(request.getExchangeRate())
                 .build();
 
         Budget savedBudget = budgetRepository.save(budget);
@@ -81,7 +82,7 @@ public class BudgetService {
             }
         }
 
-        budget.update(request.getAmount(), request.getCurrency());
+        budget.update(request.getAmount(), request.getCurrency(), request.getExchangeRate());
         return BudgetResponse.from(budget);
     }
 

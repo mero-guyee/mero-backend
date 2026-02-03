@@ -54,7 +54,8 @@ class BudgetServiceTest {
         BudgetCreateRequest request = new BudgetCreateRequest(
                 "test-client-id-1",
                 new BigDecimal("4000"),
-                Currency.USD
+                Currency.USD,
+                null
         );
 
         User user = User.builder().id(userId).build();
@@ -68,6 +69,7 @@ class BudgetServiceTest {
                 .trip(trip)
                 .amount(request.getAmount())
                 .currency(request.getCurrency())
+                .exchangeRate(request.getExchangeRate())
                 .build();
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
@@ -95,7 +97,8 @@ class BudgetServiceTest {
         BudgetCreateRequest request = new BudgetCreateRequest(
                 "test-client-id-2",
                 new BigDecimal("1000000"),
-                Currency.KRW
+                Currency.KRW,
+                null
         );
 
         User user = User.builder().id(userId).build();
@@ -109,6 +112,7 @@ class BudgetServiceTest {
                 .trip(trip)
                 .amount(request.getAmount())
                 .currency(request.getCurrency())
+                .exchangeRate(request.getExchangeRate())
                 .build();
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
@@ -134,7 +138,8 @@ class BudgetServiceTest {
         BudgetCreateRequest request = new BudgetCreateRequest(
                 "test-client-id-1",
                 new BigDecimal("4000"),
-                Currency.USD
+                Currency.USD,
+                null
         );
 
         User user = User.builder().id(userId).build();
@@ -148,6 +153,7 @@ class BudgetServiceTest {
                 .trip(trip)
                 .amount(new BigDecimal("3000"))
                 .currency(Currency.USD)
+                .exchangeRate(null)
                 .build();
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
@@ -174,7 +180,8 @@ class BudgetServiceTest {
         BudgetCreateRequest request = new BudgetCreateRequest(
                 "test-client-id-1",
                 new BigDecimal("4000"),
-                Currency.USD
+                Currency.USD,
+                null
         );
 
         User otherUser = User.builder().id(otherUserId).build();
@@ -202,7 +209,8 @@ class BudgetServiceTest {
         BudgetCreateRequest request = new BudgetCreateRequest(
                 "test-client-id-1",
                 new BigDecimal("4000"),
-                Currency.USD
+                Currency.USD,
+                null
         );
 
         given(tripRepository.findById(tripId)).willReturn(Optional.empty());
@@ -233,12 +241,14 @@ class BudgetServiceTest {
                         .trip(trip)
                         .amount(new BigDecimal("4000"))
                         .currency(Currency.USD)
+                        .exchangeRate(null)
                         .build(),
                 Budget.builder()
                         .id(2L)
                         .trip(trip)
                         .amount(new BigDecimal("1000000"))
                         .currency(Currency.KRW)
+                        .exchangeRate(null)
                         .build()
         );
 
@@ -264,7 +274,8 @@ class BudgetServiceTest {
 
         BudgetUpdateRequest request = new BudgetUpdateRequest(
                 new BigDecimal("5000"),
-                Currency.USD
+                Currency.USD,
+                null
         );
 
         User user = User.builder().id(userId).build();
@@ -278,6 +289,7 @@ class BudgetServiceTest {
                 .trip(trip)
                 .amount(new BigDecimal("4000"))
                 .currency(Currency.USD)
+                .exchangeRate(null)
                 .build();
 
         given(budgetRepository.findById(budgetId)).willReturn(Optional.of(budget));
@@ -299,7 +311,8 @@ class BudgetServiceTest {
 
         BudgetUpdateRequest request = new BudgetUpdateRequest(
                 new BigDecimal("5000"),
-                Currency.EUR
+                Currency.EUR,
+                null
         );
 
         User user = User.builder().id(userId).build();
@@ -313,6 +326,7 @@ class BudgetServiceTest {
                 .trip(trip)
                 .amount(new BigDecimal("4000"))
                 .currency(Currency.USD)
+                .exchangeRate(null)
                 .build();
 
         given(budgetRepository.findById(budgetId)).willReturn(Optional.of(budget));
@@ -346,6 +360,7 @@ class BudgetServiceTest {
                 .trip(trip)
                 .amount(new BigDecimal("4000"))
                 .currency(Currency.USD)
+                .exchangeRate(null)
                 .build();
 
         given(budgetRepository.findById(budgetId)).willReturn(Optional.of(budget));

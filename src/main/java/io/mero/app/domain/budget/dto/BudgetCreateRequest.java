@@ -25,4 +25,7 @@ public class BudgetCreateRequest {
 
     @NotNull(message = "{budget.currency.notNull}")
     private Currency currency;
+
+    @DecimalMin(value = "0.0", inclusive = false, message = "{budget.exchangeRate.positive}")
+    private BigDecimal exchangeRate;
 }
