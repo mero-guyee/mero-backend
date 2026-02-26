@@ -41,6 +41,9 @@ public class SecurityConfig {
                                 // Public 엔드포인트
                                 "/api/auth/**",
 
+                                // 로컬 테스트용 네이버 OAuth 콜백
+                                "/api/social/naver/callback",
+
                                 // Swagger 엔드포인트 허용
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
