@@ -29,3 +29,9 @@ cloud:
       static: ${AWS_REGION:ap-northeast-2}
     s3:
       bucket: ${AWS_S3_BUCKET}
+
+naver:
+  oauth:
+    client-id: ${NAVER_CLIENT_ID}
+    client-secret: ${NAVER_CLIENT_SECRET}
+    redirect-uri: ${NAVER_REDIRECT_URI}
