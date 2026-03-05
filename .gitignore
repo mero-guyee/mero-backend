@@ -69,7 +69,6 @@ Thumbs.db
 
 ### Application Config (민감 정보) ###
 application-local.yml
-application-prod.yml
 application-secret.yml
 
 ### Environment Variables ###
