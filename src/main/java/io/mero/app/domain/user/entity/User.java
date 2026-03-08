@@ -27,8 +27,11 @@ public class User extends BaseEntity {
     @Column(nullable = false, unique = true, length = 10)
     private String nickname;
 
-    @Column(name = "password_hash", nullable = false, length = 255)
+    @Column(name = "password_hash", length = 255)
     private String passwordHash;
+
+    @Column(name = "apple_id", length = 255, unique = true)
+    private String appleId;
 
     @Column(name = "profile_image_url", length = 500)
     private String profileImageUrl;
@@ -47,9 +50,12 @@ public class User extends BaseEntity {
     @Column(name = "refresh_token", length = 500)
     private String refreshToken;
 
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified;
+
     @Builder
     public User(Long id, String email, String nickname, String passwordHash,
-                String profileImageUrl, Currency defaultCurrency, Timezone timezone) {
+                String profileImageUrl, Currency defaultCurrency, Timezone timezone, String appleId) {
         this.id = id;
         this.email = email;
         this.nickname = nickname;
@@ -57,6 +63,16 @@ public class User extends BaseEntity {
         this.profileImageUrl = profileImageUrl;
         this.defaultCurrency = defaultCurrency != null ? defaultCurrency : Currency.KRW;
         this.timezone = timezone != null ? timezone : Timezone.ASIA_SEOUL;
+        this.appleId = appleId;
+        this.emailVerified = false;
+    }
+
+    public void linkAppleId(String appleId) {
+        this.appleId = appleId;
+    }
+
+    public void verifyEmail() {
+        this.emailVerified = true;
     }
 
 
@@ -91,6 +107,10 @@ public class User extends BaseEntity {
             throw new IllegalArgumentException("타임존은 필수입니다");
         }
         this.timezone = timezone;
+    }
+
+    public void updatePassword(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 
     public void updateRefreshToken(String refreshToken) {

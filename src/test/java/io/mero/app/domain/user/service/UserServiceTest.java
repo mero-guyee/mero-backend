@@ -3,11 +3,11 @@ package io.mero.app.domain.user.service;
 import io.mero.app.domain.expense.service.ExpenseCategoryService;
 import io.mero.app.domain.user.dto.*;
 import io.mero.app.domain.user.entity.User;
+import io.mero.app.domain.user.repository.EmailTokenRepository;
 import io.mero.app.domain.user.repository.UserRepository;
 import io.mero.app.global.enums.Currency;
 import io.mero.app.global.enums.Timezone;
 import io.mero.app.global.exception.DuplicateException;
-import io.mero.app.global.exception.ForbiddenException;
 import io.mero.app.global.exception.UnauthorizedException;
 import io.mero.app.global.jwt.JwtTokenProvider;
 import io.mero.app.global.util.MessageUtil;
@@ -34,7 +34,13 @@ class UserServiceTest {
     private UserRepository userRepository;
 
     @Mock
+    private EmailTokenRepository emailTokenRepository;
+
+    @Mock
     private ExpenseCategoryService expenseCategoryService;
+
+    @Mock
+    private EmailService emailService;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -72,16 +78,12 @@ class UserServiceTest {
         given(userRepository.save(any(User.class))).willReturn(savedUser);
 
         // when
-        UserResponse response = userService.signUp(request);
+        userService.signUp(request);
 
         // then
-        assertThat(response.getEmail()).isEqualTo("test@example.com");
-        assertThat(response.getNickname()).isEqualTo("테스트유저");
-        assertThat(response.getDefaultCurrency()).isEqualTo(Currency.KRW);
-        assertThat(response.getTimezone()).isEqualTo(Timezone.ASIA_SEOUL);
-
         verify(userRepository).existsByEmail(request.getEmail());
         verify(userRepository).save(any(User.class));
+        verify(emailService).sendVerificationEmail(any(), any());
     }
 
     @Test
@@ -131,11 +133,10 @@ class UserServiceTest {
         given(userRepository.save(any(User.class))).willReturn(savedUser);
 
         // when
-        UserResponse response = userService.signUp(request);
+        userService.signUp(request);
 
         // then
-        assertThat(response.getDefaultCurrency()).isEqualTo(Currency.KRW);
-        assertThat(response.getTimezone()).isEqualTo(Timezone.ASIA_SEOUL);
+        verify(userRepository).save(any(User.class));
     }
 
     @Test
@@ -177,6 +178,7 @@ class UserServiceTest {
                 .defaultCurrency(Currency.KRW)
                 .timezone(Timezone.ASIA_SEOUL)
                 .build();
+        user.verifyEmail();
 
         given(userRepository.findByEmail(request.getEmail()))
                 .willReturn(Optional.of(user));

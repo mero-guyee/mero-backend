@@ -4,8 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mero.app.domain.user.dto.*;
 import io.mero.app.domain.user.service.UserService;
-import io.mero.app.global.enums.Currency;
-import io.mero.app.global.enums.Timezone;
 import io.mero.app.global.jwt.JwtAuthenticationFilter;
 import io.mero.app.global.jwt.JwtTokenProvider;
 import org.junit.jupiter.api.DisplayName;
@@ -18,8 +16,6 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.LocalDateTime;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -61,28 +57,14 @@ class AuthControllerTest {
                 null
         );
 
-        UserResponse response = new UserResponse(
-                1L,
-                "test@example.com",
-                "테스트유저",
-                null,
-                Currency.KRW,
-                Timezone.ASIA_SEOUL,
-                LocalDateTime.now()
-        );
-
-        given(userService.signUp(any(SignUpRequest.class))).willReturn(response);
-
         // when & then
         mockMvc.perform(post("/api/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.email").value("test@example.com"))
-                .andExpect(jsonPath("$.nickname").value("테스트유저"))
-                .andExpect(jsonPath("$.defaultCurrency").value("KRW"))
-                .andExpect(jsonPath("$.timezone").value("ASIA_SEOUL"));
+                .andExpect(status().isAccepted());
+
+        verify(userService).signUp(any(SignUpRequest.class));
     }
 
     @Test

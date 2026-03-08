@@ -8,10 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Auth", description = "인증 API")
 @RestController
@@ -21,11 +18,11 @@ public class AuthController {
 
     private final UserService userService;
 
-    @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다")
+    @Operation(summary = "회원가입", description = "입력한 이메일로 인증 메일을 발송합니다. 인증 완료 후 계정이 생성됩니다.")
     @PostMapping("/signup")
-    public ResponseEntity<UserResponse> signUp(@Valid @RequestBody SignUpRequest request) {
-        UserResponse response = userService.signUp(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<Void> signUp(@Valid @RequestBody SignUpRequest request) {
+        userService.signUp(request);
+        return ResponseEntity.accepted().build();
     }
 
     @Operation(summary = "로그인", description = "이메일과 비밀번호로 로그인합니다")
@@ -46,6 +43,41 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Void> login(@Valid @RequestBody LogoutRequest request) {
         userService.logout(request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Apple 로그인", description = "Apple Identity Token으로 로그인합니다. 신규 유저는 자동으로 계정이 생성됩니다.")
+    @PostMapping("/apple")
+    public ResponseEntity<LoginResponse> appleLogin(@Valid @RequestBody AppleLoginRequest request) {
+        LoginResponse response = userService.appleLogin(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "이메일 인증", description = "이메일로 발송된 링크를 통해 계정을 인증합니다")
+    @GetMapping("/email/verify")
+    public ResponseEntity<String> verifyEmail(@RequestParam String token) {
+        userService.verifyEmail(token);
+        return ResponseEntity.ok("이메일 인증이 완료되었습니다. 앱으로 돌아가서 로그인해 주세요.");
+    }
+
+    @Operation(summary = "인증 메일 재발송", description = "이메일 인증 메일을 재발송합니다")
+    @PostMapping("/email/resend")
+    public ResponseEntity<Void> resendVerificationEmail(@Valid @RequestBody EmailRequest request) {
+        userService.resendVerificationEmail(request.getEmail());
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "비밀번호 재설정 요청", description = "입력한 이메일로 비밀번호 재설정 코드를 발송합니다")
+    @PostMapping("/password/reset-request")
+    public ResponseEntity<Void> requestPasswordReset(@Valid @RequestBody EmailRequest request) {
+        userService.requestPasswordReset(request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "비밀번호 재설정", description = "이메일로 받은 코드로 비밀번호를 변경합니다")
+    @PostMapping("/password/reset")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody PasswordResetConfirmRequest request) {
+        userService.resetPassword(request);
         return ResponseEntity.noContent().build();
     }
 

@@ -41,6 +41,9 @@ public class SecurityConfig {
                                 // Public 엔드포인트
                                 "/api/auth/**",
                                 "/api/meta",
+                                "/api/auth/email/verify",
+                                "/api/auth/password/reset-request",
+                                "/api/auth/password/reset",
 
                                 // 로컬 테스트용 네이버 OAuth 콜백
                                 "/api/social/naver/callback",
