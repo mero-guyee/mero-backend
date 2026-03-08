@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import io.mero.app.global.enums.Currency;
+
 import java.util.List;
 
 @Service
@@ -62,6 +64,15 @@ public class BudgetService {
         List<Budget> budgets = budgetRepository.findByTripOrderByCreatedAtDesc(trip);
         return budgets.stream()
                 .map(BudgetResponse::from)
+                .toList();
+    }
+
+    public List<Currency> getBudgetCurrencies(Long userId, Long tripId) {
+        Trip trip = findTripById(tripId);
+        validateOwner(trip, userId);
+
+        return budgetRepository.findByTripOrderByCreatedAtDesc(trip).stream()
+                .map(Budget::getCurrency)
                 .toList();
     }
 

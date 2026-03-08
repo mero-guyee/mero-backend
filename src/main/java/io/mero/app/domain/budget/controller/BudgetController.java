@@ -4,6 +4,7 @@ import io.mero.app.domain.budget.dto.BudgetCreateRequest;
 import io.mero.app.domain.budget.dto.BudgetResponse;
 import io.mero.app.domain.budget.dto.BudgetUpdateRequest;
 import io.mero.app.domain.budget.service.BudgetService;
+import io.mero.app.global.enums.Currency;
 import io.mero.app.global.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -43,6 +44,15 @@ public class BudgetController {
         Long userId = SecurityUtil.getCurrentUserId();
         List<BudgetResponse> response = budgetService.getBudgetsByTrip(userId, tripId);
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "예산 통화 목록 조회",
+            description = "경비 추가 시 선택 가능한 통화 목록을 조회합니다 (예산에 등록된 통화만 반환)")
+    @GetMapping("/currencies")
+    public ResponseEntity<List<Currency>> getBudgetCurrencies(@PathVariable Long tripId) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        List<Currency> currencies = budgetService.getBudgetCurrencies(userId, tripId);
+        return ResponseEntity.ok(currencies);
     }
 
     @Operation(summary = "예산 수정",
