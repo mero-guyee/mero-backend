@@ -95,6 +95,7 @@ public class Footprint extends BaseEntity {
     }
 
     public List<String> getPhotoUrls() {
+        if (photos == null) return new ArrayList<>();
         return photos.stream()
                 .sorted(Comparator.comparing(Photo::getOrderIndex))
                 .map(Photo::getS3Url)
