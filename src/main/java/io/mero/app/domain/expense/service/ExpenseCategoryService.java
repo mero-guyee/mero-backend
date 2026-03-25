@@ -2,6 +2,7 @@ package io.mero.app.domain.expense.service;
 
 import io.mero.app.domain.expense.constant.DefaultExpenseCategory;
 import io.mero.app.domain.expense.dto.ExpenseCategoryCreateRequest;
+import io.mero.app.domain.expense.dto.ExpenseCategoryResponse;
 import io.mero.app.domain.expense.entity.Expense;
 import io.mero.app.domain.expense.entity.ExpenseCategory;
 import io.mero.app.domain.expense.repository.ExpenseCategoryRepository;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -46,6 +48,15 @@ public class ExpenseCategoryService {
                 .toList();
 
         expenseCategoryRepository.saveAll(defaultCategories);
+    }
+
+    @Transactional
+    public List<ExpenseCategoryResponse> getCategories(Long userId) {
+        User user = findUserById(userId);
+        List<ExpenseCategory> expenseCategories = expenseCategoryRepository.findByUserOrderByDisplayOrderAsc(user);
+        return expenseCategories.stream()
+                .map(ExpenseCategoryResponse::from)
+                .collect(Collectors.toList());
     }
 
     @Transactional
