@@ -48,7 +48,7 @@ public class Footprint extends BaseEntity {
     private List<Photo> photos = new ArrayList<>();
 
     @OneToMany(mappedBy = "footprint", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("order ASC")
+    @OrderBy("sortOrder ASC")
     private List<FootprintLocation> locations = new ArrayList<>();
 
 
