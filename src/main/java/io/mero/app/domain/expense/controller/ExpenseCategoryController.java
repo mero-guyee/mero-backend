@@ -2,7 +2,6 @@ package io.mero.app.domain.expense.controller;
 
 import io.mero.app.domain.expense.dto.ExpenseCategoryCreateRequest;
 import io.mero.app.domain.expense.dto.ExpenseCategoryResponse;
-import io.mero.app.domain.expense.dto.ExpenseCategoryResponse;
 import io.mero.app.domain.expense.service.ExpenseCategoryService;
 import io.mero.app.global.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.Operation;

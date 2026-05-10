@@ -19,6 +19,7 @@ public class ExpenseCategoryResponse {
                 .name(category.getName())
                 .icon(category.getIcon())
                 .color(category.getColor())
+                .isDefault(category.getIsDefault())
                 .build();
     }
 }
