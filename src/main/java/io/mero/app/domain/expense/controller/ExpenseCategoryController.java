@@ -29,7 +29,7 @@ public class ExpenseCategoryController {
         return ResponseEntity.ok(categories);
     }
 
-    @Operation(summary = "카테고리 삭제", description = "지출 카테고리를 삭제합니다. 해당 카테고리의 지출은 기본 카테고리로 변경됩니다.")
+    @Operation(summary = "카테고리 생성", description = "지출 카테고리를 생성합니다.")
     @PostMapping()
     public ResponseEntity<Void> createExpenseCategory(ExpenseCategoryCreateRequest request) {
         Long userId = SecurityUtil.getCurrentUserId();

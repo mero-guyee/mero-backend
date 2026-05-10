@@ -50,7 +50,6 @@ public class ExpenseCategoryService {
         expenseCategoryRepository.saveAll(defaultCategories);
     }
 
-    @Transactional
     public List<ExpenseCategoryResponse> getCategories(Long userId) {
         User user = findUserById(userId);
         List<ExpenseCategory> expenseCategories = expenseCategoryRepository.findByUserOrderByDisplayOrderAsc(user);
