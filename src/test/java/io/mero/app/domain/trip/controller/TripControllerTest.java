@@ -131,7 +131,7 @@ class TripControllerTest {
                 List.of("브라질", "아르헨티나", "페루")
         );
 
-        String imageUrl = "https://s3.amazonaws.com/bucket/users/1/trips/images/uuid_test.jpg";
+        String imageUrl = "https://test.supabase.co/storage/v1/object/public/test-images/users/1/trips/images/uuid_test.jpg";
 
         TripResponse response = new TripResponse(
                 1L,
@@ -278,7 +278,7 @@ class TripControllerTest {
     @DisplayName("여행 이미지 업로드 성공")
     void 여행_이미지_업로드_성공() throws Exception {
         // given
-        String newImageUrl = "https://s3.amazonaws.com/bucket/users/1/trips/images/uuid_new.jpg";
+        String newImageUrl = "https://test.supabase.co/storage/v1/object/public/test-images/users/1/trips/images/uuid_new.jpg";
 
         TripResponse response = new TripResponse(
                 1L,

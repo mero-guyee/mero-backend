@@ -11,12 +11,12 @@ import io.mero.app.domain.trip.repository.TripCoverImageRepository;
 import io.mero.app.domain.trip.repository.TripRepository;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.UserRepository;
-import io.mero.app.global.dto.S3UploadResult;
+import io.mero.app.global.dto.StorageUploadResult;
 import io.mero.app.global.enums.Currency;
 import io.mero.app.global.enums.ImageMimeType;
 import io.mero.app.global.enums.Timezone;
 import io.mero.app.global.exception.ForbiddenException;
-import io.mero.app.global.service.S3Service;
+import io.mero.app.global.service.StorageService;
 import io.mero.app.global.util.MessageUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,7 +56,7 @@ class TripServiceTest {
     private TripDocumentRepository tripDocumentRepository;
 
     @Mock
-    private S3Service s3Service;
+    private StorageService storageService;
 
     @Mock
     private MessageUtil messageUtil;
@@ -96,7 +96,7 @@ class TripServiceTest {
         verify(tripRepository).findByClientIdAndUserId(clientId, userId);
         verify(userRepository).findById(userId);
         verify(tripRepository).save(any(Trip.class));
-        verify(s3Service, never()).uploadTripCoverImage(any(), any());
+        verify(storageService, never()).uploadTripCoverImage(any(), any());
     }
 
     @Test
@@ -120,9 +120,9 @@ class TripServiceTest {
                 "test image content".getBytes()
         );
 
-        S3UploadResult uploadResult = new S3UploadResult(
+        StorageUploadResult uploadResult = new StorageUploadResult(
                 "users/1/trips/cover/uuid_test.jpg",
-                "https://s3.amazonaws.com/bucket/users/1/trips/cover/uuid_test.jpg",
+                "https://test.supabase.co/storage/v1/object/public/test-images/users/1/trips/cover/uuid_test.jpg",
                 "test.jpg",
                 18L,
                 "image/jpeg"
@@ -134,7 +134,7 @@ class TripServiceTest {
         given(tripRepository.findByClientIdAndUserId(clientId, userId)).willReturn(Optional.empty());
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(tripRepository.save(any(Trip.class))).willReturn(trip);
-        given(s3Service.uploadTripCoverImage(eq(userId), any(MultipartFile.class))).willReturn(uploadResult);
+        given(storageService.uploadTripCoverImage(eq(userId), any(MultipartFile.class))).willReturn(uploadResult);
         given(tripCoverImageRepository.save(any(TripCoverImage.class))).willAnswer(invocation -> {
             TripCoverImage coverImage = invocation.getArgument(0);
             trip.setCoverImage(coverImage);
@@ -147,9 +147,9 @@ class TripServiceTest {
         // then
         assertThat(response.getId()).isEqualTo(1L);
         assertThat(response.getTitle()).isEqualTo("남미 여행");
-        assertThat(response.getImageUrl()).isEqualTo(uploadResult.getS3Url());
+        assertThat(response.getImageUrl()).isEqualTo(uploadResult.getStorageUrl());
 
-        verify(s3Service).uploadTripCoverImage(eq(userId), any(MultipartFile.class));
+        verify(storageService).uploadTripCoverImage(eq(userId), any(MultipartFile.class));
         verify(tripCoverImageRepository).save(any(TripCoverImage.class));
     }
 
@@ -269,16 +269,16 @@ class TripServiceTest {
                 "test image content".getBytes()
         );
 
-        S3UploadResult uploadResult = new S3UploadResult(
+        StorageUploadResult uploadResult = new StorageUploadResult(
                 "users/1/trips/cover/uuid_test.jpg",
-                "https://s3.amazonaws.com/bucket/users/1/trips/cover/uuid_test.jpg",
+                "https://test.supabase.co/storage/v1/object/public/test-images/users/1/trips/cover/uuid_test.jpg",
                 "test.jpg",
                 18L,
                 "image/jpeg"
         );
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
-        given(s3Service.uploadTripCoverImage(eq(userId), any(MultipartFile.class))).willReturn(uploadResult);
+        given(storageService.uploadTripCoverImage(eq(userId), any(MultipartFile.class))).willReturn(uploadResult);
         given(tripCoverImageRepository.save(any(TripCoverImage.class))).willAnswer(invocation -> {
             TripCoverImage coverImage = invocation.getArgument(0);
             trip.setCoverImage(coverImage);
@@ -289,10 +289,10 @@ class TripServiceTest {
         TripResponse response = tripService.updateTripImage(userId, tripId, image);
 
         // then
-        assertThat(response.getImageUrl()).isEqualTo(uploadResult.getS3Url());
+        assertThat(response.getImageUrl()).isEqualTo(uploadResult.getStorageUrl());
 
-        verify(s3Service).uploadTripCoverImage(eq(userId), any(MultipartFile.class));
-        verify(s3Service, never()).deleteTripCoverImage(any());
+        verify(storageService).uploadTripCoverImage(eq(userId), any(MultipartFile.class));
+        verify(storageService, never()).deleteTripCoverImage(any());
         verify(tripCoverImageRepository).save(any(TripCoverImage.class));
     }
 
@@ -310,7 +310,7 @@ class TripServiceTest {
         TripCoverImage existingCoverImage = TripCoverImage.builder()
                 .trip(trip)
                 .s3Key("users/1/trips/cover/old_image.jpg")
-                .s3Url("https://s3.amazonaws.com/bucket/users/1/trips/cover/old_image.jpg")
+                .s3Url("https://test.supabase.co/storage/v1/object/public/test-images/users/1/trips/cover/old_image.jpg")
                 .originalFilename("old_image.jpg")
                 .fileSize(100L)
                 .mimeType(ImageMimeType.JPEG)
@@ -324,16 +324,16 @@ class TripServiceTest {
                 "new test image content".getBytes()
         );
 
-        S3UploadResult uploadResult = new S3UploadResult(
+        StorageUploadResult uploadResult = new StorageUploadResult(
                 "users/1/trips/cover/uuid_new_test.jpg",
-                "https://s3.amazonaws.com/bucket/users/1/trips/cover/uuid_new_test.jpg",
+                "https://test.supabase.co/storage/v1/object/public/test-images/users/1/trips/cover/uuid_new_test.jpg",
                 "new_test.jpg",
                 22L,
                 "image/jpeg"
         );
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
-        given(s3Service.uploadTripCoverImage(eq(userId), any(MultipartFile.class))).willReturn(uploadResult);
+        given(storageService.uploadTripCoverImage(eq(userId), any(MultipartFile.class))).willReturn(uploadResult);
         given(tripCoverImageRepository.save(any(TripCoverImage.class))).willAnswer(invocation -> {
             TripCoverImage coverImage = invocation.getArgument(0);
             trip.setCoverImage(coverImage);
@@ -344,11 +344,11 @@ class TripServiceTest {
         TripResponse response = tripService.updateTripImage(userId, tripId, newImage);
 
         // then
-        assertThat(response.getImageUrl()).isEqualTo(uploadResult.getS3Url());
+        assertThat(response.getImageUrl()).isEqualTo(uploadResult.getStorageUrl());
 
-        verify(s3Service).deleteTripCoverImage("users/1/trips/cover/old_image.jpg");
+        verify(storageService).deleteTripCoverImage("users/1/trips/cover/old_image.jpg");
         verify(tripCoverImageRepository).delete(existingCoverImage);
-        verify(s3Service).uploadTripCoverImage(eq(userId), any(MultipartFile.class));
+        verify(storageService).uploadTripCoverImage(eq(userId), any(MultipartFile.class));
         verify(tripCoverImageRepository).save(any(TripCoverImage.class));
     }
 
@@ -366,7 +366,7 @@ class TripServiceTest {
         TripCoverImage coverImage = TripCoverImage.builder()
                 .trip(trip)
                 .s3Key("users/1/trips/cover/test.jpg")
-                .s3Url("https://s3.amazonaws.com/bucket/users/1/trips/cover/test.jpg")
+                .s3Url("https://test.supabase.co/storage/v1/object/public/test-images/users/1/trips/cover/test.jpg")
                 .originalFilename("test.jpg")
                 .fileSize(100L)
                 .mimeType(ImageMimeType.JPEG)
@@ -379,7 +379,7 @@ class TripServiceTest {
         tripService.deleteTripImage(userId, tripId);
 
         // then
-        verify(s3Service).deleteTripCoverImage("users/1/trips/cover/test.jpg");
+        verify(storageService).deleteTripCoverImage("users/1/trips/cover/test.jpg");
         verify(tripCoverImageRepository).delete(coverImage);
         assertThat(trip.getCoverImage()).isNull();
     }
@@ -400,7 +400,7 @@ class TripServiceTest {
         tripService.deleteTripImage(userId, tripId);
 
         // then
-        verify(s3Service, never()).deleteTripCoverImage(any());
+        verify(storageService, never()).deleteTripCoverImage(any());
         verify(tripCoverImageRepository, never()).delete(any());
     }
 
@@ -418,7 +418,7 @@ class TripServiceTest {
         TripCoverImage coverImage = TripCoverImage.builder()
                 .trip(trip)
                 .s3Key("users/1/trips/cover/test.jpg")
-                .s3Url("https://s3.amazonaws.com/bucket/users/1/trips/cover/test.jpg")
+                .s3Url("https://test.supabase.co/storage/v1/object/public/test-images/users/1/trips/cover/test.jpg")
                 .originalFilename("test.jpg")
                 .fileSize(100L)
                 .mimeType(ImageMimeType.JPEG)
@@ -432,7 +432,7 @@ class TripServiceTest {
 
         // then
         verify(tripRepository).findById(tripId);
-        verify(s3Service).deleteTripCoverImage("users/1/trips/cover/test.jpg");
+        verify(storageService).deleteTripCoverImage("users/1/trips/cover/test.jpg");
         verify(tripRepository).delete(trip);
     }
 
@@ -453,7 +453,7 @@ class TripServiceTest {
 
         // then
         verify(tripRepository).findById(tripId);
-        verify(s3Service, never()).deleteTripCoverImage(any());
+        verify(storageService, never()).deleteTripCoverImage(any());
         verify(tripRepository).delete(trip);
     }
 
