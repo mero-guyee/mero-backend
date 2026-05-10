@@ -18,12 +18,12 @@ import io.mero.app.domain.trip.repository.TripCoverImageRepository;
 import io.mero.app.domain.trip.repository.TripRepository;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.UserRepository;
-import io.mero.app.global.dto.S3UploadResult;
+import io.mero.app.global.dto.StorageUploadResult;
 import io.mero.app.global.enums.DocumentMimeType;
 import io.mero.app.global.enums.ImageMimeType;
 import io.mero.app.global.exception.ForbiddenException;
 import io.mero.app.global.exception.NotFoundException;
-import io.mero.app.global.service.S3Service;
+import io.mero.app.global.service.StorageService;
 import io.mero.app.global.util.MessageUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -43,7 +43,7 @@ public class TripService {
     private final TripCoverImageRepository tripCoverImageRepository;
     private final TripDocumentRepository tripDocumentRepository;
     private final TripMemoRepository tripMemoRepository;
-    private final S3Service s3Service;
+    private final StorageService storageService;
     private final MessageUtil messageUtil;
 
     @Transactional
@@ -116,7 +116,7 @@ public class TripService {
 
         // 기존 이미지 삭제
         if (trip.getCoverImage() != null) {
-            s3Service.deleteTripCoverImage(trip.getCoverImage().getS3Key());
+            storageService.deleteTripCoverImage(trip.getCoverImage().getS3Key());
             tripCoverImageRepository.delete(trip.getCoverImage());
             trip.removeCoverImage();
         }
@@ -128,11 +128,11 @@ public class TripService {
     }
 
     private void uploadTripCoverImage(Long userId, MultipartFile image, Trip trip) {
-        S3UploadResult uploadResult = s3Service.uploadTripCoverImage(userId, image);
+        StorageUploadResult uploadResult = storageService.uploadTripCoverImage(userId, image);
         TripCoverImage coverImage = TripCoverImage.builder()
                 .trip(trip)
-                .s3Key(uploadResult.getS3Key())
-                .s3Url(uploadResult.getS3Url())
+                .s3Key(uploadResult.getStorageKey())
+                .s3Url(uploadResult.getStorageUrl())
                 .originalFilename(uploadResult.getOriginalFilename())
                 .fileSize(uploadResult.getFileSize())
                 .mimeType(ImageMimeType.fromMimeType(uploadResult.getMimeType()))
@@ -147,7 +147,7 @@ public class TripService {
         validateOwner(userId, trip);
 
         if (trip.getCoverImage() != null) {
-            s3Service.deleteTripCoverImage(trip.getCoverImage().getS3Key());
+            storageService.deleteTripCoverImage(trip.getCoverImage().getS3Key());
             tripCoverImageRepository.delete(trip.getCoverImage());
             trip.removeCoverImage();
         }
@@ -158,13 +158,13 @@ public class TripService {
         Trip trip = findTripById(tripId);
         validateOwner(userId, trip);
 
-        S3UploadResult uploadResult = s3Service.uploadTripDocument(userId, tripId, file);
+        StorageUploadResult uploadResult = storageService.uploadTripDocument(userId, tripId, file);
 
         TripDocument document = TripDocument.builder()
                 .trip(trip)
                 .originalFileName(uploadResult.getOriginalFilename())
-                .storedFileName(uploadResult.getS3Key())
-                .fileUrl(uploadResult.getS3Url())
+                .storedFileName(uploadResult.getStorageKey())
+                .fileUrl(uploadResult.getStorageUrl())
                 .fileSize(uploadResult.getFileSize())
                 .contentType(DocumentMimeType.fromMimeType(uploadResult.getMimeType()))
                 .build();
@@ -187,7 +187,7 @@ public class TripService {
                     messageUtil.getMessage("error.forbidden"));
         }
 
-        s3Service.deleteTripDocument(document.getS3Key());
+        storageService.deleteTripDocument(document.getStorageKey());
         tripDocumentRepository.delete(document);
     }
 
@@ -197,12 +197,12 @@ public class TripService {
         validateOwner(userId, trip);
 
         if (trip.getCoverImage() != null) {
-            s3Service.deleteTripCoverImage(trip.getCoverImage().getS3Key());
+            storageService.deleteTripCoverImage(trip.getCoverImage().getS3Key());
         }
 
         List<TripDocument> documents = tripDocumentRepository.findByTripId(tripId);
         for (TripDocument document : documents) {
-            s3Service.deleteTripDocument(document.getS3Key());
+            storageService.deleteTripDocument(document.getStorageKey());
         }
 
         tripRepository.delete(trip);

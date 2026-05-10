@@ -2,7 +2,7 @@ package io.mero.app.domain.footprint.util;
 
 import io.mero.app.domain.footprint.entity.Footprint;
 import io.mero.app.domain.footprint.entity.Photo;
-import io.mero.app.global.dto.S3UploadResult;
+import io.mero.app.global.dto.StorageUploadResult;
 import io.mero.app.global.enums.ImageMimeType;
 
 import java.util.ArrayList;
@@ -12,24 +12,18 @@ import java.util.List;
 
 public class PhotoMapper {
 
-    /**
-     * Convert list of S3UploadResult to Photo entities
-     * @param uploadResults List of S3 upload results
-     * @param footprint Parent footprint (can be null for new footprint)
-     * @return List of Photo entities
-     */
-    public static List<Photo> fromUploadResults(List<S3UploadResult> uploadResults, Footprint footprint) {
+    public static List<Photo> fromUploadResults(List<StorageUploadResult> uploadResults, Footprint footprint) {
         if (uploadResults == null || uploadResults.isEmpty()) {
             return new ArrayList<>();
         }
 
         List<Photo> photos = new ArrayList<>();
         for (int i = 0; i < uploadResults.size(); i++) {
-            S3UploadResult result = uploadResults.get(i);
+            StorageUploadResult result = uploadResults.get(i);
             Photo photo = Photo.builder()
                     .footprint(footprint)
-                    .s3Key(result.getS3Key())
-                    .s3Url(result.getS3Url())
+                    .s3Key(result.getStorageKey())
+                    .s3Url(result.getStorageUrl())
                     .originalFilename(result.getOriginalFilename())
                     .fileSize(result.getFileSize())
                     .mimeType(ImageMimeType.fromMimeType(result.getMimeType()))
@@ -40,9 +34,6 @@ public class PhotoMapper {
         return photos;
     }
 
-    /**
-     * Convert Photo entities to URL string list
-     */
     public static List<String> toUrls(List<Photo> photos) {
         if (photos == null || photos.isEmpty()) {
             return Collections.emptyList();
@@ -53,10 +44,7 @@ public class PhotoMapper {
                 .toList();
     }
 
-    /**
-     * Convert Photo entities to S3 key string list
-     */
-    public static List<String> toS3Keys(List<Photo> photos) {
+    public static List<String> toStorageKeys(List<Photo> photos) {
         if (photos == null || photos.isEmpty()) {
             return Collections.emptyList();
         }

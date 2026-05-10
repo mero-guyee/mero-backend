@@ -63,7 +63,7 @@ public class TripDocument extends BaseEntity {
         this.clientId = clientId;
     }
 
-    public String getS3Key() {
+    public String getStorageKey() {
         return storedFileName;
     }
 }

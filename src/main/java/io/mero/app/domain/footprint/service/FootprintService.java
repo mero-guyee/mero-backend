@@ -16,10 +16,10 @@ import io.mero.app.domain.expense.dto.ExpenseResponse;
 import io.mero.app.domain.expense.repository.ExpenseRepository;
 import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.domain.trip.repository.TripRepository;
-import io.mero.app.global.dto.S3UploadResult;
+import io.mero.app.global.dto.StorageUploadResult;
 import io.mero.app.global.exception.ForbiddenException;
 import io.mero.app.global.exception.NotFoundException;
-import io.mero.app.global.service.S3Service;
+import io.mero.app.global.service.StorageService;
 import io.mero.app.global.util.MessageUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -37,7 +37,7 @@ public class FootprintService {
     private final PhotoRepository photoRepository;
     private final TripRepository tripRepository;
     private final ExpenseRepository expenseRepository;
-    private final S3Service s3Service;
+    private final StorageService storageService;
     private final MessageUtil messageUtil;
 
     @Transactional
@@ -160,7 +160,7 @@ public class FootprintService {
         validateTripMatch(trip, tripId);
         validateOwner(trip, userId);
 
-        List<S3UploadResult> uploadResults = s3Service.uploadFootprintPhotos(userId, tripId, footprintId, photos);
+        List<StorageUploadResult> uploadResults = storageService.uploadFootprintPhotos(userId, tripId, footprintId, photos);
 
         int startOrderIndex = footprint.getPhotos().size();
         List<Photo> newPhotos = PhotoMapper.fromUploadResults(uploadResults, footprint);
