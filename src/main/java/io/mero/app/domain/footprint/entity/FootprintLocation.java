@@ -39,7 +39,7 @@ public class FootprintLocation extends BaseEntity {
     private BigDecimal longitude;
 
     @Column(name = "sort_order ")
-    private Integer sortOrder ;
+    private Integer sortOrder;
 
     @Builder
     public FootprintLocation(Footprint footprint, String placeName, String country,
