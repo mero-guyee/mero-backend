@@ -2,7 +2,14 @@ package io.mero.app.domain.user.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.mero.app.domain.user.dto.*;
+import io.mero.app.domain.user.dto.AppleLoginRequest;
+import io.mero.app.domain.user.dto.LoginRequest;
+import io.mero.app.domain.user.dto.LoginResponse;
+import io.mero.app.domain.user.dto.LogoutRequest;
+import io.mero.app.domain.user.dto.PasswordResetConfirmRequest;
+import io.mero.app.domain.user.dto.SignUpRequest;
+import io.mero.app.domain.user.dto.TokenRefreshRequest;
+import io.mero.app.domain.user.dto.TokenRefreshResponse;
 import io.mero.app.domain.user.service.UserService;
 import io.mero.app.global.jwt.JwtAuthenticationFilter;
 import io.mero.app.global.jwt.JwtTokenProvider;
@@ -230,6 +237,129 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/auth/logout")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("Apple 로그인 API 성공")
+    void Apple_로그인_API_성공() throws Exception {
+        // given
+        String body = "{\"identityToken\":\"valid.apple.token\"}";
+
+        LoginResponse response = new LoginResponse(
+                2L, "apple@example.com", "user1a2b3c", "access-token", "refresh-token"
+        );
+
+        given(userService.appleLogin(any(AppleLoginRequest.class))).willReturn(response);
+
+        // when & then
+        mockMvc.perform(post("/api/auth/apple")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.userId").value(2L))
+                .andExpect(jsonPath("$.accessToken").value("access-token"));
+    }
+
+    @Test
+    @DisplayName("Apple 로그인 API 실패 - identityToken 없음")
+    void Apple_로그인_API_실패_identityToken_없음() throws Exception {
+        // given
+        String body = "{\"identityToken\":\"\"}";
+
+        // when & then
+        mockMvc.perform(post("/api/auth/apple")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("이메일 인증 성공")
+    void 이메일_인증_성공() throws Exception {
+        // when & then
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .get("/api/auth/email/verify")
+                        .param("token", "valid-token"))
+                .andDo(print())
+                .andExpect(status().isOk());
+
+        verify(userService).verifyEmail("valid-token");
+    }
+
+    @Test
+    @DisplayName("인증 메일 재발송 성공")
+    void 인증_메일_재발송_성공() throws Exception {
+        // given
+        String body = "{\"email\":\"test@example.com\"}";
+
+        // when & then
+        mockMvc.perform(post("/api/auth/email/resend")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andDo(print())
+                .andExpect(status().isNoContent());
+
+        verify(userService).resendVerificationEmail("test@example.com");
+    }
+
+    @Test
+    @DisplayName("인증 메일 재발송 실패 - 이메일 형식 오류")
+    void 인증_메일_재발송_실패_이메일_형식_오류() throws Exception {
+        // given
+        String body = "{\"email\":\"invalid-email\"}";
+
+        // when & then
+        mockMvc.perform(post("/api/auth/email/resend")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("비밀번호 재설정 요청 성공")
+    void 비밀번호_재설정_요청_성공() throws Exception {
+        // given
+        String body = "{\"email\":\"test@example.com\"}";
+
+        // when & then
+        mockMvc.perform(post("/api/auth/password/reset-request")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andDo(print())
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("비밀번호 재설정 성공")
+    void 비밀번호_재설정_성공() throws Exception {
+        // given
+        String body = "{\"token\":\"reset-token\",\"newPassword\":\"newPassword1\"}";
+
+        // when & then
+        mockMvc.perform(post("/api/auth/password/reset")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andDo(print())
+                .andExpect(status().isNoContent());
+
+        verify(userService).resetPassword(any(PasswordResetConfirmRequest.class));
+    }
+
+    @Test
+    @DisplayName("비밀번호 재설정 실패 - 새 비밀번호 길이 부족")
+    void 비밀번호_재설정_실패_새_비밀번호_길이_부족() throws Exception {
+        // given
+        String body = "{\"token\":\"reset-token\",\"newPassword\":\"short\"}";
+
+        // when & then
+        mockMvc.perform(post("/api/auth/password/reset")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
                 .andDo(print())
                 .andExpect(status().isBadRequest());
     }

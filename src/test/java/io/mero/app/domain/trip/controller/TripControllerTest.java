@@ -3,6 +3,10 @@ package io.mero.app.domain.trip.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mero.app.domain.trip.dto.TripCreateRequest;
 import io.mero.app.domain.trip.dto.TripDetailResponse;
+import io.mero.app.domain.trip.dto.TripDocumentResponse;
+import io.mero.app.domain.trip.dto.TripMemoCreateRequest;
+import io.mero.app.domain.trip.dto.TripMemoResponse;
+import io.mero.app.domain.trip.dto.TripMemoUpdateRequest;
 import io.mero.app.domain.trip.dto.TripResponse;
 import io.mero.app.domain.trip.dto.TripUpdateRequest;
 import io.mero.app.domain.trip.service.TripService;
@@ -319,5 +323,132 @@ class TripControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(tripService).deleteTripImage(1L, 1L);
+    }
+
+    @Test
+    @DisplayName("여행 문서 업로드 성공")
+    void 여행_문서_업로드_성공() throws Exception {
+        // given
+        TripDocumentResponse response = new TripDocumentResponse(
+                1L, null, "ticket.pdf", "https://example.com/ticket.pdf", 11L
+        );
+
+        given(tripService.uploadTripDocument(anyLong(), eq(1L), any())).willReturn(response);
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "ticket.pdf", "application/pdf", "pdf content".getBytes()
+        );
+
+        // when & then
+        mockMvc.perform(multipart("/api/trips/1/documents").file(file))
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.fileName").value("ticket.pdf"))
+                .andExpect(jsonPath("$.fileUrl").value("https://example.com/ticket.pdf"));
+    }
+
+    @Test
+    @DisplayName("여행 문서 삭제 성공")
+    void 여행_문서_삭제_성공() throws Exception {
+        // when & then
+        mockMvc.perform(delete("/api/trips/1/documents/1"))
+                .andDo(print())
+                .andExpect(status().isNoContent());
+
+        verify(tripService).deleteTripDocument(1L, 1L, 1L);
+    }
+
+    @Test
+    @DisplayName("여행 메모 생성 성공")
+    void 여행_메모_생성_성공() throws Exception {
+        // given
+        TripMemoCreateRequest request = new TripMemoCreateRequest("memo-client-id-1", "메모 제목", "메모 내용");
+
+        TripMemoResponse response = new TripMemoResponse(
+                1L, "memo-client-id-1", "메모 제목", "메모 내용", null, null
+        );
+
+        given(tripService.createTripMemo(anyLong(), eq(1L), any(TripMemoCreateRequest.class))).willReturn(response);
+
+        // when & then
+        mockMvc.perform(post("/api/trips/1/memos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.title").value("메모 제목"))
+                .andExpect(jsonPath("$.content").value("메모 내용"));
+    }
+
+    @Test
+    @DisplayName("여행 메모 목록 조회 성공")
+    void 여행_메모_목록_조회_성공() throws Exception {
+        // given
+        List<TripMemoResponse> responses = List.of(
+                new TripMemoResponse(1L, "c1", "메모1", "내용1", null, null),
+                new TripMemoResponse(2L, "c2", "메모2", "내용2", null, null)
+        );
+
+        given(tripService.getTripMemos(anyLong(), eq(1L))).willReturn(responses);
+
+        // when & then
+        mockMvc.perform(get("/api/trips/1/memos"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].title").value("메모1"));
+    }
+
+    @Test
+    @DisplayName("여행 메모 상세 조회 성공")
+    void 여행_메모_상세_조회_성공() throws Exception {
+        // given
+        TripMemoResponse response = new TripMemoResponse(
+                1L, "c1", "메모 제목", "메모 내용", null, null
+        );
+
+        given(tripService.getTripMemo(anyLong(), eq(1L), eq(1L))).willReturn(response);
+
+        // when & then
+        mockMvc.perform(get("/api/trips/1/memos/1"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.title").value("메모 제목"));
+    }
+
+    @Test
+    @DisplayName("여행 메모 수정 성공")
+    void 여행_메모_수정_성공() throws Exception {
+        // given
+        TripMemoUpdateRequest request = new TripMemoUpdateRequest("수정된 제목", "수정된 내용");
+
+        TripMemoResponse response = new TripMemoResponse(
+                1L, "c1", "수정된 제목", "수정된 내용", null, null
+        );
+
+        given(tripService.updateTripMemo(anyLong(), eq(1L), eq(1L), any(TripMemoUpdateRequest.class))).willReturn(response);
+
+        // when & then
+        mockMvc.perform(put("/api/trips/1/memos/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("수정된 제목"))
+                .andExpect(jsonPath("$.content").value("수정된 내용"));
+    }
+
+    @Test
+    @DisplayName("여행 메모 삭제 성공")
+    void 여행_메모_삭제_성공() throws Exception {
+        // when & then
+        mockMvc.perform(delete("/api/trips/1/memos/1"))
+                .andDo(print())
+                .andExpect(status().isNoContent());
+
+        verify(tripService).deleteTripMemo(1L, 1L, 1L);
     }
 }

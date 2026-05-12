@@ -1,21 +1,30 @@
 package io.mero.app.domain.trip.service;
 
 import io.mero.app.domain.trip.repository.TripDocumentRepository;
+import io.mero.app.domain.trip.repository.TripMemoRepository;
 import io.mero.app.domain.trip.dto.TripCreateRequest;
 import io.mero.app.domain.trip.dto.TripDetailResponse;
+import io.mero.app.domain.trip.dto.TripDocumentResponse;
+import io.mero.app.domain.trip.dto.TripMemoCreateRequest;
+import io.mero.app.domain.trip.dto.TripMemoResponse;
+import io.mero.app.domain.trip.dto.TripMemoUpdateRequest;
 import io.mero.app.domain.trip.dto.TripResponse;
 import io.mero.app.domain.trip.dto.TripUpdateRequest;
 import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.domain.trip.entity.TripCoverImage;
+import io.mero.app.domain.trip.entity.TripDocument;
+import io.mero.app.domain.trip.entity.TripMemo;
 import io.mero.app.domain.trip.repository.TripCoverImageRepository;
 import io.mero.app.domain.trip.repository.TripRepository;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.UserRepository;
 import io.mero.app.global.dto.StorageUploadResult;
 import io.mero.app.global.enums.Currency;
+import io.mero.app.global.enums.DocumentMimeType;
 import io.mero.app.global.enums.ImageMimeType;
 import io.mero.app.global.enums.Timezone;
 import io.mero.app.global.exception.ForbiddenException;
+import io.mero.app.global.exception.NotFoundException;
 import io.mero.app.global.service.StorageService;
 import io.mero.app.global.util.MessageUtil;
 import org.junit.jupiter.api.DisplayName;
@@ -54,6 +63,9 @@ class TripServiceTest {
 
     @Mock
     private TripDocumentRepository tripDocumentRepository;
+
+    @Mock
+    private TripMemoRepository tripMemoRepository;
 
     @Mock
     private StorageService storageService;
@@ -455,6 +467,313 @@ class TripServiceTest {
         verify(tripRepository).findById(tripId);
         verify(storageService, never()).deleteTripCoverImage(any());
         verify(tripRepository).delete(trip);
+    }
+
+    // ===== 문서 업로드 =====
+
+    @Test
+    @DisplayName("여행 문서 업로드 성공")
+    void 여행_문서_업로드_성공() {
+        // given
+        Long userId = 1L;
+        Long tripId = 1L;
+
+        User user = createUser(userId);
+        Trip trip = createTrip(tripId, user, "도쿄 여행", LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 7));
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "ticket.pdf", "application/pdf", "pdf content".getBytes()
+        );
+
+        StorageUploadResult uploadResult = new StorageUploadResult(
+                "users/1/trips/1/documents/ticket.pdf",
+                "https://example.com/ticket.pdf",
+                "ticket.pdf",
+                11L,
+                "application/pdf"
+        );
+
+        TripDocument document = TripDocument.builder()
+                .trip(trip)
+                .originalFileName("ticket.pdf")
+                .storedFileName("users/1/trips/1/documents/ticket.pdf")
+                .fileUrl("https://example.com/ticket.pdf")
+                .fileSize(11L)
+                .contentType(DocumentMimeType.PDF)
+                .build();
+
+        given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
+        given(storageService.uploadTripDocument(eq(userId), eq(tripId), any(MultipartFile.class))).willReturn(uploadResult);
+        given(tripDocumentRepository.save(any(TripDocument.class))).willReturn(document);
+
+        // when
+        TripDocumentResponse response = tripService.uploadTripDocument(userId, tripId, file);
+
+        // then
+        assertThat(response.getFileName()).isEqualTo("ticket.pdf");
+        assertThat(response.getFileUrl()).isEqualTo("https://example.com/ticket.pdf");
+
+        verify(storageService).uploadTripDocument(eq(userId), eq(tripId), any(MultipartFile.class));
+        verify(tripDocumentRepository).save(any(TripDocument.class));
+    }
+
+    @Test
+    @DisplayName("여행 문서 삭제 성공")
+    void 여행_문서_삭제_성공() {
+        // given
+        Long userId = 1L;
+        Long tripId = 1L;
+        Long documentId = 1L;
+
+        User user = createUser(userId);
+        Trip trip = createTrip(tripId, user, "도쿄 여행", LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 7));
+
+        TripDocument document = TripDocument.builder()
+                .trip(trip)
+                .originalFileName("ticket.pdf")
+                .storedFileName("users/1/trips/1/documents/ticket.pdf")
+                .fileUrl("https://example.com/ticket.pdf")
+                .fileSize(11L)
+                .contentType(DocumentMimeType.PDF)
+                .build();
+
+        given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
+        given(tripDocumentRepository.findById(documentId)).willReturn(Optional.of(document));
+
+        // when
+        tripService.deleteTripDocument(userId, tripId, documentId);
+
+        // then
+        verify(storageService).deleteTripDocument("users/1/trips/1/documents/ticket.pdf");
+        verify(tripDocumentRepository).delete(document);
+    }
+
+    @Test
+    @DisplayName("여행 문서 삭제 실패 - 문서 없음")
+    void 여행_문서_삭제_실패_문서_없음() {
+        // given
+        Long userId = 1L;
+        Long tripId = 1L;
+        Long documentId = 999L;
+
+        User user = createUser(userId);
+        Trip trip = createTrip(tripId, user, "도쿄 여행", LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 7));
+
+        given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
+        given(tripDocumentRepository.findById(documentId)).willReturn(Optional.empty());
+        given(messageUtil.getMessage("error.document.notFound")).willReturn("문서를 찾을 수 없습니다");
+
+        // when & then
+        assertThatThrownBy(() -> tripService.deleteTripDocument(userId, tripId, documentId))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("문서를 찾을 수 없습니다");
+    }
+
+    // ===== 메모 생성 =====
+
+    @Test
+    @DisplayName("여행 메모 생성 성공")
+    void 여행_메모_생성_성공() {
+        // given
+        Long userId = 1L;
+        Long tripId = 1L;
+
+        User user = createUser(userId);
+        Trip trip = createTrip(tripId, user, "도쿄 여행", LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 7));
+
+        TripMemoCreateRequest request = new TripMemoCreateRequest("memo-client-id-1", "메모 제목", "메모 내용");
+
+        TripMemo memo = TripMemo.builder()
+                .trip(trip)
+                .clientId("memo-client-id-1")
+                .title("메모 제목")
+                .content("메모 내용")
+                .build();
+
+        given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
+        given(tripMemoRepository.findByClientIdAndTripId(request.getClientId(), tripId)).willReturn(Optional.empty());
+        given(tripMemoRepository.save(any(TripMemo.class))).willReturn(memo);
+
+        // when
+        TripMemoResponse response = tripService.createTripMemo(userId, tripId, request);
+
+        // then
+        assertThat(response.getTitle()).isEqualTo("메모 제목");
+        assertThat(response.getContent()).isEqualTo("메모 내용");
+
+        verify(tripMemoRepository).save(any(TripMemo.class));
+    }
+
+    @Test
+    @DisplayName("여행 메모 생성 성공 - 중복 clientId (멱등성)")
+    void 여행_메모_생성_성공_중복_clientId() {
+        // given
+        Long userId = 1L;
+        Long tripId = 1L;
+
+        User user = createUser(userId);
+        Trip trip = createTrip(tripId, user, "도쿄 여행", LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 7));
+
+        TripMemoCreateRequest request = new TripMemoCreateRequest("memo-client-id-1", "메모 제목", "메모 내용");
+
+        TripMemo existing = TripMemo.builder()
+                .trip(trip)
+                .clientId("memo-client-id-1")
+                .title("메모 제목")
+                .content("메모 내용")
+                .build();
+
+        given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
+        given(tripMemoRepository.findByClientIdAndTripId(request.getClientId(), tripId)).willReturn(Optional.of(existing));
+
+        // when
+        TripMemoResponse response = tripService.createTripMemo(userId, tripId, request);
+
+        // then
+        assertThat(response.getTitle()).isEqualTo("메모 제목");
+        verify(tripMemoRepository, never()).save(any(TripMemo.class));
+    }
+
+    // ===== 메모 목록 조회 =====
+
+    @Test
+    @DisplayName("여행 메모 목록 조회 성공")
+    void 여행_메모_목록_조회_성공() {
+        // given
+        Long userId = 1L;
+        Long tripId = 1L;
+
+        User user = createUser(userId);
+        Trip trip = createTrip(tripId, user, "도쿄 여행", LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 7));
+
+        List<TripMemo> memos = List.of(
+                TripMemo.builder().trip(trip).clientId("c1").title("메모1").content("내용1").build(),
+                TripMemo.builder().trip(trip).clientId("c2").title("메모2").content("내용2").build()
+        );
+
+        given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
+        given(tripMemoRepository.findByTripIdOrderByCreatedAtDesc(tripId)).willReturn(memos);
+
+        // when
+        List<TripMemoResponse> responses = tripService.getTripMemos(userId, tripId);
+
+        // then
+        assertThat(responses).hasSize(2);
+        assertThat(responses.get(0).getTitle()).isEqualTo("메모1");
+    }
+
+    // ===== 메모 상세 조회 =====
+
+    @Test
+    @DisplayName("여행 메모 상세 조회 성공")
+    void 여행_메모_상세_조회_성공() {
+        // given
+        Long userId = 1L;
+        Long tripId = 1L;
+        Long memoId = 1L;
+
+        User user = createUser(userId);
+        Trip trip = createTrip(tripId, user, "도쿄 여행", LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 7));
+
+        TripMemo memo = TripMemo.builder()
+                .trip(trip)
+                .clientId("memo-client-id-1")
+                .title("메모 제목")
+                .content("메모 내용")
+                .build();
+
+        given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
+        given(tripMemoRepository.findById(memoId)).willReturn(Optional.of(memo));
+
+        // when
+        TripMemoResponse response = tripService.getTripMemo(userId, tripId, memoId);
+
+        // then
+        assertThat(response.getTitle()).isEqualTo("메모 제목");
+    }
+
+    // ===== 메모 수정 =====
+
+    @Test
+    @DisplayName("여행 메모 수정 성공")
+    void 여행_메모_수정_성공() {
+        // given
+        Long userId = 1L;
+        Long tripId = 1L;
+        Long memoId = 1L;
+
+        User user = createUser(userId);
+        Trip trip = createTrip(tripId, user, "도쿄 여행", LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 7));
+
+        TripMemo memo = TripMemo.builder()
+                .trip(trip)
+                .clientId("memo-client-id-1")
+                .title("원본 제목")
+                .content("원본 내용")
+                .build();
+
+        TripMemoUpdateRequest request = new TripMemoUpdateRequest("수정된 제목", "수정된 내용");
+
+        given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
+        given(tripMemoRepository.findById(memoId)).willReturn(Optional.of(memo));
+
+        // when
+        TripMemoResponse response = tripService.updateTripMemo(userId, tripId, memoId, request);
+
+        // then
+        assertThat(response.getTitle()).isEqualTo("수정된 제목");
+        assertThat(response.getContent()).isEqualTo("수정된 내용");
+    }
+
+    // ===== 메모 삭제 =====
+
+    @Test
+    @DisplayName("여행 메모 삭제 성공")
+    void 여행_메모_삭제_성공() {
+        // given
+        Long userId = 1L;
+        Long tripId = 1L;
+        Long memoId = 1L;
+
+        User user = createUser(userId);
+        Trip trip = createTrip(tripId, user, "도쿄 여행", LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 7));
+
+        TripMemo memo = TripMemo.builder()
+                .trip(trip)
+                .clientId("memo-client-id-1")
+                .title("메모 제목")
+                .content("메모 내용")
+                .build();
+
+        given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
+        given(tripMemoRepository.findById(memoId)).willReturn(Optional.of(memo));
+
+        // when
+        tripService.deleteTripMemo(userId, tripId, memoId);
+
+        // then
+        verify(tripMemoRepository).delete(memo);
+    }
+
+    @Test
+    @DisplayName("여행 메모 삭제 실패 - 메모 없음")
+    void 여행_메모_삭제_실패_메모_없음() {
+        // given
+        Long userId = 1L;
+        Long tripId = 1L;
+        Long memoId = 999L;
+
+        User user = createUser(userId);
+        Trip trip = createTrip(tripId, user, "도쿄 여행", LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 7));
+
+        given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
+        given(tripMemoRepository.findById(memoId)).willReturn(Optional.empty());
+        given(messageUtil.getMessage("error.memo.notFound")).willReturn("메모를 찾을 수 없습니다");
+
+        // when & then
+        assertThatThrownBy(() -> tripService.deleteTripMemo(userId, tripId, memoId))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("메모를 찾을 수 없습니다");
     }
 
     private User createUser(Long userId) {

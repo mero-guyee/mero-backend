@@ -342,6 +342,85 @@ class BudgetServiceTest {
     }
 
     @Test
+    @DisplayName("예산 통화 목록 조회 성공")
+    void getBudgetCurrencies_Success() {
+        // given
+        Long userId = 1L;
+        Long tripId = 1L;
+
+        User user = User.builder().id(userId).build();
+        Trip trip = Trip.builder().id(tripId).user(user).build();
+
+        List<Budget> budgets = List.of(
+                Budget.builder().id(1L).trip(trip).amount(new BigDecimal("4000")).currency(Currency.USD).build(),
+                Budget.builder().id(2L).trip(trip).amount(new BigDecimal("1000000")).currency(Currency.KRW).build()
+        );
+
+        given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
+        given(budgetRepository.findByTripOrderByCreatedAtDesc(trip)).willReturn(budgets);
+
+        // when
+        List<Currency> currencies = budgetService.getBudgetCurrencies(userId, tripId);
+
+        // then
+        assertThat(currencies).hasSize(2);
+        assertThat(currencies).containsExactly(Currency.USD, Currency.KRW);
+    }
+
+    @Test
+    @DisplayName("예산 수정 실패 - 통화 중복")
+    void updateBudget_Fail_DuplicateCurrency() {
+        // given
+        Long userId = 1L;
+        Long tripId = 1L;
+        Long budgetId = 1L;
+
+        BudgetUpdateRequest request = new BudgetUpdateRequest(new BigDecimal("5000"), Currency.EUR, null);
+
+        User user = User.builder().id(userId).build();
+        Trip trip = Trip.builder().id(tripId).user(user).build();
+
+        Budget budget = Budget.builder().id(budgetId).trip(trip)
+                .amount(new BigDecimal("4000")).currency(Currency.USD).build();
+
+        Budget existingEurBudget = Budget.builder().id(2L).trip(trip)
+                .amount(new BigDecimal("3000")).currency(Currency.EUR).build();
+
+        given(budgetRepository.findById(budgetId)).willReturn(Optional.of(budget));
+        given(budgetRepository.findByTripAndCurrency(trip, Currency.EUR)).willReturn(Optional.of(existingEurBudget));
+        given(messageUtil.getMessage("error.budget.duplicateCurrency")).willReturn("이미 해당 통화의 예산이 존재합니다");
+
+        // when & then
+        assertThatThrownBy(() -> budgetService.updateBudget(userId, tripId, budgetId, request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("이미 해당 통화의 예산이 존재합니다");
+    }
+
+    @Test
+    @DisplayName("예산 삭제 실패 - 권한 없음")
+    void deleteBudget_Fail_NotOwner() {
+        // given
+        Long userId = 1L;
+        Long otherUserId = 2L;
+        Long tripId = 1L;
+        Long budgetId = 1L;
+
+        User otherUser = User.builder().id(otherUserId).build();
+        Trip trip = Trip.builder().id(tripId).user(otherUser).build();
+
+        Budget budget = Budget.builder().id(budgetId).trip(trip)
+                .amount(new BigDecimal("4000")).currency(Currency.USD).build();
+
+        given(budgetRepository.findById(budgetId)).willReturn(Optional.of(budget));
+        given(messageUtil.getMessage("error.forbidden")).willReturn("접근 권한이 없습니다");
+
+        // when & then
+        assertThatThrownBy(() -> budgetService.deleteBudget(userId, tripId, budgetId))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessage("접근 권한이 없습니다");
+    }
+
+    @Test
     @DisplayName("예산 삭제 성공")
     void deleteBudget_Success() {
         // given

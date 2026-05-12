@@ -153,6 +153,24 @@ class BudgetControllerTest {
     }
 
     @Test
+    @DisplayName("예산 통화 목록 조회 API 성공")
+    void getBudgetCurrencies_Success() throws Exception {
+        // given
+        List<Currency> currencies = List.of(Currency.USD, Currency.KRW, Currency.EUR);
+
+        given(budgetService.getBudgetCurrencies(anyLong(), eq(1L))).willReturn(currencies);
+
+        // when & then
+        mockMvc.perform(get("/api/trips/1/budgets/currencies"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[0]").value("USD"))
+                .andExpect(jsonPath("$[1]").value("KRW"));
+    }
+
+    @Test
     @DisplayName("예산 삭제 API 성공")
     void deleteBudget_Success() throws Exception {
         // when & then
