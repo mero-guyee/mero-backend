@@ -2,25 +2,25 @@ package io.mero.app.domain.user.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
+import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 public class EmailService {
-
-    private final JavaMailSender mailSender;
 
     @Value("${app.base-url}")
     private String baseUrl;
 
     @Value("${app.mail.from}")
     private String fromEmail;
+
+    @Value("${resend.api-key}")
+    private String apiKey;
+
+    private final RestClient restClient = RestClient.create();
 
     @Async
     public void sendVerificationEmail(String to, String token) {
@@ -52,16 +52,19 @@ public class EmailService {
     }
 
     private void send(String to, String subject, String html) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
-            helper.setFrom(fromEmail);
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(html, true);
-            mailSender.send(message);
-        } catch (MessagingException e) {
-            throw new RuntimeException("이메일 발송 실패: " + e.getMessage(), e);
-        }
+        Map<String, Object> payload = Map.of(
+                "from", fromEmail,
+                "to", new String[]{to},
+                "subject", subject,
+                "html", html
+        );
+
+        restClient.post()
+                .uri("https://api.resend.com/emails")
+                .header("Authorization", "Bearer " + apiKey)
+                .header("Content-Type", "application/json")
+                .body(payload)
+                .retrieve()
+                .toBodilessEntity();
     }
 }
