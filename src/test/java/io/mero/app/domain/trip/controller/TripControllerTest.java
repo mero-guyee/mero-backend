@@ -220,8 +220,7 @@ class TripControllerTest {
                 LocalDate.of(2026, 5, 15),
                 List.of("브라질", "아르헨티나", "페루"),
                 null,
-                LocalDateTime.now(),
-                Collections.emptyList()
+                LocalDateTime.now()
         );
 
         given(tripService.getTrip(anyLong(), eq(1L))).willReturn(response);
@@ -323,6 +322,24 @@ class TripControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(tripService).deleteTripImage(1L, 1L);
+    }
+
+    @Test
+    @DisplayName("여행 문서 목록 조회 성공")
+    void 여행_문서_목록_조회_성공() throws Exception {
+        // given
+        List<TripDocumentResponse> responses = List.of(
+                new TripDocumentResponse(1L, null, "ticket.pdf", "https://example.com/ticket.pdf", 11L)
+        );
+
+        given(tripService.getTripDocuments(anyLong(), eq(1L))).willReturn(responses);
+
+        // when & then
+        mockMvc.perform(get("/api/trips/1/documents"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].fileName").value("ticket.pdf"))
+                .andExpect(jsonPath("$[0].fileUrl").value("https://example.com/ticket.pdf"));
     }
 
     @Test

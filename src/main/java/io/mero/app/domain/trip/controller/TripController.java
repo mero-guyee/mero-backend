@@ -116,6 +116,14 @@ public class TripController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "여행 문서 목록 조회", description = "여행의 문서 목록을 조회합니다")
+    @GetMapping("/{tripId}/documents")
+    public ResponseEntity<List<TripDocumentResponse>> getTripDocuments(@PathVariable Long tripId) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        List<TripDocumentResponse> responses = tripService.getTripDocuments(userId, tripId);
+        return ResponseEntity.ok(responses);
+    }
+
     @Operation(summary = "여행 문서 업로드", description = "여행에 문서를 업로드합니다")
     @PostMapping(value = "/{tripId}/documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<TripDocumentResponse> uploadTripDocument(

@@ -200,7 +200,6 @@ class TripServiceTest {
         Trip trip = createTrip(tripId, user, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15));
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
-        given(tripDocumentRepository.findByTripId(tripId)).willReturn(Collections.emptyList());
 
         // when
         TripDetailResponse response = tripService.getTrip(userId, tripId);
@@ -210,7 +209,6 @@ class TripServiceTest {
         assertThat(response.getTitle()).isEqualTo("남미 여행");
 
         verify(tripRepository).findById(tripId);
-        verify(tripDocumentRepository).findByTripId(tripId);
     }
 
     @Test
@@ -467,6 +465,40 @@ class TripServiceTest {
         verify(tripRepository).findById(tripId);
         verify(storageService, never()).deleteTripCoverImage(any());
         verify(tripRepository).delete(trip);
+    }
+
+    // ===== 문서 목록 조회 =====
+
+    @Test
+    @DisplayName("여행 문서 목록 조회 성공")
+    void 여행_문서_목록_조회_성공() {
+        // given
+        Long userId = 1L;
+        Long tripId = 1L;
+
+        User user = createUser(userId);
+        Trip trip = createTrip(tripId, user, "도쿄 여행", LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 7));
+
+        TripDocument document = TripDocument.builder()
+                .trip(trip)
+                .originalFileName("ticket.pdf")
+                .storedFileName("users/1/trips/1/documents/ticket.pdf")
+                .fileUrl("https://example.com/ticket.pdf")
+                .fileSize(11L)
+                .contentType(DocumentMimeType.PDF)
+                .build();
+
+        given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
+        given(tripDocumentRepository.findByTripId(tripId)).willReturn(List.of(document));
+
+        // when
+        List<TripDocumentResponse> responses = tripService.getTripDocuments(userId, tripId);
+
+        // then
+        assertThat(responses).hasSize(1);
+        assertThat(responses.get(0).getFileName()).isEqualTo("ticket.pdf");
+
+        verify(tripDocumentRepository).findByTripId(tripId);
     }
 
     // ===== 문서 업로드 =====

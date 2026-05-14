@@ -88,10 +88,7 @@ public class TripService {
     public TripDetailResponse getTrip(Long userId, Long tripId) {
         Trip trip = findTripById(tripId);
         validateOwner(userId, trip);
-
-        List<TripDocument> documents = tripDocumentRepository.findByTripId(tripId);
-
-        return TripDetailResponse.from(trip, documents);
+        return TripDetailResponse.from(trip);
     }
 
     @Transactional
@@ -151,6 +148,15 @@ public class TripService {
             tripCoverImageRepository.delete(trip.getCoverImage());
             trip.removeCoverImage();
         }
+    }
+
+    @Transactional(readOnly = true)
+    public List<TripDocumentResponse> getTripDocuments(Long userId, Long tripId) {
+        Trip trip = findTripById(tripId);
+        validateOwner(userId, trip);
+        return tripDocumentRepository.findByTripId(tripId).stream()
+                .map(TripDocumentResponse::from)
+                .toList();
     }
 
     @Transactional
