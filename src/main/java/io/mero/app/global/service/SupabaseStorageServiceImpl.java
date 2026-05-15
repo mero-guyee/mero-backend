@@ -63,7 +63,8 @@ public class SupabaseStorageServiceImpl implements StorageService {
 
     private StorageUploadResult upload(MultipartFile file, String path, String bucket) {
         try {
-            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            String extension = extractExtension(file.getOriginalFilename());
+            String fileName = UUID.randomUUID() + extension;
             String fullPath = path + fileName;
 
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
@@ -73,7 +74,7 @@ public class SupabaseStorageServiceImpl implements StorageService {
                     .contentLength(file.getSize())
                     .build();
 
-            s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+            s3Client.putObject(putObjectRequest, RequestBody.fromBytes(file.getBytes()));
 
             String fileUrl = String.format("%s/storage/v1/object/public/%s/%s", storageUrl, bucket, fullPath);
 
@@ -119,6 +120,14 @@ public class SupabaseStorageServiceImpl implements StorageService {
             log.error("파일 삭제 실패: {}", e.getMessage());
             throw new FileDeleteException("파일 삭제 실패", e);
         }
+    }
+
+    private String extractExtension(String originalFilename) {
+        if (originalFilename == null) {
+            return "";
+        }
+        int dot = originalFilename.lastIndexOf('.');
+        return dot >= 0 ? originalFilename.substring(dot) : "";
     }
 
     private void validateImageFile(MultipartFile file) {

@@ -28,7 +28,7 @@ public class StorageConfig {
         AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
         return S3Client.builder()
                 .endpointOverride(URI.create(storageUrl + "/storage/v1/s3"))
-                .region(Region.of("ap-southeast-1"))
+                .region(Region.of("ap-south-1"))
                 .credentialsProvider(StaticCredentialsProvider.create(credentials))
                 .serviceConfiguration(S3Configuration.builder()
                         .pathStyleAccessEnabled(true)
