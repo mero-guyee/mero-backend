@@ -116,6 +116,7 @@ public class TripService {
             storageService.deleteTripCoverImage(trip.getCoverImage().getS3Key());
             tripCoverImageRepository.delete(trip.getCoverImage());
             trip.removeCoverImage();
+            tripCoverImageRepository.flush();
         }
 
         // 새 이미지 업로드
