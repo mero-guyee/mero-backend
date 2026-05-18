@@ -3,6 +3,7 @@ package io.mero.app.domain.user.service;
 import io.mero.app.domain.expense.service.ExpenseCategoryService;
 import io.mero.app.domain.user.dto.*;
 import io.mero.app.domain.user.service.AppleAuthService.AppleClaims;
+import io.mero.app.domain.user.service.GoogleAuthService.GoogleClaims;
 import io.mero.app.domain.user.entity.EmailToken;
 import io.mero.app.domain.user.entity.EmailTokenType;
 import io.mero.app.domain.user.entity.User;
@@ -34,6 +35,7 @@ public class UserService {
     private final ExpenseCategoryService categoryService;
     private final EmailService emailService;
     private final AppleAuthService appleAuthService;
+    private final GoogleAuthService googleAuthService;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final MessageUtil messageUtil;
@@ -119,6 +121,40 @@ public class UserService {
                 .email(claims.email())
                 .nickname(nickname)
                 .appleId(claims.appleUserId())
+                .defaultCurrency(Currency.KRW)
+                .timezone(Timezone.ASIA_SEOUL)
+                .build();
+        user.verifyEmail();
+        User savedUser = userRepository.save(user);
+        categoryService.createDefaultCategoriesForUser(savedUser);
+        return savedUser;
+    }
+
+    @Transactional
+    public LoginResponse googleLogin(GoogleLoginRequest request) {
+        GoogleClaims claims = googleAuthService.validate(request.getIdToken());
+
+        User user = userRepository.findByGoogleId(claims.googleUserId())
+                .orElseGet(() -> userRepository.findByEmail(claims.email())
+                        .map(existing -> {
+                            existing.linkGoogleId(claims.googleUserId());
+                            return existing;
+                        })
+                        .orElseGet(() -> createGoogleUser(claims)));
+
+        String accessToken = jwtTokenProvider.createAccessToken(user.getId());
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
+        user.updateRefreshToken(refreshToken);
+
+        return new LoginResponse(user.getId(), user.getEmail(), user.getNickname(), accessToken, refreshToken);
+    }
+
+    private User createGoogleUser(GoogleClaims claims) {
+        String nickname = generateUniqueNickname();
+        User user = User.builder()
+                .email(claims.email())
+                .nickname(nickname)
+                .googleId(claims.googleUserId())
                 .defaultCurrency(Currency.KRW)
                 .timezone(Timezone.ASIA_SEOUL)
                 .build();

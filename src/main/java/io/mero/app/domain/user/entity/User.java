@@ -33,6 +33,9 @@ public class User extends BaseEntity {
     @Column(name = "apple_id", length = 255, unique = true)
     private String appleId;
 
+    @Column(name = "google_id", length = 255, unique = true)
+    private String googleId;
+
     @Column(name = "profile_image_url", length = 500)
     private String profileImageUrl;
 
@@ -55,7 +58,8 @@ public class User extends BaseEntity {
 
     @Builder
     public User(Long id, String email, String nickname, String passwordHash,
-                String profileImageUrl, Currency defaultCurrency, Timezone timezone, String appleId) {
+                String profileImageUrl, Currency defaultCurrency, Timezone timezone,
+                String appleId, String googleId) {
         this.id = id;
         this.email = email;
         this.nickname = nickname;
@@ -64,11 +68,16 @@ public class User extends BaseEntity {
         this.defaultCurrency = defaultCurrency != null ? defaultCurrency : Currency.KRW;
         this.timezone = timezone != null ? timezone : Timezone.ASIA_SEOUL;
         this.appleId = appleId;
+        this.googleId = googleId;
         this.emailVerified = false;
     }
 
     public void linkAppleId(String appleId) {
         this.appleId = appleId;
+    }
+
+    public void linkGoogleId(String googleId) {
+        this.googleId = googleId;
     }
 
     public void verifyEmail() {

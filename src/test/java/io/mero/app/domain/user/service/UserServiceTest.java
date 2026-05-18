@@ -2,6 +2,7 @@ package io.mero.app.domain.user.service;
 
 import io.mero.app.domain.expense.service.ExpenseCategoryService;
 import io.mero.app.domain.user.dto.AppleLoginRequest;
+import io.mero.app.domain.user.dto.GoogleLoginRequest;
 import io.mero.app.domain.user.dto.LoginRequest;
 import io.mero.app.domain.user.dto.LoginResponse;
 import io.mero.app.domain.user.dto.LogoutRequest;
@@ -17,6 +18,7 @@ import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.EmailTokenRepository;
 import io.mero.app.domain.user.repository.UserRepository;
 import io.mero.app.domain.user.service.AppleAuthService.AppleClaims;
+import io.mero.app.domain.user.service.GoogleAuthService.GoogleClaims;
 import io.mero.app.global.enums.Currency;
 import io.mero.app.global.enums.Timezone;
 import io.mero.app.global.exception.BadRequestException;
@@ -63,6 +65,9 @@ class UserServiceTest {
 
     @Mock
     private AppleAuthService appleAuthService;
+
+    @Mock
+    private GoogleAuthService googleAuthService;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -608,6 +613,123 @@ class UserServiceTest {
         assertThat(response.getUserId()).isEqualTo(2L);
         assertThat(response.getEmail()).isEqualTo("newapple@example.com");
         verify(userRepository).save(any(User.class));
+    }
+
+    // ===== Google 로그인 =====
+
+    @Test
+    @DisplayName("Google 로그인 성공 - 기존 Google 계정")
+    void Google_로그인_성공_기존_계정() {
+        // given
+        GoogleLoginRequest request = new GoogleLoginRequest();
+        GoogleClaims claims = new GoogleClaims("google-user-id-1", "google@example.com");
+
+        User user = User.builder()
+                .id(10L)
+                .email("google@example.com")
+                .nickname("user-google-1")
+                .googleId("google-user-id-1")
+                .build();
+        user.verifyEmail();
+
+        given(googleAuthService.validate(any())).willReturn(claims);
+        given(userRepository.findByGoogleId("google-user-id-1")).willReturn(Optional.of(user));
+        given(jwtTokenProvider.createAccessToken(10L)).willReturn("access-token");
+        given(jwtTokenProvider.createRefreshToken(10L)).willReturn("refresh-token");
+
+        // when
+        LoginResponse response = userService.googleLogin(request);
+
+        // then
+        assertThat(response.getUserId()).isEqualTo(10L);
+        assertThat(response.getEmail()).isEqualTo("google@example.com");
+        assertThat(response.getAccessToken()).isEqualTo("access-token");
+        assertThat(response.getRefreshToken()).isEqualTo("refresh-token");
+        assertThat(user.getRefreshToken()).isEqualTo("refresh-token");
+        verify(userRepository, never()).save(any(User.class));
+        verify(userRepository, never()).findByEmail(anyString());
+    }
+
+    @Test
+    @DisplayName("Google 로그인 성공 - 동일 이메일 기존 계정에 googleId 연결")
+    void Google_로그인_성공_동일_이메일_계정_연결() {
+        // given
+        GoogleLoginRequest request = new GoogleLoginRequest();
+        GoogleClaims claims = new GoogleClaims("google-user-id-2", "existing@example.com");
+
+        User existing = User.builder()
+                .id(20L)
+                .email("existing@example.com")
+                .nickname("기존유저")
+                .passwordHash("encodedPassword")
+                .build();
+        existing.verifyEmail();
+
+        given(googleAuthService.validate(any())).willReturn(claims);
+        given(userRepository.findByGoogleId("google-user-id-2")).willReturn(Optional.empty());
+        given(userRepository.findByEmail("existing@example.com")).willReturn(Optional.of(existing));
+        given(jwtTokenProvider.createAccessToken(20L)).willReturn("access-token");
+        given(jwtTokenProvider.createRefreshToken(20L)).willReturn("refresh-token");
+
+        // when
+        LoginResponse response = userService.googleLogin(request);
+
+        // then
+        assertThat(response.getUserId()).isEqualTo(20L);
+        assertThat(existing.getGoogleId()).isEqualTo("google-user-id-2");
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("Google 로그인 성공 - 신규 사용자 생성")
+    void Google_로그인_성공_신규_사용자() {
+        // given
+        GoogleLoginRequest request = new GoogleLoginRequest();
+        GoogleClaims claims = new GoogleClaims("google-user-id-new", "newgoogle@example.com");
+
+        User newUser = User.builder()
+                .id(30L)
+                .email("newgoogle@example.com")
+                .nickname("user1a2b3c")
+                .googleId("google-user-id-new")
+                .build();
+        newUser.verifyEmail();
+
+        given(googleAuthService.validate(any())).willReturn(claims);
+        given(userRepository.findByGoogleId("google-user-id-new")).willReturn(Optional.empty());
+        given(userRepository.findByEmail("newgoogle@example.com")).willReturn(Optional.empty());
+        given(userRepository.existsByNickname(anyString())).willReturn(false);
+        given(userRepository.save(any(User.class))).willReturn(newUser);
+        given(jwtTokenProvider.createAccessToken(30L)).willReturn("access-token");
+        given(jwtTokenProvider.createRefreshToken(30L)).willReturn("refresh-token");
+
+        // when
+        LoginResponse response = userService.googleLogin(request);
+
+        // then
+        assertThat(response.getUserId()).isEqualTo(30L);
+        assertThat(response.getEmail()).isEqualTo("newgoogle@example.com");
+        assertThat(newUser.isEmailVerified()).isTrue();
+        verify(userRepository).save(any(User.class));
+        verify(expenseCategoryService).createDefaultCategoriesForUser(newUser);
+    }
+
+    @Test
+    @DisplayName("Google 로그인 실패 - 토큰 검증 실패")
+    void Google_로그인_실패_토큰_검증_실패() {
+        // given
+        GoogleLoginRequest request = new GoogleLoginRequest();
+
+        given(googleAuthService.validate(any()))
+                .willThrow(new BadRequestException("Google 토큰 검증에 실패했습니다"));
+
+        // when & then
+        assertThatThrownBy(() -> userService.googleLogin(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Google 토큰 검증에 실패했습니다");
+
+        verify(userRepository, never()).findByGoogleId(anyString());
+        verify(userRepository, never()).save(any(User.class));
     }
 
     // ===== 닉네임 변경 =====

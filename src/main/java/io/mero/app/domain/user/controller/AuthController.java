@@ -53,6 +53,13 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Google 로그인", description = "Google ID Token으로 로그인합니다. 신규 유저는 자동으로 계정이 생성됩니다.")
+    @PostMapping("/google")
+    public ResponseEntity<LoginResponse> googleLogin(@Valid @RequestBody GoogleLoginRequest request) {
+        LoginResponse response = userService.googleLogin(request);
+        return ResponseEntity.ok(response);
+    }
+
     @Operation(summary = "이메일 인증", description = "이메일로 발송된 링크를 통해 계정을 인증합니다")
     @GetMapping("/email/verify")
     public ResponseEntity<String> verifyEmail(@RequestParam String token) {

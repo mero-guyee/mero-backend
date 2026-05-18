@@ -3,6 +3,7 @@ package io.mero.app.domain.user.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mero.app.domain.user.dto.AppleLoginRequest;
+import io.mero.app.domain.user.dto.GoogleLoginRequest;
 import io.mero.app.domain.user.dto.LoginRequest;
 import io.mero.app.domain.user.dto.LoginResponse;
 import io.mero.app.domain.user.dto.LogoutRequest;
@@ -271,6 +272,46 @@ class AuthControllerTest {
 
         // when & then
         mockMvc.perform(post("/api/auth/apple")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("Google 로그인 API 성공")
+    void Google_로그인_API_성공() throws Exception {
+        // given
+        String body = "{\"idToken\":\"valid.google.token\"}";
+
+        LoginResponse response = new LoginResponse(
+                3L, "google@example.com", "user-google", "access-token", "refresh-token"
+        );
+
+        given(userService.googleLogin(any(GoogleLoginRequest.class))).willReturn(response);
+
+        // when & then
+        mockMvc.perform(post("/api/auth/google")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.userId").value(3L))
+                .andExpect(jsonPath("$.email").value("google@example.com"))
+                .andExpect(jsonPath("$.accessToken").value("access-token"))
+                .andExpect(jsonPath("$.refreshToken").value("refresh-token"));
+
+        verify(userService).googleLogin(any(GoogleLoginRequest.class));
+    }
+
+    @Test
+    @DisplayName("Google 로그인 API 실패 - idToken 없음")
+    void Google_로그인_API_실패_idToken_없음() throws Exception {
+        // given
+        String body = "{\"idToken\":\"\"}";
+
+        // when & then
+        mockMvc.perform(post("/api/auth/google")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andDo(print())
