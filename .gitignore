@@ -87,3 +87,5 @@ files/
 ### Claude 임시 파일 ###
 tmpclaude-*
 **/tmpclaude-*
+.mcp.json
+.claude
