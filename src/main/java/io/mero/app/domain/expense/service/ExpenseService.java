@@ -158,7 +158,7 @@ public class ExpenseService {
         Expense expense = findExpenseById(expenseId);
         validateOwner(expense.getTrip(), userId);
 
-        expenseRepository.delete(expense);
+        expense.delete();
     }
 
     private Trip findTripById(Long tripId) {
