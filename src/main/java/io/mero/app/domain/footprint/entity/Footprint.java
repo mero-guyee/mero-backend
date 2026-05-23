@@ -52,9 +52,6 @@ public class Footprint extends BaseEntity {
     private List<FootprintLocation> locations = new ArrayList<>();
 
 
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
-
 //    @Version // 충돌 해결용
 //    private Long version;
 
@@ -112,21 +109,6 @@ public class Footprint extends BaseEntity {
                 this.locations.add(location);
             }
         }
-    }
-
-    // === Soft Delete ===
-    public void delete() {
-        this.deletedAt = LocalDateTime.now();
-        this.lastModifiedAt = LocalDateTime.now();
-    }
-
-    public void restore() {
-        this.deletedAt = null;
-        this.lastModifiedAt = LocalDateTime.now();
-    }
-
-    public boolean isDeleted() {
-        return this.deletedAt != null;
     }
 
 }
