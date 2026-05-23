@@ -11,13 +11,13 @@ import io.mero.app.domain.footprint.entity.Photo;
 import io.mero.app.domain.footprint.repository.FootprintRepository;
 import io.mero.app.domain.footprint.repository.PhotoRepository;
 import io.mero.app.domain.footprint.util.FootprintLocationMapper;
-import io.mero.app.domain.footprint.util.PhotoMapper;
 import io.mero.app.domain.expense.dto.ExpenseResponse;
 import io.mero.app.domain.expense.entity.Expense;
 import io.mero.app.domain.expense.repository.ExpenseRepository;
 import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.domain.trip.repository.TripRepository;
 import io.mero.app.global.dto.StorageUploadResult;
+import io.mero.app.global.enums.ImageMimeType;
 import io.mero.app.global.exception.ForbiddenException;
 import io.mero.app.global.exception.NotFoundException;
 import io.mero.app.global.service.StorageService;
@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -157,27 +158,38 @@ public class FootprintService {
     // === 사진 관리 ===
 
     @Transactional
-    public List<PhotoResponse> uploadPhotos(Long userId, Long tripId, Long footprintId, List<MultipartFile> photos) {
+    public PhotoResponse uploadPhoto(Long userId, Long tripId, Long footprintId,
+                                     String clientId, MultipartFile photo) {
         Footprint footprint = findFootprintById(footprintId);
         Trip trip = footprint.getTrip();
 
         validateTripMatch(trip, tripId);
         validateOwner(trip, userId);
 
-        List<StorageUploadResult> uploadResults = storageService.uploadFootprintPhotos(userId, tripId, footprintId, photos);
-
-        int startOrderIndex = footprint.getPhotos().size();
-        List<Photo> newPhotos = PhotoMapper.fromUploadResults(uploadResults, footprint);
-        for (int i = 0; i < newPhotos.size(); i++) {
-            newPhotos.get(i).updateOrder(startOrderIndex + i);
+        Optional<Photo> existing = photoRepository.findByClientId(clientId);
+        if (existing.isPresent()) {
+            return PhotoResponse.from(existing.get());
         }
 
-        List<Photo> savedPhotos = photoRepository.saveAll(newPhotos);
-        footprint.getPhotos().addAll(savedPhotos);
+        StorageUploadResult uploadResult = storageService
+                .uploadFootprintPhotos(userId, tripId, footprintId, List.of(photo))
+                .get(0);
 
-        return savedPhotos.stream()
-                .map(PhotoResponse::from)
-                .toList();
+        Photo newPhoto = Photo.builder()
+                .footprint(footprint)
+                .clientId(clientId)
+                .s3Key(uploadResult.getStorageKey())
+                .s3Url(uploadResult.getStorageUrl())
+                .originalFilename(uploadResult.getOriginalFilename())
+                .fileSize(uploadResult.getFileSize())
+                .mimeType(ImageMimeType.fromMimeType(uploadResult.getMimeType()))
+                .orderIndex(footprint.getPhotos().size())
+                .build();
+
+        Photo saved = photoRepository.save(newPhoto);
+        footprint.getPhotos().add(saved);
+
+        return PhotoResponse.from(saved);
     }
 
     @Transactional

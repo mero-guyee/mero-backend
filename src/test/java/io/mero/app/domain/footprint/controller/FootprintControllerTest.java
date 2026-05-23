@@ -205,32 +205,30 @@ class FootprintControllerTest {
     @DisplayName("발자취 사진 업로드 성공")
     void 발자취_사진_업로드_성공() throws Exception {
         // given
-        List<PhotoResponse> responses = List.of(
-                PhotoResponse.builder()
-                        .id(1L)
-                        .s3Url("https://example.com/photo1.jpg")
-                        .originalFilename("photo1.jpg")
-                        .orderIndex(0)
-                        .build()
-        );
+        PhotoResponse response = PhotoResponse.builder()
+                .id(1L)
+                .s3Url("https://example.com/photo1.jpg")
+                .originalFilename("photo1.jpg")
+                .orderIndex(0)
+                .build();
 
-        given(footprintService.uploadPhotos(anyLong(), eq(1L), eq(1L), anyList())).willReturn(responses);
+        given(footprintService.uploadPhoto(anyLong(), eq(1L), eq(1L), eq("client-photo-1"), any()))
+                .willReturn(response);
 
         MockMultipartFile photo = new MockMultipartFile(
-                "photos",
+                "photo",
                 "photo1.jpg",
                 MediaType.IMAGE_JPEG_VALUE,
                 "photo content".getBytes()
         );
 
         // when & then
-        mockMvc.perform(multipart("/api/trips/1/footprints/1/photos")
+        mockMvc.perform(multipart("/api/trips/1/footprints/1/photos/client-photo-1")
                         .file(photo))
                 .andDo(print())
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].id").value(1L))
-                .andExpect(jsonPath("$[0].s3Url").value("https://example.com/photo1.jpg"));
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.s3Url").value("https://example.com/photo1.jpg"));
     }
 
     @Test

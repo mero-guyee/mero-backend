@@ -80,14 +80,15 @@ public class FootprintController {
 
     // === 사진 관리 ===
 
-    @Operation(summary = "발자취 사진 업로드", description = "발자취에 사진을 업로드합니다")
-    @PostMapping(value = "/{footprintId}/photos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<List<PhotoResponse>> uploadPhotos(
+    @Operation(summary = "발자취 사진 업로드", description = "발자취에 사진 1장을 업로드합니다. clientId 기반 멱등 처리.")
+    @PostMapping(value = "/{footprintId}/photos/{clientId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<PhotoResponse> uploadPhoto(
             @PathVariable Long tripId,
             @PathVariable Long footprintId,
-            @RequestPart("photos") List<MultipartFile> photos) {
+            @PathVariable String clientId,
+            @RequestPart("photo") MultipartFile photo) {
         Long userId = SecurityUtil.getCurrentUserId();
-        List<PhotoResponse> response = footprintService.uploadPhotos(userId, tripId, footprintId, photos);
+        PhotoResponse response = footprintService.uploadPhoto(userId, tripId, footprintId, clientId, photo);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
