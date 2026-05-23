@@ -30,7 +30,9 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -212,7 +214,8 @@ class ExpenseCategoryServiceTest {
         // then
         assertThat(expense1.getCategory()).isEqualTo(etcCategory);
         assertThat(expense2.getCategory()).isEqualTo(etcCategory);
-        verify(expenseCategoryRepository).delete(categoryToDelete);
+        assertThat(categoryToDelete.isDeleted()).isTrue();
+        verify(expenseCategoryRepository, never()).delete(any());
     }
 
     @Test
@@ -247,7 +250,8 @@ class ExpenseCategoryServiceTest {
         expenseCategoryService.deleteCategory(userId, categoryId);
 
         // then
-        verify(expenseCategoryRepository).delete(categoryToDelete);
+        assertThat(categoryToDelete.isDeleted()).isTrue();
+        verify(expenseCategoryRepository, never()).delete(any());
     }
 
     @Test
