@@ -13,6 +13,7 @@ import io.mero.app.domain.footprint.repository.PhotoRepository;
 import io.mero.app.domain.footprint.util.FootprintLocationMapper;
 import io.mero.app.domain.footprint.util.PhotoMapper;
 import io.mero.app.domain.expense.dto.ExpenseResponse;
+import io.mero.app.domain.expense.entity.Expense;
 import io.mero.app.domain.expense.repository.ExpenseRepository;
 import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.domain.trip.repository.TripRepository;
@@ -121,7 +122,10 @@ public class FootprintService {
         validateTripMatch(trip, tripId);
         validateOwner(trip, userId);
 
-        footprintRepository.delete(footprint);
+        expenseRepository.findByFootprint(footprint)
+                .forEach(Expense::unlinkFromFootprint);
+
+        footprint.delete();
     }
 
     private Trip findTripById(Long tripId) {

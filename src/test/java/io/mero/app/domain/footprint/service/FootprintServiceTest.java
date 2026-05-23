@@ -1,5 +1,6 @@
 package io.mero.app.domain.footprint.service;
 
+import io.mero.app.domain.expense.entity.Expense;
 import io.mero.app.domain.expense.repository.ExpenseRepository;
 import io.mero.app.domain.footprint.dto.FootprintCreateRequest;
 import io.mero.app.domain.footprint.dto.FootprintDetailResponse;
@@ -364,7 +365,35 @@ class FootprintServiceTest {
         footprintService.deleteFootprint(userId, tripId, footprintId);
 
         // then
-        verify(footprintRepository).delete(footprint);
+        assertThat(footprint.isDeleted()).isTrue();
+        verify(footprintRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("발자취 삭제 시 연결된 Expense의 footprint 참조가 해제된다")
+    void 발자취_삭제_시_연결된_Expense_unlink() {
+        // given
+        Long userId = 1L;
+        Long tripId = 1L;
+        Long footprintId = 1L;
+
+        User user = createUser(userId);
+        Trip trip = createTrip(tripId, user);
+        Footprint footprint = createFootprint(footprintId, trip, "client-id-1", "내용", LocalDate.of(2026, 4, 1));
+
+        Expense expense1 = Expense.builder().trip(trip).footprint(footprint).build();
+        Expense expense2 = Expense.builder().trip(trip).footprint(footprint).build();
+
+        given(footprintRepository.findById(footprintId)).willReturn(Optional.of(footprint));
+        given(expenseRepository.findByFootprint(footprint)).willReturn(List.of(expense1, expense2));
+
+        // when
+        footprintService.deleteFootprint(userId, tripId, footprintId);
+
+        // then
+        assertThat(expense1.getFootprint()).isNull();
+        assertThat(expense2.getFootprint()).isNull();
+        assertThat(footprint.isDeleted()).isTrue();
     }
 
     @Test
