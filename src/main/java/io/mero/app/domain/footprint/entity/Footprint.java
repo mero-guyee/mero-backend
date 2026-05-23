@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -60,9 +59,6 @@ public class Footprint extends BaseEntity {
 //    @Version // 충돌 해결용
 //    private Long version;
 
-    @Column(name = "last_modified_at", nullable = false)
-    private LocalDateTime lastModifiedAt;
-
     @Builder
     public Footprint(Long id, Trip trip, String title, String content,
                      LocalDate date, String weatherInfo, List<Photo> photoUrls, String clientId) {
@@ -73,7 +69,6 @@ public class Footprint extends BaseEntity {
         this.date = date;
         this.weatherInfo = weatherInfo;
         this.clientId = clientId;
-        this.lastModifiedAt = LocalDateTime.now();
         this.photos = photoUrls;
         this.locations = new ArrayList<>();
     }
