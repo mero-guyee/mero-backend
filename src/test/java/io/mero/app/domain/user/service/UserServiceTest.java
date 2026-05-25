@@ -5,7 +5,6 @@ import io.mero.app.domain.user.dto.AppleLoginRequest;
 import io.mero.app.domain.user.dto.GoogleLoginRequest;
 import io.mero.app.domain.user.dto.LoginRequest;
 import io.mero.app.domain.user.dto.LoginResponse;
-import io.mero.app.domain.user.dto.LogoutRequest;
 import io.mero.app.domain.user.dto.NicknameChangeRequest;
 import io.mero.app.domain.user.dto.PasswordChangeRequest;
 import io.mero.app.domain.user.dto.PasswordResetConfirmRequest;
@@ -373,7 +372,6 @@ class UserServiceTest {
     @DisplayName("로그아웃 성공")
     void 로그아웃_성공() {
         // given
-        String refreshToken = "valid-refresh-token";
         long userId = 1L;
 
         User user = User.builder()
@@ -383,42 +381,16 @@ class UserServiceTest {
                 .nickname("테스트유저")
                 .build();
 
-        user.updateRefreshToken(refreshToken);
+        user.updateRefreshToken("some-hash");
 
-        given(jwtTokenProvider.validateRefreshToken(refreshToken)).willReturn(true);
-        given(jwtTokenProvider.getUserIdFrom(refreshToken)).willReturn(userId);
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
 
-        LogoutRequest request = new LogoutRequest(refreshToken);
-
         // when
-        userService.logout(request);
+        userService.logout(userId);
 
         // then
         assertThat(user.getRefreshToken()).isNull();
-
-        verify(jwtTokenProvider).validateRefreshToken(refreshToken);
-        verify(jwtTokenProvider).getUserIdFrom(refreshToken);
         verify(userRepository).findById(userId);
-    }
-    
-    @Test
-    @DisplayName("로그아웃 실패 - 유효하지 않는 토큰")
-    void 로그아웃_실패_유효하지_않는_토큰() {
-        // given
-        String invalidToken = "invalid-token";
-
-        given(jwtTokenProvider.validateRefreshToken(invalidToken)).willReturn(false);
-        given(messageUtil.getMessage("error.invalid.token")).willReturn("유효하지 않은 토큰입니다");
-
-        LogoutRequest request = new LogoutRequest(invalidToken);
-
-        // when & then
-        assertThatThrownBy(() -> userService.logout(request))
-                .isInstanceOf(UnauthorizedException.class)
-                .hasMessage("유효하지 않은 토큰입니다");
-
-        verify(jwtTokenProvider).validateRefreshToken(invalidToken);
     }
 
     // ===== 이메일 인증 =====

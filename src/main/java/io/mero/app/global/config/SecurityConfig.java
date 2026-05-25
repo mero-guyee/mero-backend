@@ -32,6 +32,8 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // 인증 필요 (permitAll 보다 먼저 매칭되어야 함)
+                        .requestMatchers("/api/auth/logout").authenticated()
                         // 인증 불필요 (누구나 접근 가능)
                         .requestMatchers(
                                 // health check

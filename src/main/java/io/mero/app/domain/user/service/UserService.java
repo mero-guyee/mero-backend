@@ -270,14 +270,7 @@ public class UserService {
     }
 
     @Transactional
-    public void logout(LogoutRequest request) {
-        String refreshToken = request.getRefreshToken();
-
-        if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
-            throw new UnauthorizedException(messageUtil.getMessage("error.invalid.token"));
-        }
-
-        Long userId = jwtTokenProvider.getUserIdFrom(refreshToken);
+    public void logout(Long userId) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(messageUtil.getMessage("error.user.notFound")))
                 .clearRefreshToken();

@@ -6,7 +6,6 @@ import io.mero.app.domain.user.dto.AppleLoginRequest;
 import io.mero.app.domain.user.dto.GoogleLoginRequest;
 import io.mero.app.domain.user.dto.LoginRequest;
 import io.mero.app.domain.user.dto.LoginResponse;
-import io.mero.app.domain.user.dto.LogoutRequest;
 import io.mero.app.domain.user.dto.PasswordResetConfirmRequest;
 import io.mero.app.domain.user.dto.SignUpRequest;
 import io.mero.app.domain.user.dto.TokenRefreshRequest;
@@ -14,8 +13,12 @@ import io.mero.app.domain.user.dto.TokenRefreshResponse;
 import io.mero.app.domain.user.service.UserService;
 import io.mero.app.global.jwt.JwtAuthenticationFilter;
 import io.mero.app.global.jwt.JwtTokenProvider;
+import io.mero.app.global.util.SecurityUtil;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -27,6 +30,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -52,6 +56,19 @@ class AuthControllerTest {
 
     @MockitoBean
     private JwtTokenProvider jwtTokenProvider;
+
+    private MockedStatic<SecurityUtil> securityUtil;
+
+    @BeforeEach
+    void setUp() {
+        securityUtil = mockStatic(SecurityUtil.class);
+        securityUtil.when(SecurityUtil::getCurrentUserId).thenReturn(1L);
+    }
+
+    @AfterEach
+    void tearDown() {
+        securityUtil.close();
+    }
 
     @Test
     @DisplayName("회원가입 API 성공")
@@ -215,31 +232,12 @@ class AuthControllerTest {
     @Test
     @DisplayName("로그아웃 API 성공")
     void 로그아웃_API_성공() throws Exception {
-        // given
-        LogoutRequest request = new LogoutRequest("valid-refresh-token");
-
         // when & then
-        mockMvc.perform(post("/api/auth/logout")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(post("/api/auth/logout"))
                 .andDo(print())
                 .andExpect(status().isNoContent());
 
-        verify(userService).logout(any(LogoutRequest.class));
-    }
-    
-    @Test
-    @DisplayName("로그아웃 API 실패 - 토큰 없음")
-    void 로그아웃_API_실패_토큰_없음() throws Exception {
-        // given
-        LogoutRequest request = new LogoutRequest("");
-
-        // when & then
-        mockMvc.perform(post("/api/auth/logout")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andDo(print())
-                .andExpect(status().isBadRequest());
+        verify(userService).logout(1L);
     }
 
     @Test
