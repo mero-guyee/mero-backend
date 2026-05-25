@@ -20,13 +20,13 @@ class JwtTokenProviderTest {
         ReflectionTestUtils.setField(jwtTokenProvider, "refreshTokenValidity", 604800000L);
         jwtTokenProvider.init();
     }
-    
+
     @Test
     @DisplayName("Access Token 생성")
     void Access_Token_생성() {
         // given
         long userId = 1L;
-    
+
         // when
         String accessToken = jwtTokenProvider.createAccessToken(userId);
 
@@ -34,7 +34,7 @@ class JwtTokenProviderTest {
         assertThat(accessToken).isNotNull();
         assertThat(accessToken).isNotEmpty();
     }
-    
+
     @Test
     @DisplayName("토큰에서 userId 추출")
     void 토큰에서_userId_추출() {
@@ -48,34 +48,34 @@ class JwtTokenProviderTest {
         // then
         assertThat(extractedUserId).isEqualTo(userId);
     }
-    
+
     @Test
-    @DisplayName("토큰 유효성 검증 - 성공")
-    void 토큰_유효성_검증_성공() {
+    @DisplayName("Access Token 유효성 검증 - 성공")
+    void Access_Token_유효성_검증_성공() {
         // given
         long userId = 1L;
         String accessToken = jwtTokenProvider.createAccessToken(userId);
-    
+
         // when
-        boolean isValid = jwtTokenProvider.validateToken(accessToken);
+        boolean isValid = jwtTokenProvider.validateAccessToken(accessToken);
 
         // then
         assertThat(isValid).isTrue();
     }
-    
+
     @Test
-    @DisplayName("토큰 유효성 검증 - 잘못된 토큰")
-    void 토큰_유효성_검증_잘못된_토큰() {
+    @DisplayName("Access Token 유효성 검증 - 잘못된 토큰")
+    void Access_Token_유효성_검증_잘못된_토큰() {
         // given
         String invalidToken = "invalid.token";
 
         // when
-        boolean isValid = jwtTokenProvider.validateToken(invalidToken);
+        boolean isValid = jwtTokenProvider.validateAccessToken(invalidToken);
 
         // then
         assertThat(isValid).isFalse();
     }
-    
+
     @Test
     @DisplayName("Refresh Token 생성")
     void Refresh_Token_생성() {
@@ -90,4 +90,42 @@ class JwtTokenProviderTest {
         assertThat(refreshToken).isNotEmpty();
     }
 
+    @Test
+    @DisplayName("Refresh Token 유효성 검증 - 성공")
+    void Refresh_Token_유효성_검증_성공() {
+        // given
+        String refreshToken = jwtTokenProvider.createRefreshToken(1L);
+
+        // when
+        boolean isValid = jwtTokenProvider.validateRefreshToken(refreshToken);
+
+        // then
+        assertThat(isValid).isTrue();
+    }
+
+    @Test
+    @DisplayName("Access Token으로 Refresh Token 검증 시 실패")
+    void Access_Token으로_Refresh_검증_실패() {
+        // given
+        String accessToken = jwtTokenProvider.createAccessToken(1L);
+
+        // when
+        boolean isValid = jwtTokenProvider.validateRefreshToken(accessToken);
+
+        // then
+        assertThat(isValid).isFalse();
+    }
+
+    @Test
+    @DisplayName("Refresh Token으로 Access Token 검증 시 실패")
+    void Refresh_Token으로_Access_검증_실패() {
+        // given
+        String refreshToken = jwtTokenProvider.createRefreshToken(1L);
+
+        // when
+        boolean isValid = jwtTokenProvider.validateAccessToken(refreshToken);
+
+        // then
+        assertThat(isValid).isFalse();
+    }
 }

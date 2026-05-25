@@ -294,7 +294,7 @@ class UserServiceTest {
 
         user.updateRefreshToken(oldRefreshToken);
 
-        given(jwtTokenProvider.validateToken(oldRefreshToken)).willReturn(true);
+        given(jwtTokenProvider.validateRefreshToken(oldRefreshToken)).willReturn(true);
         given(jwtTokenProvider.getUserIdFrom(oldRefreshToken)).willReturn(1L);
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(jwtTokenProvider.createAccessToken(userId)).willReturn("new-access-token");
@@ -310,7 +310,7 @@ class UserServiceTest {
         assertThat(response.getRefreshToken()).isEqualTo("new-refresh-token");
         assertThat(user.getRefreshToken()).isEqualTo("new-refresh-token");
 
-        verify(jwtTokenProvider).validateToken(oldRefreshToken);
+        verify(jwtTokenProvider).validateRefreshToken(oldRefreshToken);
         verify(jwtTokenProvider).getUserIdFrom(oldRefreshToken);
         verify(userRepository).findById(userId);
         verify(jwtTokenProvider).createAccessToken(userId);
@@ -324,7 +324,7 @@ class UserServiceTest {
         // given
         String invalidToken = "invalid-token";
 
-        given(jwtTokenProvider.validateToken(invalidToken)).willReturn(false);
+        given(jwtTokenProvider.validateRefreshToken(invalidToken)).willReturn(false);
         given(messageUtil.getMessage("error.invalid.token")).willReturn("유효하지 않은 토큰입니다");
 
         TokenRefreshRequest request = new TokenRefreshRequest(invalidToken);
@@ -334,7 +334,7 @@ class UserServiceTest {
                 .isInstanceOf(UnauthorizedException.class)
                 .hasMessage("유효하지 않은 토큰입니다");
 
-        verify(jwtTokenProvider).validateToken(invalidToken);
+        verify(jwtTokenProvider).validateRefreshToken(invalidToken);
     }
     
     @Test
@@ -354,7 +354,7 @@ class UserServiceTest {
 
         user.updateRefreshToken(savedToken);
 
-        given(jwtTokenProvider.validateToken(requestToken)).willReturn(true);
+        given(jwtTokenProvider.validateRefreshToken(requestToken)).willReturn(true);
         given(jwtTokenProvider.getUserIdFrom(requestToken)).willReturn(1L);
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         given(messageUtil.getMessage("error.invalid.token")).willReturn("유효하지 않은 토큰입니다");
@@ -384,7 +384,7 @@ class UserServiceTest {
 
         user.updateRefreshToken(refreshToken);
 
-        given(jwtTokenProvider.validateToken(refreshToken)).willReturn(true);
+        given(jwtTokenProvider.validateRefreshToken(refreshToken)).willReturn(true);
         given(jwtTokenProvider.getUserIdFrom(refreshToken)).willReturn(userId);
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
 
@@ -396,7 +396,7 @@ class UserServiceTest {
         // then
         assertThat(user.getRefreshToken()).isNull();
 
-        verify(jwtTokenProvider).validateToken(refreshToken);
+        verify(jwtTokenProvider).validateRefreshToken(refreshToken);
         verify(jwtTokenProvider).getUserIdFrom(refreshToken);
         verify(userRepository).findById(userId);
     }
@@ -407,7 +407,7 @@ class UserServiceTest {
         // given
         String invalidToken = "invalid-token";
 
-        given(jwtTokenProvider.validateToken(invalidToken)).willReturn(false);
+        given(jwtTokenProvider.validateRefreshToken(invalidToken)).willReturn(false);
         given(messageUtil.getMessage("error.invalid.token")).willReturn("유효하지 않은 토큰입니다");
 
         LogoutRequest request = new LogoutRequest(invalidToken);
@@ -417,7 +417,7 @@ class UserServiceTest {
                 .isInstanceOf(UnauthorizedException.class)
                 .hasMessage("유효하지 않은 토큰입니다");
 
-        verify(jwtTokenProvider).validateToken(invalidToken);
+        verify(jwtTokenProvider).validateRefreshToken(invalidToken);
     }
 
     // ===== 이메일 인증 =====

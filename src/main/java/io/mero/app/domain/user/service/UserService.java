@@ -249,7 +249,7 @@ public class UserService {
     public TokenRefreshResponse refreshToken(TokenRefreshRequest request) {
         String refreshToken = request.getRefreshToken();
 
-        if (!jwtTokenProvider.validateToken(refreshToken)) {
+        if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
             throw new UnauthorizedException(messageUtil.getMessage("error.invalid.token"));
         }
 
@@ -272,7 +272,7 @@ public class UserService {
     public void logout(LogoutRequest request) {
         String refreshToken = request.getRefreshToken();
 
-        if (!jwtTokenProvider.validateToken(refreshToken)) {
+        if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
             throw new UnauthorizedException(messageUtil.getMessage("error.invalid.token"));
         }
 

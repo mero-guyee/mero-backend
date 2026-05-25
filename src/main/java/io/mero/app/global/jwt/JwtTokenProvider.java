@@ -15,6 +15,10 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
+    private static final String CLAIM_TOKEN_TYPE = "typ";
+    private static final String TOKEN_TYPE_ACCESS = "access";
+    private static final String TOKEN_TYPE_REFRESH = "refresh";
+
     @Value("${jwt.secret}")
     private String secretKey;
 
@@ -35,26 +39,23 @@ public class JwtTokenProvider {
      * Access Token 생성
      */
     public String createAccessToken(Long userId) {
-        Date now = new Date();
-        Date validity = new Date(now.getTime() + accessTokenValidity);
-
-        return Jwts.builder()
-                .subject(String.valueOf(userId))
-                .issuedAt(now)
-                .expiration(validity)
-                .signWith(key)
-                .compact();
+        return createToken(userId, TOKEN_TYPE_ACCESS, accessTokenValidity);
     }
 
     /**
      * Refresh Token 생성
      */
     public String createRefreshToken(Long userId) {
+        return createToken(userId, TOKEN_TYPE_REFRESH, refreshTokenValidity);
+    }
+
+    private String createToken(Long userId, String type, long validityMillis) {
         Date now = new Date();
-        Date validity = new Date(now.getTime() + refreshTokenValidity);
+        Date validity = new Date(now.getTime() + validityMillis);
 
         return Jwts.builder()
                 .subject(String.valueOf(userId))
+                .claim(CLAIM_TOKEN_TYPE, type)
                 .issuedAt(now)
                 .expiration(validity)
                 .signWith(key)
@@ -65,28 +66,44 @@ public class JwtTokenProvider {
      * 토큰에서 userId 추출
      */
     public Long getUserIdFrom(String token) {
-        Claims claims = Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-
+        Claims claims = parseClaims(token);
         return Long.parseLong(claims.getSubject());
     }
 
     /**
-     * 토큰 유효성 검증
+     * Access Token 유효성 검증 (서명·만료·타입)
      */
-    public boolean validateToken(String token) {
+    public boolean validateAccessToken(String token) {
+        return validate(token, TOKEN_TYPE_ACCESS);
+    }
+
+    /**
+     * Refresh Token 유효성 검증 (서명·만료·타입)
+     */
+    public boolean validateRefreshToken(String token) {
+        return validate(token, TOKEN_TYPE_REFRESH);
+    }
+
+    private boolean validate(String token, String expectedType) {
         try {
-            Jwts.parser()
-                    .verifyWith(key)
-                    .build()
-                    .parseSignedClaims(token);
+            Claims claims = parseClaims(token);
+            String actualType = claims.get(CLAIM_TOKEN_TYPE, String.class);
+            if (!expectedType.equals(actualType)) {
+                log.error("JWT token type mismatch: expected={}, actual={}", expectedType, actualType);
+                return false;
+            }
             return true;
         } catch (JwtException e) {
             log.error("Invalid JWT token: {}", e.getMessage());
             return false;
         }
+    }
+
+    private Claims parseClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }
