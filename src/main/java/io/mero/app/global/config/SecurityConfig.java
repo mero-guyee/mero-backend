@@ -58,8 +58,7 @@ public class SecurityConfig {
 
                                 // Swagger 엔드포인트 허용
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/h2-console/**"
+                                "/v3/api-docs/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
