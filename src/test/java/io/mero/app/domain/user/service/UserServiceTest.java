@@ -25,6 +25,7 @@ import io.mero.app.global.exception.BadRequestException;
 import io.mero.app.global.exception.DuplicateException;
 import io.mero.app.global.exception.NotFoundException;
 import io.mero.app.global.exception.UnauthorizedException;
+import io.mero.app.global.util.TokenHasher;
 import io.mero.app.global.jwt.JwtTokenProvider;
 import io.mero.app.global.util.MessageUtil;
 import org.junit.jupiter.api.DisplayName;
@@ -225,7 +226,7 @@ class UserServiceTest {
         assertThat(response.getNickname()).isEqualTo("테스트유저");
         assertThat(response.getAccessToken()).isEqualTo("access-token");
         assertThat(response.getRefreshToken()).isEqualTo("refresh-token");
-        assertThat(user.getRefreshToken()).isEqualTo("refresh-token");
+        assertThat(user.getRefreshToken()).isEqualTo(TokenHasher.sha256("refresh-token"));
 
         verify(userRepository).findByEmail(request.getEmail());
         verify(passwordEncoder).matches(request.getPassword(), user.getPasswordHash());
@@ -292,7 +293,7 @@ class UserServiceTest {
                 .nickname("테스트유저")
                 .build();
 
-        user.updateRefreshToken(oldRefreshToken);
+        user.updateRefreshToken(TokenHasher.sha256(oldRefreshToken));
 
         given(jwtTokenProvider.validateRefreshToken(oldRefreshToken)).willReturn(true);
         given(jwtTokenProvider.getUserIdFrom(oldRefreshToken)).willReturn(1L);
@@ -308,7 +309,7 @@ class UserServiceTest {
         //then
         assertThat(response.getAccessToken()).isEqualTo("new-access-token");
         assertThat(response.getRefreshToken()).isEqualTo("new-refresh-token");
-        assertThat(user.getRefreshToken()).isEqualTo("new-refresh-token");
+        assertThat(user.getRefreshToken()).isEqualTo(TokenHasher.sha256("new-refresh-token"));
 
         verify(jwtTokenProvider).validateRefreshToken(oldRefreshToken);
         verify(jwtTokenProvider).getUserIdFrom(oldRefreshToken);
@@ -645,7 +646,7 @@ class UserServiceTest {
         assertThat(response.getEmail()).isEqualTo("google@example.com");
         assertThat(response.getAccessToken()).isEqualTo("access-token");
         assertThat(response.getRefreshToken()).isEqualTo("refresh-token");
-        assertThat(user.getRefreshToken()).isEqualTo("refresh-token");
+        assertThat(user.getRefreshToken()).isEqualTo(TokenHasher.sha256("refresh-token"));
         verify(userRepository, never()).save(any(User.class));
         verify(userRepository, never()).findByEmail(anyString());
     }

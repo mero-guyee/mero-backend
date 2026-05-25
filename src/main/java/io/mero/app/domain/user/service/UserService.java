@@ -17,6 +17,7 @@ import io.mero.app.global.exception.NotFoundException;
 import io.mero.app.global.exception.UnauthorizedException;
 import io.mero.app.global.jwt.JwtTokenProvider;
 import io.mero.app.global.util.MessageUtil;
+import io.mero.app.global.util.TokenHasher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -110,7 +111,7 @@ public class UserService {
 
         String accessToken = jwtTokenProvider.createAccessToken(user.getId());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
-        user.updateRefreshToken(refreshToken);
+        user.updateRefreshToken(TokenHasher.sha256(refreshToken));
 
         return new LoginResponse(user.getId(), user.getEmail(), user.getNickname(), accessToken, refreshToken);
     }
@@ -144,7 +145,7 @@ public class UserService {
 
         String accessToken = jwtTokenProvider.createAccessToken(user.getId());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
-        user.updateRefreshToken(refreshToken);
+        user.updateRefreshToken(TokenHasher.sha256(refreshToken));
 
         return new LoginResponse(user.getId(), user.getEmail(), user.getNickname(), accessToken, refreshToken);
     }
@@ -198,7 +199,7 @@ public class UserService {
 
         String accessToken = jwtTokenProvider.createAccessToken(user.getId());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
-        user.updateRefreshToken(refreshToken);
+        user.updateRefreshToken(TokenHasher.sha256(refreshToken));
 
         return new LoginResponse(user.getId(), user.getEmail(), user.getNickname(), accessToken, refreshToken);
     }
@@ -257,13 +258,13 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(messageUtil.getMessage("error.user.notFound")));
 
-        if (!refreshToken.equals(user.getRefreshToken())) {
+        if (!TokenHasher.sha256(refreshToken).equals(user.getRefreshToken())) {
             throw new UnauthorizedException(messageUtil.getMessage("error.invalid.token"));
         }
 
         String newAccessToken = jwtTokenProvider.createAccessToken(userId);
         String newRefreshToken = jwtTokenProvider.createRefreshToken(userId);
-        user.updateRefreshToken(newRefreshToken);
+        user.updateRefreshToken(TokenHasher.sha256(newRefreshToken));
 
         return new TokenRefreshResponse(newAccessToken, newRefreshToken);
     }
