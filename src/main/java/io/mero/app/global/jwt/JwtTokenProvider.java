@@ -89,12 +89,12 @@ public class JwtTokenProvider {
             Claims claims = parseClaims(token);
             String actualType = claims.get(CLAIM_TOKEN_TYPE, String.class);
             if (!expectedType.equals(actualType)) {
-                log.error("JWT token type mismatch: expected={}, actual={}", expectedType, actualType);
+                log.debug("JWT token type mismatch: expected={}, actual={}", expectedType, actualType);
                 return false;
             }
             return true;
         } catch (JwtException e) {
-            log.error("Invalid JWT token: {}", e.getMessage());
+            log.debug("Invalid JWT token: {}", e.getMessage());
             return false;
         }
     }
