@@ -350,14 +350,16 @@ class TripControllerTest {
                 1L, null, "ticket.pdf", "https://example.com/ticket.pdf", 11L
         );
 
-        given(tripService.uploadTripDocument(anyLong(), eq(1L), any())).willReturn(response);
+        given(tripService.uploadTripDocument(anyLong(), eq(1L), eq("doc-client-id-1"), any())).willReturn(response);
 
         MockMultipartFile file = new MockMultipartFile(
                 "file", "ticket.pdf", "application/pdf", "pdf content".getBytes()
         );
 
         // when & then
-        mockMvc.perform(multipart("/api/trips/1/documents").file(file))
+        mockMvc.perform(multipart("/api/trips/1/documents")
+                        .file(file)
+                        .param("clientId", "doc-client-id-1"))
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.fileName").value("ticket.pdf"))

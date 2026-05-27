@@ -532,12 +532,15 @@ class TripServiceTest {
                 .contentType(DocumentMimeType.PDF)
                 .build();
 
+        String clientId = "doc-client-id-1";
+
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
+        given(tripDocumentRepository.findByClientIdAndTripId(clientId, tripId)).willReturn(Optional.empty());
         given(storageService.uploadTripDocument(eq(userId), eq(tripId), any(MultipartFile.class))).willReturn(uploadResult);
         given(tripDocumentRepository.save(any(TripDocument.class))).willReturn(document);
 
         // when
-        TripDocumentResponse response = tripService.uploadTripDocument(userId, tripId, file);
+        TripDocumentResponse response = tripService.uploadTripDocument(userId, tripId, clientId, file);
 
         // then
         assertThat(response.getFileName()).isEqualTo("ticket.pdf");

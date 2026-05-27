@@ -161,14 +161,21 @@ public class TripService {
     }
 
     @Transactional
-    public TripDocumentResponse uploadTripDocument(Long userId, Long tripId, MultipartFile file) {
+    public TripDocumentResponse uploadTripDocument(Long userId, Long tripId, String clientId, MultipartFile file) {
         Trip trip = findTripById(tripId);
         validateOwner(userId, trip);
 
+        return tripDocumentRepository.findByClientIdAndTripId(clientId, tripId)
+                .map(TripDocumentResponse::from)
+                .orElseGet(() -> uploadNewTripDocument(trip, userId, tripId, clientId, file));
+    }
+
+    private TripDocumentResponse uploadNewTripDocument(Trip trip, Long userId, Long tripId, String clientId, MultipartFile file) {
         StorageUploadResult uploadResult = storageService.uploadTripDocument(userId, tripId, file);
 
         TripDocument document = TripDocument.builder()
                 .trip(trip)
+                .clientId(clientId)
                 .originalFileName(uploadResult.getOriginalFilename())
                 .storedFileName(uploadResult.getStorageKey())
                 .fileUrl(uploadResult.getStorageUrl())

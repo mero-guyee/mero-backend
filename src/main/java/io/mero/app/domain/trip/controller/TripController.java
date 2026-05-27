@@ -16,10 +16,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Valid;
 import jakarta.validation.Validator;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,7 +35,7 @@ import java.util.Set;
 @RestController
 @RequestMapping("/api/trips")
 @RequiredArgsConstructor
-
+@Validated
 public class TripController {
 
     private final TripService tripService;
@@ -124,14 +127,18 @@ public class TripController {
         return ResponseEntity.ok(responses);
     }
 
-    @Operation(summary = "여행 문서 업로드", description = "여행에 문서를 업로드합니다")
+    @Operation(summary = "여행 문서 업로드", description = "여행에 문서를 업로드합니다. clientId 기반 멱등 처리.")
     @PostMapping(value = "/{tripId}/documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<TripDocumentResponse> uploadTripDocument(
             @PathVariable Long tripId,
+            @RequestParam("clientId")
+            @NotBlank(message = "{tripDocument.clientId.notBlank}")
+            @Size(max = 36, message = "{tripDocument.clientId.size}")
+            String clientId,
             @RequestPart("file") MultipartFile file
     ) {
         Long userId = SecurityUtil.getCurrentUserId();
-        TripDocumentResponse response = tripService.uploadTripDocument(userId, tripId, file);
+        TripDocumentResponse response = tripService.uploadTripDocument(userId, tripId, clientId, file);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
