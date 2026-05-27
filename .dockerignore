@@ -1,0 +1,53 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Gradle / build
+.gradle
+build
+out
+bin
+
+# IDE
+.idea
+.vscode
+*.iml
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+hs_err_pid*
+replay_pid*
+
+# Claude / MCP
+.claude
+.mcp.json
+tmpclaude-*
+**/tmpclaude-*
+
+# Local secrets / env
+.env
+.env.*
+src/main/resources/application-local.yml
+src/main/resources/application-secret.yml
+
+# Uploads / local data
+uploads
+files
+*.db
+*.sqlite
+*.sqlite3
+
+# Docs
+README.md
+HELP.md
+
+# Docker
+Dockerfile
+.dockerignore
