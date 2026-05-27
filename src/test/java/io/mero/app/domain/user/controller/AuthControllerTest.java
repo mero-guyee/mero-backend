@@ -77,9 +77,7 @@ class AuthControllerTest {
         SignUpRequest request = new SignUpRequest(
                 "test@example.com",
                 "password123",
-                "테스트유저",
-                null,
-                null
+                "테스트유저"
         );
 
         // when & then
@@ -99,9 +97,7 @@ class AuthControllerTest {
         SignUpRequest request = new SignUpRequest(
                 "invalid-email",  // 잘못된 형식
                 "password123",
-                "테스트유저",
-                null,
-                null
+                "테스트유저"
         );
 
         // when & then
@@ -119,9 +115,7 @@ class AuthControllerTest {
         SignUpRequest request = new SignUpRequest(
                 "test@example.com",
                 "short",  // 8자 미만
-                "테스트유저",
-                null,
-                null
+                "테스트유저"
         );
 
         // when & then
@@ -139,9 +133,7 @@ class AuthControllerTest {
         SignUpRequest request = new SignUpRequest(
                 null,
                 "password123",
-                "테스트유저",
-                null,
-                null
+                "테스트유저"
         );
 
         // when & then

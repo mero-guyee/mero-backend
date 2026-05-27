@@ -1,7 +1,5 @@
 package io.mero.app.domain.user.dto;
 
-import io.mero.app.global.enums.Currency;
-import io.mero.app.global.enums.Timezone;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -25,7 +23,4 @@ public class SignUpRequest {
     @NotBlank(message = "{user.nickname.notBlank}")
     @Size(min = 2, max = 10, message = "{user.nickname.size}")
     private String nickname;
-
-    private Currency defaultCurrency;
-    private Timezone timezone;
 }

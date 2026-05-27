@@ -19,10 +19,8 @@ import io.mero.app.domain.trip.repository.TripRepository;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.UserRepository;
 import io.mero.app.global.dto.StorageUploadResult;
-import io.mero.app.global.enums.Currency;
 import io.mero.app.global.enums.DocumentMimeType;
 import io.mero.app.global.enums.ImageMimeType;
-import io.mero.app.global.enums.Timezone;
 import io.mero.app.global.exception.ForbiddenException;
 import io.mero.app.global.exception.NotFoundException;
 import io.mero.app.global.service.StorageService;
@@ -814,8 +812,6 @@ class TripServiceTest {
                 .email("test@example.com")
                 .passwordHash("password")
                 .nickname("테스트유저")
-                .defaultCurrency(Currency.KRW)
-                .timezone(Timezone.ASIA_SEOUL)
                 .build();
     }
 

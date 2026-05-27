@@ -9,8 +9,6 @@ import io.mero.app.domain.user.entity.EmailTokenType;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.EmailTokenRepository;
 import io.mero.app.domain.user.repository.UserRepository;
-import io.mero.app.global.enums.Currency;
-import io.mero.app.global.enums.Timezone;
 import io.mero.app.global.exception.BadRequestException;
 import io.mero.app.global.exception.DuplicateException;
 import io.mero.app.global.exception.NotFoundException;
@@ -50,8 +48,6 @@ public class UserService {
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .nickname(request.getNickname())
-                .defaultCurrency(request.getDefaultCurrency() != null ? request.getDefaultCurrency() : Currency.KRW)
-                .timezone(request.getTimezone() != null ? request.getTimezone() : Timezone.ASIA_SEOUL)
                 .build();
         User savedUser = userRepository.save(user);
         categoryService.createDefaultCategoriesForUser(savedUser);
@@ -122,8 +118,6 @@ public class UserService {
                 .email(claims.email())
                 .nickname(nickname)
                 .appleId(claims.appleUserId())
-                .defaultCurrency(Currency.KRW)
-                .timezone(Timezone.ASIA_SEOUL)
                 .build();
         user.verifyEmail();
         User savedUser = userRepository.save(user);
@@ -156,8 +150,6 @@ public class UserService {
                 .email(claims.email())
                 .nickname(nickname)
                 .googleId(claims.googleUserId())
-                .defaultCurrency(Currency.KRW)
-                .timezone(Timezone.ASIA_SEOUL)
                 .build();
         user.verifyEmail();
         User savedUser = userRepository.save(user);

@@ -16,7 +16,6 @@ import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.domain.trip.repository.TripRepository;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.global.enums.Currency;
-import io.mero.app.global.enums.Timezone;
 import io.mero.app.global.exception.BadRequestException;
 import io.mero.app.global.exception.ForbiddenException;
 import io.mero.app.global.exception.NotFoundException;
@@ -87,8 +86,6 @@ class ExpenseServiceTest {
                 .email("test@example.com")
                 .passwordHash("password")
                 .nickname("테스트")
-                .defaultCurrency(Currency.KRW)
-                .timezone(Timezone.ASIA_SEOUL)
                 .build();
 
         Trip trip = Trip.builder()

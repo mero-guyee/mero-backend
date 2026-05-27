@@ -18,8 +18,6 @@ import io.mero.app.domain.user.repository.EmailTokenRepository;
 import io.mero.app.domain.user.repository.UserRepository;
 import io.mero.app.domain.user.service.AppleAuthService.AppleClaims;
 import io.mero.app.domain.user.service.GoogleAuthService.GoogleClaims;
-import io.mero.app.global.enums.Currency;
-import io.mero.app.global.enums.Timezone;
 import io.mero.app.global.exception.BadRequestException;
 import io.mero.app.global.exception.DuplicateException;
 import io.mero.app.global.exception.NotFoundException;
@@ -88,17 +86,13 @@ class UserServiceTest {
         SignUpRequest request = new SignUpRequest(
                 "test@example.com",
                 "password123",
-                "테스트유저",
-                null,
-                null
+                "테스트유저"
         );
 
         User savedUser = User.builder()
                 .email(request.getEmail())
                 .passwordHash(request.getPassword())
                 .nickname(request.getNickname())
-                .defaultCurrency(Currency.KRW)
-                .timezone(Timezone.ASIA_SEOUL)
                 .build();
 
         given(userRepository.existsByEmail(request.getEmail())).willReturn(false);
@@ -120,9 +114,7 @@ class UserServiceTest {
         SignUpRequest request = new SignUpRequest(
                 "duplicate@example.com",
                 "password123",
-                "테스트유저",
-                null,
-                null
+                "테스트유저"
         );
 
         given(userRepository.existsByEmail(request.getEmail())).willReturn(true);
@@ -137,45 +129,13 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("회원가입 - 기본값 설정")
-    void 회원가입_기본값_설정() {
-        // given
-        SignUpRequest request = new SignUpRequest(
-                "test@example.com",
-                "password123",
-                "테스트유저",
-                null,  // defaultCurrency null
-                null   // timezone null
-        );
-
-        User savedUser = User.builder()
-                .email(request.getEmail())
-                .passwordHash(request.getPassword())
-                .nickname(request.getNickname())
-                .defaultCurrency(Currency.KRW)
-                .timezone(Timezone.ASIA_SEOUL)
-                .build();
-
-        given(userRepository.existsByEmail(request.getEmail())).willReturn(false);
-        given(userRepository.save(any(User.class))).willReturn(savedUser);
-
-        // when
-        userService.signUp(request);
-
-        // then
-        verify(userRepository).save(any(User.class));
-    }
-
-    @Test
     @DisplayName("회원가입 실패 - 닉네임 중복")
     void 회원가입_실패_닉네임_중복() {
         // given
         SignUpRequest request = new SignUpRequest(
                 "test@example.com",
                 "password123",
-                "중복닉네임",
-                null,
-                null
+                "중복닉네임"
         );
 
         given(userRepository.existsByEmail(request.getEmail())).willReturn(false);
@@ -202,8 +162,6 @@ class UserServiceTest {
                 .email("test@email.com")
                 .passwordHash("encodedPassword")
                 .nickname("테스트유저")
-                .defaultCurrency(Currency.KRW)
-                .timezone(Timezone.ASIA_SEOUL)
                 .build();
         user.verifyEmail();
 

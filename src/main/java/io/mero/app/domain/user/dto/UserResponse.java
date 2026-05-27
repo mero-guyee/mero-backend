@@ -1,8 +1,6 @@
 package io.mero.app.domain.user.dto;
 
 import io.mero.app.domain.user.entity.User;
-import io.mero.app.global.enums.Currency;
-import io.mero.app.global.enums.Timezone;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -16,8 +14,6 @@ public class UserResponse {
     private String email;
     private String nickname;
     private String profileImage;
-    private Currency defaultCurrency;
-    private Timezone timezone;
     private LocalDateTime createdAt;
 
     public static UserResponse from(User user) {
@@ -26,8 +22,6 @@ public class UserResponse {
                 user.getEmail(),
                 user.getNickname(),
                 user.getProfileImageUrl(),
-                user.getDefaultCurrency(),
-                user.getTimezone(),
                 user.getCreatedAt()
         );
     }
