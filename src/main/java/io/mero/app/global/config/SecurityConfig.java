@@ -42,7 +42,6 @@ public class SecurityConfig {
 
                                 // Public 엔드포인트
                                 "/api/auth/**",
-                                "/api/meta",
                                 "/api/auth/email/verify",
                                 "/api/auth/password/reset-request",
                                 "/api/auth/password/reset",
