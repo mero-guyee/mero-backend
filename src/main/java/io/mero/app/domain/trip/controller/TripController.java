@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import jakarta.validation.Validator;
 import jakarta.validation.constraints.NotBlank;
@@ -57,7 +58,7 @@ public class TripController {
 
         Set<ConstraintViolation<TripCreateRequest>> violations = validator.validate(request);
         if (!violations.isEmpty()) {
-            return ResponseEntity.badRequest().build();
+            throw new ConstraintViolationException(violations);
         }
 
         Long userId = SecurityUtil.getCurrentUserId();
