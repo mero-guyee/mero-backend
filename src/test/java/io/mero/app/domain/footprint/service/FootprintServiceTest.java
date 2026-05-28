@@ -84,6 +84,7 @@ class FootprintServiceTest {
                 "도쿄 첫째날",
                 "신주쿠를 걸었다",
                 LocalDate.of(2026, 4, 1),
+                null,
                 Collections.emptyList(),
                 Collections.emptyList()
         );
@@ -121,6 +122,7 @@ class FootprintServiceTest {
                 "도쿄 첫째날",
                 "신주쿠를 걸었다",
                 LocalDate.of(2026, 4, 1),
+                null,
                 Collections.emptyList(),
                 Collections.emptyList()
         );
@@ -150,7 +152,7 @@ class FootprintServiceTest {
         Trip trip = createTrip(tripId, otherUser);
 
         FootprintCreateRequest request = new FootprintCreateRequest(
-                "client-id-1", "제목", "내용", LocalDate.of(2026, 4, 1), null, null
+                "client-id-1", "제목", "내용", LocalDate.of(2026, 4, 1), null, null, null
         );
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
@@ -170,7 +172,7 @@ class FootprintServiceTest {
         Long tripId = 999L;
 
         FootprintCreateRequest request = new FootprintCreateRequest(
-                "client-id-1", "제목", "내용", LocalDate.of(2026, 4, 1), null, null
+                "client-id-1", "제목", "내용", LocalDate.of(2026, 4, 1), null, null, null
         );
 
         given(tripRepository.findById(tripId)).willReturn(Optional.empty());
@@ -303,6 +305,7 @@ class FootprintServiceTest {
                 "수정된 제목",
                 "수정된 내용",
                 LocalDate.of(2026, 4, 2),
+                null,
                 Collections.emptyList(),
                 Collections.emptyList()
         );
@@ -331,7 +334,7 @@ class FootprintServiceTest {
         Footprint footprint = createFootprint(footprintId, trip, "client-id-1", "내용", LocalDate.of(2026, 4, 1));
 
         FootprintUpdateRequest request = new FootprintUpdateRequest(
-                "제목", "내용", LocalDate.of(2026, 4, 1), null, null
+                "제목", "내용", LocalDate.of(2026, 4, 1), null, null, null
         );
 
         given(footprintRepository.findById(footprintId)).willReturn(Optional.of(footprint));

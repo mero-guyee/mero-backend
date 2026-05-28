@@ -73,10 +73,11 @@ public class Footprint extends BaseEntity {
         this.locations = new ArrayList<>();
     }
 
-    public void update(String title, String content, LocalDate date) {
+    public void update(String title, String content, LocalDate date, String weatherInfo) {
         this.title = title;
         this.content = content;
         this.date = date;
+        this.weatherInfo = weatherInfo;
     }
 
     // === 사진 관리 ===

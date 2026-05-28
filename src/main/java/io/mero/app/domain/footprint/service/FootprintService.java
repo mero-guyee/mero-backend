@@ -60,6 +60,7 @@ public class FootprintService {
                 .title(request.getTitle())
                 .content(request.getContent())
                 .date(request.getDate())
+                .weatherInfo(request.getWeatherInfo())
                 .build();
 
         Footprint savedFootprint = footprintRepository.save(footprint);
@@ -106,7 +107,8 @@ public class FootprintService {
         footprint.update(
                 request.getTitle(),
                 request.getContent(),
-                request.getDate()
+                request.getDate(),
+                request.getWeatherInfo()
         );
 
         List<FootprintLocation> newLocations = FootprintLocationMapper.fromRequests(request.getLocations(), footprint);

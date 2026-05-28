@@ -79,6 +79,7 @@ class FootprintControllerTest {
                 "도쿄 첫째날",
                 "신주쿠를 걸었다",
                 LocalDate.of(2026, 4, 1),
+                null,
                 Collections.emptyList(),
                 Collections.emptyList()
         );
@@ -89,6 +90,7 @@ class FootprintControllerTest {
                 1L,
                 "신주쿠를 걸었다",
                 LocalDate.of(2026, 4, 1),
+                null,
                 Collections.emptyList(),
                 null
         );
@@ -113,8 +115,8 @@ class FootprintControllerTest {
     void 발자취_목록_조회_성공() throws Exception {
         // given
         List<FootprintResponse> responses = List.of(
-                new FootprintResponse(1L, "client-id-1", 1L, "첫째날", LocalDate.of(2026, 4, 1), Collections.emptyList(), null),
-                new FootprintResponse(2L, "client-id-2", 1L, "둘째날", LocalDate.of(2026, 4, 2), Collections.emptyList(), null)
+                new FootprintResponse(1L, "client-id-1", 1L, "첫째날", LocalDate.of(2026, 4, 1), null, Collections.emptyList(), null),
+                new FootprintResponse(2L, "client-id-2", 1L, "둘째날", LocalDate.of(2026, 4, 2), null, Collections.emptyList(), null)
         );
 
         given(footprintService.getFootprints(anyLong(), eq(1L))).willReturn(responses);
@@ -163,6 +165,7 @@ class FootprintControllerTest {
                 "수정된 제목",
                 "수정된 내용",
                 LocalDate.of(2026, 4, 2),
+                null,
                 Collections.emptyList(),
                 Collections.emptyList()
         );
@@ -173,6 +176,7 @@ class FootprintControllerTest {
                 1L,
                 "수정된 내용",
                 LocalDate.of(2026, 4, 2),
+                null,
                 Collections.emptyList(),
                 null
         );

@@ -16,6 +16,7 @@ public class FootprintResponse {
     private Long tripId;
     private String content;
     private LocalDate date;
+    private String weatherInfo;
     private List<LocationResponse> locations;
     private String thumbnailUrl;
 
@@ -29,6 +30,7 @@ public class FootprintResponse {
                 footprint.getTrip().getId(),
                 footprint.getContent(),
                 footprint.getDate(),
+                footprint.getWeatherInfo(),
                 LocationResponse.fromList(footprint.getLocations()),
                 thumbnailUrl
         );
