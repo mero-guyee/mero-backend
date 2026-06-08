@@ -27,12 +27,6 @@ jwt:
   access-token-validity: ${JWT_ACCESS_TOKEN_VALIDITY:3600000}
   refresh-token-validity: ${JWT_REFRESH_TOKEN_VALIDITY:86400000}
 
-naver:
-  oauth:
-    client-id: ${NAVER_CLIENT_ID}
-    client-secret: ${NAVER_CLIENT_SECRET}
-    redirect-uri: ${NAVER_REDIRECT_URI}
-
 apple:
   bundle-id: ${APPLE_BUNDLE_ID}
 

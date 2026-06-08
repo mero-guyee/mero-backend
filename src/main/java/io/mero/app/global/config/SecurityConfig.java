@@ -46,9 +46,6 @@ public class SecurityConfig {
                                 "/api/auth/password/reset-request",
                                 "/api/auth/password/reset",
 
-                                // 로컬 테스트용 네이버 OAuth 콜백
-                                "/api/social/naver/callback",
-
                                         // 법적 문서 (이용약관, 개인정보처리방침, 위치정보 이용약관)
                                 "/terms",
                                 "/privacy",
