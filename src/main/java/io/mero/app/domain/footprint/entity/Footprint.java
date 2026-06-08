@@ -11,9 +11,7 @@ import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Entity
 @Getter
@@ -90,14 +88,6 @@ public class Footprint extends BaseEntity {
                 this.photos.add(photo);
             }
         }
-    }
-
-    public List<String> getPhotoUrls() {
-        if (photos == null) return new ArrayList<>();
-        return photos.stream()
-                .sorted(Comparator.comparing(Photo::getOrderIndex))
-                .map(Photo::getS3Url)
-                .collect(Collectors.toList());
     }
 
     // === 위치 관리 ===

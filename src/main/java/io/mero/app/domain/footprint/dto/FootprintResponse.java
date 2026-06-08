@@ -20,10 +20,7 @@ public class FootprintResponse {
     private List<LocationResponse> locations;
     private String thumbnailUrl;
 
-    public static FootprintResponse from(Footprint footprint) {
-        List<String> photoUrls = footprint.getPhotoUrls();
-        String thumbnailUrl = photoUrls.isEmpty() ? null : photoUrls.get(0);
-
+    public static FootprintResponse from(Footprint footprint, String thumbnailUrl) {
         return new FootprintResponse(
                 footprint.getId(),
                 footprint.getClientId(),

@@ -443,7 +443,6 @@ class FootprintServiceTest {
         List<StorageUploadResult> uploadResults = List.of(
                 new StorageUploadResult(
                         "users/1/trips/1/footprints/1/photo1.jpg",
-                        "https://example.com/photo1.jpg",
                         "photo1.jpg",
                         13L,
                         "image/jpeg"
@@ -454,7 +453,6 @@ class FootprintServiceTest {
                 .footprint(footprint)
                 .clientId(clientId)
                 .s3Key("users/1/trips/1/footprints/1/photo1.jpg")
-                .s3Url("https://example.com/photo1.jpg")
                 .originalFilename("photo1.jpg")
                 .fileSize(13L)
                 .mimeType(ImageMimeType.JPEG)
@@ -466,12 +464,14 @@ class FootprintServiceTest {
         given(storageService.uploadFootprintPhotos(eq(userId), eq(tripId), eq(footprintId), anyList()))
                 .willReturn(uploadResults);
         given(photoRepository.save(any(Photo.class))).willReturn(savedPhoto);
+        given(storageService.getImageSignedUrl("users/1/trips/1/footprints/1/photo1.jpg"))
+                .willReturn("https://signed.example.com/photo1.jpg");
 
         // when
         PhotoResponse response = footprintService.uploadPhoto(userId, tripId, footprintId, clientId, photo);
 
         // then
-        assertThat(response.getS3Url()).isEqualTo("https://example.com/photo1.jpg");
+        assertThat(response.getS3Url()).isEqualTo("https://signed.example.com/photo1.jpg");
 
         verify(storageService).uploadFootprintPhotos(eq(userId), eq(tripId), eq(footprintId), anyList());
         verify(photoRepository).save(any(Photo.class));
@@ -498,7 +498,6 @@ class FootprintServiceTest {
                 .footprint(footprint)
                 .clientId(clientId)
                 .s3Key("existing-key")
-                .s3Url("https://example.com/existing.jpg")
                 .originalFilename("photo1.jpg")
                 .fileSize(13L)
                 .mimeType(ImageMimeType.JPEG)
@@ -507,12 +506,14 @@ class FootprintServiceTest {
 
         given(footprintRepository.findById(footprintId)).willReturn(Optional.of(footprint));
         given(photoRepository.findByClientId(clientId)).willReturn(Optional.of(existing));
+        given(storageService.getImageSignedUrl("existing-key"))
+                .willReturn("https://signed.example.com/existing.jpg");
 
         // when
         PhotoResponse response = footprintService.uploadPhoto(userId, tripId, footprintId, clientId, photo);
 
         // then
-        assertThat(response.getS3Url()).isEqualTo("https://example.com/existing.jpg");
+        assertThat(response.getS3Url()).isEqualTo("https://signed.example.com/existing.jpg");
         verify(storageService, never()).uploadFootprintPhotos(any(), any(), any(), anyList());
         verify(photoRepository, never()).save(any(Photo.class));
     }
@@ -564,7 +565,6 @@ class FootprintServiceTest {
         Photo photo = Photo.builder()
                 .footprint(footprint)
                 .s3Key("users/1/trips/1/footprints/1/photo1.jpg")
-                .s3Url("https://example.com/photo1.jpg")
                 .originalFilename("photo1.jpg")
                 .fileSize(13L)
                 .mimeType(ImageMimeType.JPEG)

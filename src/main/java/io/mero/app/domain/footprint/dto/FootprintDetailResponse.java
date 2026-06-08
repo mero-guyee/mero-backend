@@ -22,7 +22,7 @@ public class FootprintDetailResponse {
     private List<String> photoUrls;
     private List<ExpenseResponse> expenses;
 
-    public static FootprintDetailResponse from(Footprint footprint, List<ExpenseResponse> expenses) {
+    public static FootprintDetailResponse from(Footprint footprint, List<String> photoUrls, List<ExpenseResponse> expenses) {
         return new FootprintDetailResponse(
                 footprint.getId(),
                 footprint.getTrip().getId(),
@@ -30,7 +30,7 @@ public class FootprintDetailResponse {
                 footprint.getDate(),
                 LocationResponse.fromList(footprint.getLocations()),
                 footprint.getWeatherInfo(),
-                footprint.getPhotoUrls(),
+                photoUrls,
                 expenses == null ? Collections.emptyList() : expenses
         );
     }

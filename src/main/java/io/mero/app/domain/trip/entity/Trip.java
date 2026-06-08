@@ -97,10 +97,6 @@ public class Trip extends BaseEntity {
         this.coverImage = null;
     }
 
-    public String getCoverImageUrl() {
-        return coverImage != null ? coverImage.getS3Url() : null;
-    }
-
     public List<String> getCountries() {
         if (countriesStr == null || countriesStr.trim().isEmpty()) {
             return new ArrayList<>();

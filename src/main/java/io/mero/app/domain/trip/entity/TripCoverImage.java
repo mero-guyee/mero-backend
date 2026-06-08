@@ -25,9 +25,6 @@ public class TripCoverImage extends BaseEntity {
     @Column(name = "s3_key", nullable = false)
     private String s3Key;
 
-    @Column(name = "s3_url", nullable = false, length = 1000)
-    private String s3Url;
-
     @Column(name = "original_filename", length = 500)
     private String originalFilename;
 
@@ -45,12 +42,11 @@ public class TripCoverImage extends BaseEntity {
     private Integer height;
 
     @Builder
-    public TripCoverImage(Trip trip, String s3Key, String s3Url,
+    public TripCoverImage(Trip trip, String s3Key,
                           String originalFilename, Long fileSize, ImageMimeType mimeType,
                           Integer width, Integer height) {
         this.trip = trip;
         this.s3Key = s3Key;
-        this.s3Url = s3Url;
         this.originalFilename = originalFilename;
         this.fileSize = fileSize;
         this.mimeType = mimeType;
@@ -58,10 +54,9 @@ public class TripCoverImage extends BaseEntity {
         this.height = height;
     }
 
-    public void update(String s3Key, String s3Url, String originalFilename,
+    public void update(String s3Key, String originalFilename,
                        Long fileSize, ImageMimeType mimeType, Integer width, Integer height) {
         this.s3Key = s3Key;
-        this.s3Url = s3Url;
         this.originalFilename = originalFilename;
         this.fileSize = fileSize;
         this.mimeType = mimeType;

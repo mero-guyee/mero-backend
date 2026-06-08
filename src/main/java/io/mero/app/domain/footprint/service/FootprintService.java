@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,7 +50,7 @@ public class FootprintService {
 
         // 멱등성 체크: 동일한 clientId로 이미 생성된 Footprint가 있으면 해당 Footprint 반환
         return footprintRepository.findByClientIdAndTripId(request.getClientId(), tripId)
-                .map(FootprintResponse::from)
+                .map(this::toFootprintResponse)
                 .orElseGet(() -> createNewFootprint(trip, request));
     }
 
@@ -68,7 +69,7 @@ public class FootprintService {
         List<FootprintLocation> locations = FootprintLocationMapper.fromRequests(request.getLocations(), savedFootprint);
         savedFootprint.updateLocations(locations);
 
-        return FootprintResponse.from(savedFootprint);
+        return toFootprintResponse(savedFootprint);
     }
 
     public List<FootprintResponse> getFootprints(Long userId, Long tripId) {
@@ -77,7 +78,7 @@ public class FootprintService {
 
         List<Footprint> footprints = footprintRepository.findByTripIdOrderByDateDesc(tripId);
         return footprints.stream()
-                .map(FootprintResponse::from)
+                .map(this::toFootprintResponse)
                 .toList();
     }
 
@@ -93,7 +94,7 @@ public class FootprintService {
                 .map(ExpenseResponse::from)
                 .toList();
 
-        return FootprintDetailResponse.from(footprint, expenses);
+        return FootprintDetailResponse.from(footprint, photoSignedUrls(footprint), expenses);
     }
 
     @Transactional
@@ -114,7 +115,7 @@ public class FootprintService {
         List<FootprintLocation> newLocations = FootprintLocationMapper.fromRequests(request.getLocations(), footprint);
         footprint.updateLocations(newLocations);
 
-        return FootprintResponse.from(footprint);
+        return toFootprintResponse(footprint);
     }
 
     @Transactional
@@ -129,6 +130,25 @@ public class FootprintService {
                 .forEach(Expense::unlinkFromFootprint);
 
         footprint.delete();
+    }
+
+    private FootprintResponse toFootprintResponse(Footprint footprint) {
+        String thumbnailUrl = footprint.getPhotos().stream()
+                .min(Comparator.comparing(Photo::getOrderIndex))
+                .map(photo -> storageService.getImageSignedUrl(photo.getS3Key()))
+                .orElse(null);
+        return FootprintResponse.from(footprint, thumbnailUrl);
+    }
+
+    private List<String> photoSignedUrls(Footprint footprint) {
+        return footprint.getPhotos().stream()
+                .sorted(Comparator.comparing(Photo::getOrderIndex))
+                .map(photo -> storageService.getImageSignedUrl(photo.getS3Key()))
+                .toList();
+    }
+
+    private PhotoResponse toPhotoResponse(Photo photo) {
+        return PhotoResponse.from(photo, storageService.getImageSignedUrl(photo.getS3Key()));
     }
 
     private Trip findTripById(Long tripId) {
@@ -170,7 +190,7 @@ public class FootprintService {
 
         Optional<Photo> existing = photoRepository.findByClientId(clientId);
         if (existing.isPresent()) {
-            return PhotoResponse.from(existing.get());
+            return toPhotoResponse(existing.get());
         }
 
         StorageUploadResult uploadResult = storageService
@@ -181,7 +201,6 @@ public class FootprintService {
                 .footprint(footprint)
                 .clientId(clientId)
                 .s3Key(uploadResult.getStorageKey())
-                .s3Url(uploadResult.getStorageUrl())
                 .originalFilename(uploadResult.getOriginalFilename())
                 .fileSize(uploadResult.getFileSize())
                 .mimeType(ImageMimeType.fromMimeType(uploadResult.getMimeType()))
@@ -191,7 +210,7 @@ public class FootprintService {
         Photo saved = photoRepository.save(newPhoto);
         footprint.getPhotos().add(saved);
 
-        return PhotoResponse.from(saved);
+        return toPhotoResponse(saved);
     }
 
     @Transactional

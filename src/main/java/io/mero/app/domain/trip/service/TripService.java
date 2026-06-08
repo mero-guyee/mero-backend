@@ -50,7 +50,7 @@ public class TripService {
     public TripResponse createTrip(Long userId, TripCreateRequest request, MultipartFile image) {
         // 멱등성 체크: 동일한 clientId로 이미 생성된 Trip이 있으면 해당 Trip 반환
         return tripRepository.findByClientIdAndUserId(request.getClientId(), userId)
-                .map(TripResponse::from)
+                .map(this::toTripResponse)
                 .orElseGet(() -> createNewTrip(userId, request, image));
     }
 
@@ -75,20 +75,20 @@ public class TripService {
             uploadTripCoverImage(userId, image, savedTrip);
         }
 
-        return TripResponse.from(savedTrip);
+        return toTripResponse(savedTrip);
     }
 
     public List<TripResponse> getTrips(Long userId) {
         List<Trip> trips = tripRepository.findByUserIdOrderByStartDateDesc(userId);
         return trips.stream()
-                .map(TripResponse::from)
+                .map(this::toTripResponse)
                 .collect(Collectors.toList());
     }
 
     public TripDetailResponse getTrip(Long userId, Long tripId) {
         Trip trip = findTripById(tripId);
         validateOwner(userId, trip);
-        return TripDetailResponse.from(trip);
+        return TripDetailResponse.from(trip, coverSignedUrl(trip));
     }
 
     @Transactional
@@ -103,7 +103,7 @@ public class TripService {
                 request.getCountries()
         );
 
-        return TripResponse.from(trip);
+        return toTripResponse(trip);
     }
 
     @Transactional
@@ -122,7 +122,7 @@ public class TripService {
         // 새 이미지 업로드
         uploadTripCoverImage(userId, image, trip);
 
-        return TripResponse.from(trip);
+        return toTripResponse(trip);
     }
 
     private void uploadTripCoverImage(Long userId, MultipartFile image, Trip trip) {
@@ -130,7 +130,6 @@ public class TripService {
         TripCoverImage coverImage = TripCoverImage.builder()
                 .trip(trip)
                 .s3Key(uploadResult.getStorageKey())
-                .s3Url(uploadResult.getStorageUrl())
                 .originalFilename(uploadResult.getOriginalFilename())
                 .fileSize(uploadResult.getFileSize())
                 .mimeType(ImageMimeType.fromMimeType(uploadResult.getMimeType()))
@@ -156,7 +155,7 @@ public class TripService {
         Trip trip = findTripById(tripId);
         validateOwner(userId, trip);
         return tripDocumentRepository.findByTripId(tripId).stream()
-                .map(TripDocumentResponse::from)
+                .map(this::toDocumentResponse)
                 .toList();
     }
 
@@ -166,7 +165,7 @@ public class TripService {
         validateOwner(userId, trip);
 
         return tripDocumentRepository.findByClientIdAndTripId(clientId, tripId)
-                .map(TripDocumentResponse::from)
+                .map(this::toDocumentResponse)
                 .orElseGet(() -> uploadNewTripDocument(trip, userId, tripId, clientId, file));
     }
 
@@ -178,13 +177,12 @@ public class TripService {
                 .clientId(clientId)
                 .originalFileName(uploadResult.getOriginalFilename())
                 .storedFileName(uploadResult.getStorageKey())
-                .fileUrl(uploadResult.getStorageUrl())
                 .fileSize(uploadResult.getFileSize())
                 .contentType(DocumentMimeType.fromMimeType(uploadResult.getMimeType()))
                 .build();
 
         TripDocument savedDocument = tripDocumentRepository.save(document);
-        return TripDocumentResponse.from(savedDocument);
+        return toDocumentResponse(savedDocument);
     }
 
     @Transactional
@@ -220,6 +218,19 @@ public class TripService {
         }
 
         tripRepository.delete(trip);
+    }
+
+    private TripResponse toTripResponse(Trip trip) {
+        return TripResponse.from(trip, coverSignedUrl(trip));
+    }
+
+    private String coverSignedUrl(Trip trip) {
+        TripCoverImage cover = trip.getCoverImage();
+        return cover != null ? storageService.getImageSignedUrl(cover.getS3Key()) : null;
+    }
+
+    private TripDocumentResponse toDocumentResponse(TripDocument document) {
+        return TripDocumentResponse.from(document, storageService.getDocumentSignedUrl(document.getStorageKey()));
     }
 
     private Trip findTripById(Long tripId) {

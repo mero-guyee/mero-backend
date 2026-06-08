@@ -18,11 +18,11 @@ public class PhotoResponse {
     private Integer height;
     private Integer orderIndex;
 
-    public static PhotoResponse from(Photo photo) {
+    public static PhotoResponse from(Photo photo, String s3Url) {
         return PhotoResponse.builder()
                 .id(photo.getId())
                 .clientId(photo.getClientId())
-                .s3Url(photo.getS3Url())
+                .s3Url(s3Url)
                 .originalFilename(photo.getOriginalFilename())
                 .fileSize(photo.getFileSize())
                 .mimeType(photo.getMimeType() != null ? photo.getMimeType().getMimeType() : null)

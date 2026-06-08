@@ -132,7 +132,6 @@ class TripServiceTest {
 
         StorageUploadResult uploadResult = new StorageUploadResult(
                 "users/1/trips/cover/uuid_test.jpg",
-                "https://test.supabase.co/storage/v1/object/public/test-images/users/1/trips/cover/uuid_test.jpg",
                 "test.jpg",
                 18L,
                 "image/jpeg"
@@ -151,13 +150,16 @@ class TripServiceTest {
             return coverImage;
         });
 
+        given(storageService.getImageSignedUrl("users/1/trips/cover/uuid_test.jpg"))
+                .willReturn("https://signed.test/cover.jpg");
+
         // when
         TripResponse response = tripService.createTrip(userId, request, image);
 
         // then
         assertThat(response.getId()).isEqualTo(1L);
         assertThat(response.getTitle()).isEqualTo("남미 여행");
-        assertThat(response.getImageUrl()).isEqualTo(uploadResult.getStorageUrl());
+        assertThat(response.getImageUrl()).isEqualTo("https://signed.test/cover.jpg");
 
         verify(storageService).uploadTripCoverImage(eq(userId), any(MultipartFile.class));
         verify(tripCoverImageRepository).save(any(TripCoverImage.class));
@@ -279,7 +281,6 @@ class TripServiceTest {
 
         StorageUploadResult uploadResult = new StorageUploadResult(
                 "users/1/trips/cover/uuid_test.jpg",
-                "https://test.supabase.co/storage/v1/object/public/test-images/users/1/trips/cover/uuid_test.jpg",
                 "test.jpg",
                 18L,
                 "image/jpeg"
@@ -293,11 +294,14 @@ class TripServiceTest {
             return coverImage;
         });
 
+        given(storageService.getImageSignedUrl("users/1/trips/cover/uuid_test.jpg"))
+                .willReturn("https://signed.test/cover.jpg");
+
         // when
         TripResponse response = tripService.updateTripImage(userId, tripId, image);
 
         // then
-        assertThat(response.getImageUrl()).isEqualTo(uploadResult.getStorageUrl());
+        assertThat(response.getImageUrl()).isEqualTo("https://signed.test/cover.jpg");
 
         verify(storageService).uploadTripCoverImage(eq(userId), any(MultipartFile.class));
         verify(storageService, never()).deleteTripCoverImage(any());
@@ -318,7 +322,6 @@ class TripServiceTest {
         TripCoverImage existingCoverImage = TripCoverImage.builder()
                 .trip(trip)
                 .s3Key("users/1/trips/cover/old_image.jpg")
-                .s3Url("https://test.supabase.co/storage/v1/object/public/test-images/users/1/trips/cover/old_image.jpg")
                 .originalFilename("old_image.jpg")
                 .fileSize(100L)
                 .mimeType(ImageMimeType.JPEG)
@@ -334,7 +337,6 @@ class TripServiceTest {
 
         StorageUploadResult uploadResult = new StorageUploadResult(
                 "users/1/trips/cover/uuid_new_test.jpg",
-                "https://test.supabase.co/storage/v1/object/public/test-images/users/1/trips/cover/uuid_new_test.jpg",
                 "new_test.jpg",
                 22L,
                 "image/jpeg"
@@ -348,11 +350,14 @@ class TripServiceTest {
             return coverImage;
         });
 
+        given(storageService.getImageSignedUrl("users/1/trips/cover/uuid_new_test.jpg"))
+                .willReturn("https://signed.test/new_cover.jpg");
+
         // when
         TripResponse response = tripService.updateTripImage(userId, tripId, newImage);
 
         // then
-        assertThat(response.getImageUrl()).isEqualTo(uploadResult.getStorageUrl());
+        assertThat(response.getImageUrl()).isEqualTo("https://signed.test/new_cover.jpg");
 
         verify(storageService).deleteTripCoverImage("users/1/trips/cover/old_image.jpg");
         verify(tripCoverImageRepository).delete(existingCoverImage);
@@ -374,7 +379,6 @@ class TripServiceTest {
         TripCoverImage coverImage = TripCoverImage.builder()
                 .trip(trip)
                 .s3Key("users/1/trips/cover/test.jpg")
-                .s3Url("https://test.supabase.co/storage/v1/object/public/test-images/users/1/trips/cover/test.jpg")
                 .originalFilename("test.jpg")
                 .fileSize(100L)
                 .mimeType(ImageMimeType.JPEG)
@@ -426,7 +430,6 @@ class TripServiceTest {
         TripCoverImage coverImage = TripCoverImage.builder()
                 .trip(trip)
                 .s3Key("users/1/trips/cover/test.jpg")
-                .s3Url("https://test.supabase.co/storage/v1/object/public/test-images/users/1/trips/cover/test.jpg")
                 .originalFilename("test.jpg")
                 .fileSize(100L)
                 .mimeType(ImageMimeType.JPEG)
@@ -481,7 +484,6 @@ class TripServiceTest {
                 .trip(trip)
                 .originalFileName("ticket.pdf")
                 .storedFileName("users/1/trips/1/documents/ticket.pdf")
-                .fileUrl("https://example.com/ticket.pdf")
                 .fileSize(11L)
                 .contentType(DocumentMimeType.PDF)
                 .build();
@@ -517,7 +519,6 @@ class TripServiceTest {
 
         StorageUploadResult uploadResult = new StorageUploadResult(
                 "users/1/trips/1/documents/ticket.pdf",
-                "https://example.com/ticket.pdf",
                 "ticket.pdf",
                 11L,
                 "application/pdf"
@@ -527,7 +528,6 @@ class TripServiceTest {
                 .trip(trip)
                 .originalFileName("ticket.pdf")
                 .storedFileName("users/1/trips/1/documents/ticket.pdf")
-                .fileUrl("https://example.com/ticket.pdf")
                 .fileSize(11L)
                 .contentType(DocumentMimeType.PDF)
                 .build();
@@ -538,13 +538,15 @@ class TripServiceTest {
         given(tripDocumentRepository.findByClientIdAndTripId(clientId, tripId)).willReturn(Optional.empty());
         given(storageService.uploadTripDocument(eq(userId), eq(tripId), any(MultipartFile.class))).willReturn(uploadResult);
         given(tripDocumentRepository.save(any(TripDocument.class))).willReturn(document);
+        given(storageService.getDocumentSignedUrl("users/1/trips/1/documents/ticket.pdf"))
+                .willReturn("https://signed.example.com/ticket.pdf");
 
         // when
         TripDocumentResponse response = tripService.uploadTripDocument(userId, tripId, clientId, file);
 
         // then
         assertThat(response.getFileName()).isEqualTo("ticket.pdf");
-        assertThat(response.getFileUrl()).isEqualTo("https://example.com/ticket.pdf");
+        assertThat(response.getFileUrl()).isEqualTo("https://signed.example.com/ticket.pdf");
 
         verify(storageService).uploadTripDocument(eq(userId), eq(tripId), any(MultipartFile.class));
         verify(tripDocumentRepository).save(any(TripDocument.class));
@@ -565,7 +567,6 @@ class TripServiceTest {
                 .trip(trip)
                 .originalFileName("ticket.pdf")
                 .storedFileName("users/1/trips/1/documents/ticket.pdf")
-                .fileUrl("https://example.com/ticket.pdf")
                 .fileSize(11L)
                 .contentType(DocumentMimeType.PDF)
                 .build();

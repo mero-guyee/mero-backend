@@ -7,7 +7,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public class StorageUploadResult {
     private String storageKey;
-    private String storageUrl;
     private String originalFilename;
     private Long fileSize;
     private String mimeType;

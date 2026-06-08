@@ -23,7 +23,7 @@ public class TripResponse {
     private String imageUrl;
     private LocalDateTime createdAt;
 
-    public static TripResponse from(Trip trip) {
+    public static TripResponse from(Trip trip, String imageUrl) {
         return new TripResponse(
                 trip.getId(),
                 trip.getClientId(),
@@ -31,7 +31,7 @@ public class TripResponse {
                 trip.getStartDate(),
                 trip.getEndDate(),
                 trip.getCountries(),
-                trip.getCoverImageUrl(),
+                imageUrl,
                 trip.getCreatedAt()
         );
     }

@@ -13,12 +13,12 @@ public class TripDocumentResponse {
     private String fileUrl;
     private Long fileSize;
 
-    public static TripDocumentResponse from(TripDocument document) {
+    public static TripDocumentResponse from(TripDocument document, String fileUrl) {
         return new TripDocumentResponse(
                 document.getId(),
                 document.getClientId(),
                 document.getOriginalFileName(),
-                document.getFileUrl(),
+                fileUrl,
                 document.getFileSize()
         );
     }

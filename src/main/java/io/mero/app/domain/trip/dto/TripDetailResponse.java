@@ -20,14 +20,14 @@ public class TripDetailResponse {
     private String imageUrl;
     private LocalDateTime createdAt;
 
-    public static TripDetailResponse from(Trip trip) {
+    public static TripDetailResponse from(Trip trip, String imageUrl) {
         return new TripDetailResponse(
                 trip.getId(),
                 trip.getTitle(),
                 trip.getStartDate(),
                 trip.getEndDate(),
                 trip.getCountries(),
-                trip.getCoverImageUrl(),
+                imageUrl,
                 trip.getCreatedAt()
         );
     }

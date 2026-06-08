@@ -26,9 +26,6 @@ public class Photo extends BaseEntity {
     @Column(name = "s3_key", nullable = false)
     private String s3Key;
 
-    @Column(name = "s3_url", nullable = false, length = 1000)
-    private String s3Url;
-
     @Column(name = "local_file_path", length = 500)
     private String localFilePath;
 
@@ -59,12 +56,11 @@ public class Photo extends BaseEntity {
     private String clientId;
 
     @Builder
-    public Photo(Footprint footprint, String s3Key, String s3Url,
+    public Photo(Footprint footprint, String s3Key,
                  String originalFilename, Long fileSize, ImageMimeType mimeType,
                  Integer width, Integer height, Integer orderIndex, String clientId) {
         this.footprint = footprint;
         this.s3Key = s3Key;
-        this.s3Url = s3Url;
         this.originalFilename = originalFilename;
         this.fileSize = fileSize;
         this.mimeType = mimeType;
@@ -75,10 +71,9 @@ public class Photo extends BaseEntity {
         this.clientId = clientId;
     }
 
-    public void update(String s3Key, String s3Url, String originalFilename,
+    public void update(String s3Key, String originalFilename,
                        Long fileSize, ImageMimeType mimeType, Integer width, Integer height) {
         this.s3Key = s3Key;
-        this.s3Url = s3Url;
         this.originalFilename = originalFilename;
         this.fileSize = fileSize;
         this.mimeType = mimeType;

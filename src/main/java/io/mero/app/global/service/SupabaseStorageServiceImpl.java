@@ -12,9 +12,13 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -25,15 +29,16 @@ import java.util.stream.Collectors;
 public class SupabaseStorageServiceImpl implements StorageService {
 
     private final S3Client s3Client;
-
-    @Value("${storage.url}")
-    private String storageUrl;
+    private final S3Presigner s3Presigner;
 
     @Value("${storage.bucket.images}")
     private String imagesBucket;
 
     @Value("${storage.bucket.docs}")
     private String docsBucket;
+
+    @Value("${storage.signed-url-expiry-seconds:3600}")
+    private long signedUrlExpirySeconds;
 
     @Override
     public StorageUploadResult uploadTripCoverImage(Long userId, MultipartFile image) {
@@ -76,9 +81,7 @@ public class SupabaseStorageServiceImpl implements StorageService {
 
             s3Client.putObject(putObjectRequest, RequestBody.fromBytes(file.getBytes()));
 
-            String fileUrl = String.format("%s/storage/v1/object/public/%s/%s", storageUrl, bucket, fullPath);
-
-            return new StorageUploadResult(fullPath, fileUrl, file.getOriginalFilename(), file.getSize(), file.getContentType());
+            return new StorageUploadResult(fullPath, file.getOriginalFilename(), file.getSize(), file.getContentType());
         } catch (IOException e) {
             log.error("파일 업로드 실패: {}", e.getMessage());
             throw new FileUploadException("파일 업로드 실패", e);
@@ -103,6 +106,31 @@ public class SupabaseStorageServiceImpl implements StorageService {
     @Override
     public void deleteTripDocument(String storageKey) {
         deleteByKey(docsBucket, storageKey);
+    }
+
+    @Override
+    public String getImageSignedUrl(String storageKey) {
+        return generateSignedUrl(imagesBucket, storageKey);
+    }
+
+    @Override
+    public String getDocumentSignedUrl(String storageKey) {
+        return generateSignedUrl(docsBucket, storageKey);
+    }
+
+    private String generateSignedUrl(String bucket, String storageKey) {
+        if (storageKey == null || storageKey.isEmpty()) {
+            return null;
+        }
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(storageKey)
+                .build();
+        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofSeconds(signedUrlExpirySeconds))
+                .getObjectRequest(getObjectRequest)
+                .build();
+        return s3Presigner.presignGetObject(presignRequest).url().toString();
     }
 
     private void deleteByKey(String bucket, String storageKey) {

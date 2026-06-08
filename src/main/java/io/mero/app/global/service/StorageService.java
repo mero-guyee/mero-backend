@@ -16,4 +16,7 @@ public interface StorageService {
 
     StorageUploadResult uploadTripDocument(Long userId, Long tripId, MultipartFile document);
     void deleteTripDocument(String storageKey);
+
+    String getImageSignedUrl(String storageKey);
+    String getDocumentSignedUrl(String storageKey);
 }
