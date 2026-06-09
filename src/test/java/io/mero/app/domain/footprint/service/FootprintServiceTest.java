@@ -634,7 +634,6 @@ class FootprintServiceTest {
                 .clientId(clientId)
                 .content(content)
                 .date(date)
-                .photoUrls(new ArrayList<>())
                 .build();
     }
 }

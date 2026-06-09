@@ -59,7 +59,7 @@ public class Footprint extends BaseEntity {
 
     @Builder
     public Footprint(Long id, Trip trip, String title, String content,
-                     LocalDate date, String weatherInfo, List<Photo> photoUrls, String clientId) {
+                     LocalDate date, String weatherInfo, String clientId) {
         this.id = id;
         this.trip = trip;
         this.title = title;
@@ -67,8 +67,6 @@ public class Footprint extends BaseEntity {
         this.date = date;
         this.weatherInfo = weatherInfo;
         this.clientId = clientId;
-        this.photos = photoUrls;
-        this.locations = new ArrayList<>();
     }
 
     public void update(String title, String content, LocalDate date, String weatherInfo) {
