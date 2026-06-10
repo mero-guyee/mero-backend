@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: mero-test-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mero}
+      POSTGRES_USER: ${POSTGRES_USER:-mero}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mero}
+    ports:
+      - "5432:5432"
+    volumes:
+      - mero-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mero} -d ${POSTGRES_DB:-mero}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    image: mero-backend:local
+    container_name: mero-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DATABASE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-mero}
+      DB_USERNAME: ${POSTGRES_USER:-mero}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-mero}
+    env_file:
+      - .env
+
+volumes:
+  mero-db-data:

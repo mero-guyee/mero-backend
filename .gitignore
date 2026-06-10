@@ -69,7 +69,6 @@ Thumbs.db
 
 ### Application Config (민감 정보) ###
 application-local.yml
-application-prod.yml
 application-secret.yml
 
 ### Environment Variables ###
@@ -84,3 +83,9 @@ files/
 *.db
 *.sqlite
 *.sqlite3
+
+### Claude 임시 파일 ###
+tmpclaude-*
+**/tmpclaude-*
+.mcp.json
+.claude
