@@ -44,12 +44,12 @@ public class ExpenseService {
     private final MessageUtil messageUtil;
 
     @Transactional
-    public ExpenseResponse createExpense(Long userId, ExpenseCreateRequest request) {
-        Trip trip = findTripById(request.getTripId());
+    public ExpenseResponse createExpense(Long userId, Long tripId, ExpenseCreateRequest request) {
+        Trip trip = findTripById(tripId);
         validateOwner(trip, userId);
 
         // 멱등성 체크: 동일한 clientId로 이미 생성된 Expense가 있으면 해당 Expense 반환
-        return expenseRepository.findByClientIdAndTripId(request.getClientId(), request.getTripId())
+        return expenseRepository.findByClientIdAndTripId(request.getClientId(), tripId)
                 .map(ExpenseResponse::from)
                 .orElseGet(() -> createNewExpense(userId, trip, request));
     }

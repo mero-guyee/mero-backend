@@ -80,7 +80,6 @@ class ExpenseControllerTest {
         // given
         ExpenseCreateRequest request = new ExpenseCreateRequest(
                 "test-client-id-1",
-                1L,
                 null,  // footprintId
                 new BigDecimal("100"),
                 Currency.USD,
@@ -99,7 +98,7 @@ class ExpenseControllerTest {
                 LocalDateTime.now()
         );
 
-        given(expenseService.createExpense(anyLong(), any(ExpenseCreateRequest.class)))
+        given(expenseService.createExpense(anyLong(), anyLong(), any(ExpenseCreateRequest.class)))
                 .willReturn(response);
 
         // when & then
@@ -119,7 +118,6 @@ class ExpenseControllerTest {
         // given
         ExpenseCreateRequest request = new ExpenseCreateRequest(
                 "test-client-id-2",
-                1L,
                 1L,  // footprintId
                 new BigDecimal("100"),
                 Currency.USD,
@@ -138,7 +136,7 @@ class ExpenseControllerTest {
                 LocalDateTime.now()
         );
 
-        given(expenseService.createExpense(anyLong(), any(ExpenseCreateRequest.class)))
+        given(expenseService.createExpense(anyLong(), anyLong(), any(ExpenseCreateRequest.class)))
                 .willReturn(response);
 
         // when & then

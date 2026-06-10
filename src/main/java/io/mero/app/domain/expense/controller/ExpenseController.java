@@ -30,9 +30,10 @@ public class ExpenseController {
     @Operation(summary = "경비 생성", description = "새로운 경비를 등록합니다 (공식 환율 또는 커스텀 환율)")
     @PostMapping
     public ResponseEntity<ExpenseResponse> createExpense(
+            @PathVariable Long tripId,
             @Valid @RequestBody ExpenseCreateRequest request) {
         Long userId = SecurityUtil.getCurrentUserId();
-        ExpenseResponse response = expenseService.createExpense(userId, request);
+        ExpenseResponse response = expenseService.createExpense(userId, tripId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
