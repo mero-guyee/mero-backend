@@ -142,7 +142,11 @@ class FootprintControllerTest {
                 LocalDate.of(2026, 4, 1),
                 Collections.emptyList(),
                 null,
-                List.of("https://example.com/photo1.jpg"),
+                List.of(PhotoResponse.builder()
+                        .id(1L)
+                        .clientId("client-photo-1")
+                        .s3Url("https://example.com/photo1.jpg")
+                        .build()),
                 Collections.emptyList()
         );
 
@@ -154,7 +158,9 @@ class FootprintControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.tripId").value(1L))
-                .andExpect(jsonPath("$.photoUrls").isArray());
+                .andExpect(jsonPath("$.photos").isArray())
+                .andExpect(jsonPath("$.photos[0].id").value(1L))
+                .andExpect(jsonPath("$.photos[0].clientId").value("client-photo-1"));
     }
 
     @Test

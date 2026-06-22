@@ -94,7 +94,7 @@ public class FootprintService {
                 .map(ExpenseResponse::from)
                 .toList();
 
-        return FootprintDetailResponse.from(footprint, photoSignedUrls(footprint), expenses);
+        return FootprintDetailResponse.from(footprint, photoResponses(footprint), expenses);
     }
 
     @Transactional
@@ -140,10 +140,10 @@ public class FootprintService {
         return FootprintResponse.from(footprint, thumbnailUrl);
     }
 
-    private List<String> photoSignedUrls(Footprint footprint) {
+    private List<PhotoResponse> photoResponses(Footprint footprint) {
         return footprint.getPhotos().stream()
                 .sorted(Comparator.comparing(Photo::getOrderIndex))
-                .map(photo -> storageService.getImageSignedUrl(photo.getS3Key()))
+                .map(this::toPhotoResponse)
                 .toList();
     }
 
