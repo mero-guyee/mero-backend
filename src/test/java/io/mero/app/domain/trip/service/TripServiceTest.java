@@ -1,6 +1,7 @@
 package io.mero.app.domain.trip.service;
 
 import io.mero.app.domain.budget.repository.BudgetRepository;
+import io.mero.app.domain.footprint.repository.FootprintRepository;
 import io.mero.app.domain.footprint.repository.PhotoRepository;
 import io.mero.app.domain.trip.repository.TripDocumentRepository;
 import io.mero.app.domain.trip.repository.TripMemoRepository;
@@ -72,6 +73,9 @@ class TripServiceTest {
 
     @Mock
     private PhotoRepository photoRepository;
+
+    @Mock
+    private FootprintRepository footprintRepository;
 
     @Mock
     private StorageService storageService;

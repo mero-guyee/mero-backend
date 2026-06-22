@@ -3,6 +3,8 @@ package io.mero.app.domain.trip.service;
 import io.mero.app.domain.trip.entity.TripDocument;
 import io.mero.app.domain.trip.entity.TripMemo;
 import io.mero.app.domain.budget.repository.BudgetRepository;
+import io.mero.app.domain.footprint.entity.Photo;
+import io.mero.app.domain.footprint.repository.FootprintRepository;
 import io.mero.app.domain.footprint.repository.PhotoRepository;
 import io.mero.app.domain.trip.repository.TripDocumentRepository;
 import io.mero.app.domain.trip.repository.TripMemoRepository;
@@ -47,6 +49,7 @@ public class TripService {
     private final TripMemoRepository tripMemoRepository;
     private final BudgetRepository budgetRepository;
     private final PhotoRepository photoRepository;
+    private final FootprintRepository footprintRepository;
     private final StorageService storageService;
     private final MessageUtil messageUtil;
 
@@ -230,13 +233,32 @@ public class TripService {
             storageService.deleteTripDocument(document.getStorageKey());
         }
 
-        // soft delete된 자식은 @SQLRestriction에 가려져 cascade로 정리되지 않으므로 직접 제거
+        // soft delete된 자식은 @SQLRestriction에 가려져 cascade로 정리되지 않으므로 직접 제거.
+        // 사진은 native bulk delete라 @PreRemove가 동작하지 않으므로 스토리지 파일을 먼저 정리한다.
+        deletePhotoStorage(photoRepository.findSoftDeletedByTripId(tripId));
         photoRepository.deleteSoftDeletedByTripId(tripId);
         tripDocumentRepository.deleteSoftDeletedByTripId(tripId);
         budgetRepository.deleteSoftDeletedByTripId(tripId);
         tripMemoRepository.deleteAllByTripId(tripId);
 
+        // soft delete된 발자취는 cascade 대상에서 빠지는데, DB의 ON DELETE CASCADE가 발자취 행을
+        // 지울 때 자식(photo/footprint_location)엔 cascade가 없어 FK 위반이 난다.
+        // 자식 → 발자취 순으로 직접 정리한다. (사진은 스토리지 파일도 함께 제거)
+        deletePhotoStorage(photoRepository.findByDeletedFootprintTripId(tripId));
+        photoRepository.deleteByDeletedFootprintTripId(tripId);
+        footprintRepository.deleteLocationsByDeletedFootprintTripId(tripId);
+        footprintRepository.deleteSoftDeletedByTripId(tripId);
+
         tripRepository.delete(trip);
+    }
+
+    // native bulk delete로 제거될 사진들의 스토리지 파일을 정리 (@PreRemove가 동작하지 않으므로 수동 처리)
+    private void deletePhotoStorage(List<Photo> photos) {
+        for (Photo photo : photos) {
+            if (photo.getS3Key() != null && !photo.getS3Key().isEmpty()) {
+                storageService.deleteFootprintPhoto(photo.getS3Key());
+            }
+        }
     }
 
     private TripResponse toTripResponse(Trip trip) {
