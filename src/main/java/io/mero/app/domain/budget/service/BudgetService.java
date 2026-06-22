@@ -33,10 +33,18 @@ public class BudgetService {
         Trip trip = findTripById(tripId);
         validateOwner(trip, userId);
 
-        // 멱등성 체크: 동일한 clientId로 이미 생성된 Budget이 있으면 해당 Budget 반환
-        return budgetRepository.findByClientIdAndTripId(request.getClientId(), tripId)
-                .map(BudgetResponse::from)
+        // 멱등성 체크: 동일한 clientId 행이 있으면 재사용. soft delete된 경우 복구 후 업데이트.
+        return budgetRepository.findByClientIdAndTripIdIncludingDeleted(request.getClientId(), tripId)
+                .map(budget -> restoreOrKeepBudget(budget, request))
                 .orElseGet(() -> createNewBudget(trip, request));
+    }
+
+    private BudgetResponse restoreOrKeepBudget(Budget budget, BudgetCreateRequest request) {
+        if (budget.isDeleted()) {
+            budget.restore();
+            budget.update(request.getAmount(), request.getCurrency(), request.getExchangeRate());
+        }
+        return BudgetResponse.from(budget);
     }
 
     private BudgetResponse createNewBudget(Trip trip, BudgetCreateRequest request) {
@@ -105,7 +113,7 @@ public class BudgetService {
         validateTripMatch(trip, tripId);
         validateOwner(trip, userId);
 
-        budgetRepository.delete(budget);
+        budget.delete();
     }
 
     private Trip findTripById(Long tripId) {

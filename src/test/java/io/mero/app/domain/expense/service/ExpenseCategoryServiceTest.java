@@ -214,8 +214,7 @@ class ExpenseCategoryServiceTest {
         // then
         assertThat(expense1.getCategory()).isEqualTo(etcCategory);
         assertThat(expense2.getCategory()).isEqualTo(etcCategory);
-        assertThat(categoryToDelete.isDeleted()).isTrue();
-        verify(expenseCategoryRepository, never()).delete(any());
+        verify(expenseCategoryRepository).delete(categoryToDelete);
     }
 
     @Test
@@ -249,9 +248,8 @@ class ExpenseCategoryServiceTest {
         // when
         expenseCategoryService.deleteCategory(userId, categoryId);
 
-        // then
-        assertThat(categoryToDelete.isDeleted()).isTrue();
-        verify(expenseCategoryRepository, never()).delete(any());
+        // then (hard delete)
+        verify(expenseCategoryRepository).delete(categoryToDelete);
     }
 
     @Test

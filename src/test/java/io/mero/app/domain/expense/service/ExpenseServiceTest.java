@@ -115,7 +115,7 @@ class ExpenseServiceTest {
                 .build();
 
         given(tripRepository.findById(1L)).willReturn(Optional.of(trip));
-        given(expenseRepository.findByClientIdAndTripId("test-client-id-1", 1L)).willReturn(Optional.empty());
+        given(expenseRepository.findByClientIdAndTripIdIncludingDeleted("test-client-id-1", 1L)).willReturn(Optional.empty());
         given(expenseCategoryRepository.findById(1L)).willReturn(Optional.of(category));
         given(expenseRepository.save(any(Expense.class))).willReturn(expense);
 
@@ -179,7 +179,7 @@ class ExpenseServiceTest {
                 .build();
 
         given(tripRepository.findById(1L)).willReturn(Optional.of(trip));
-        given(expenseRepository.findByClientIdAndTripId("test-client-id-2", 1L)).willReturn(Optional.empty());
+        given(expenseRepository.findByClientIdAndTripIdIncludingDeleted("test-client-id-2", 1L)).willReturn(Optional.empty());
         given(footprintRepository.findById(1L)).willReturn(Optional.of(footprint));
         given(expenseCategoryRepository.findById(1L)).willReturn(Optional.of(category));
         given(expenseRepository.save(any(Expense.class))).willReturn(expense);
@@ -225,7 +225,7 @@ class ExpenseServiceTest {
                 .build();
 
         given(tripRepository.findById(1L)).willReturn(Optional.of(trip1));
-        given(expenseRepository.findByClientIdAndTripId("test-client-id-3", 1L)).willReturn(Optional.empty());
+        given(expenseRepository.findByClientIdAndTripIdIncludingDeleted("test-client-id-3", 1L)).willReturn(Optional.empty());
         given(footprintRepository.findById(2L)).willReturn(Optional.of(footprint));
         given(messageUtil.getMessage("error.footprint.tripMismatch")).willReturn("같은 여행의 Footprint만 연결할 수 있습니다");
 

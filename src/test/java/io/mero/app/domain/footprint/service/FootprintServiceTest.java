@@ -92,7 +92,7 @@ class FootprintServiceTest {
         Footprint footprint = createFootprint(1L, trip, request.getClientId(), request.getContent(), request.getDate());
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
-        given(footprintRepository.findByClientIdAndTripId(request.getClientId(), tripId)).willReturn(Optional.empty());
+        given(footprintRepository.findByClientIdAndTripIdIncludingDeleted(request.getClientId(), tripId)).willReturn(Optional.empty());
         given(footprintRepository.save(any(Footprint.class))).willReturn(footprint);
 
         // when
@@ -103,7 +103,7 @@ class FootprintServiceTest {
         assertThat(response.getClientId()).isEqualTo("client-id-1");
         assertThat(response.getDate()).isEqualTo(LocalDate.of(2026, 4, 1));
 
-        verify(footprintRepository).findByClientIdAndTripId(request.getClientId(), tripId);
+        verify(footprintRepository).findByClientIdAndTripIdIncludingDeleted(request.getClientId(), tripId);
         verify(footprintRepository).save(any(Footprint.class));
     }
 
@@ -130,7 +130,7 @@ class FootprintServiceTest {
         Footprint existing = createFootprint(1L, trip, request.getClientId(), request.getContent(), request.getDate());
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
-        given(footprintRepository.findByClientIdAndTripId(request.getClientId(), tripId)).willReturn(Optional.of(existing));
+        given(footprintRepository.findByClientIdAndTripIdIncludingDeleted(request.getClientId(), tripId)).willReturn(Optional.of(existing));
 
         // when
         FootprintResponse response = footprintService.createFootprint(userId, tripId, request);
@@ -460,7 +460,7 @@ class FootprintServiceTest {
                 .build();
 
         given(footprintRepository.findById(footprintId)).willReturn(Optional.of(footprint));
-        given(photoRepository.findByClientId(clientId)).willReturn(Optional.empty());
+        given(photoRepository.findByClientIdIncludingDeleted(clientId)).willReturn(Optional.empty());
         given(storageService.uploadFootprintPhotos(eq(userId), eq(tripId), eq(footprintId), anyList()))
                 .willReturn(uploadResults);
         given(photoRepository.save(any(Photo.class))).willReturn(savedPhoto);
@@ -505,7 +505,7 @@ class FootprintServiceTest {
                 .build();
 
         given(footprintRepository.findById(footprintId)).willReturn(Optional.of(footprint));
-        given(photoRepository.findByClientId(clientId)).willReturn(Optional.of(existing));
+        given(photoRepository.findByClientIdIncludingDeleted(clientId)).willReturn(Optional.of(existing));
         given(storageService.getImageSignedUrl("existing-key"))
                 .willReturn("https://signed.example.com/existing.jpg");
 
@@ -579,8 +579,9 @@ class FootprintServiceTest {
         // when
         footprintService.deletePhoto(userId, tripId, footprintId, photoId);
 
-        // then
-        verify(photoRepository).delete(photo);
+        // then (soft delete: deletedAt 마킹, 물리 삭제 호출 없음)
+        assertThat(photo.isDeleted()).isTrue();
+        verify(photoRepository, never()).delete(photo);
     }
 
     @Test
