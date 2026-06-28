@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 
 @Getter
@@ -19,8 +20,9 @@ public class FootprintResponse {
     private String weatherInfo;
     private List<LocationResponse> locations;
     private String thumbnailUrl;
+    private List<PhotoResponse> photos;
 
-    public static FootprintResponse from(Footprint footprint, String thumbnailUrl) {
+    public static FootprintResponse from(Footprint footprint, String thumbnailUrl, List<PhotoResponse> photos) {
         return new FootprintResponse(
                 footprint.getId(),
                 footprint.getClientId(),
@@ -29,7 +31,8 @@ public class FootprintResponse {
                 footprint.getDate(),
                 footprint.getWeatherInfo(),
                 LocationResponse.fromList(footprint.getLocations()),
-                thumbnailUrl
+                thumbnailUrl,
+                photos == null ? Collections.emptyList() : photos
         );
     }
 }

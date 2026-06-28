@@ -145,11 +145,9 @@ public class FootprintService {
     }
 
     private FootprintResponse toFootprintResponse(Footprint footprint) {
-        String thumbnailUrl = footprint.getPhotos().stream()
-                .min(Comparator.comparing(Photo::getOrderIndex))
-                .map(photo -> storageService.getImageSignedUrl(photo.getS3Key()))
-                .orElse(null);
-        return FootprintResponse.from(footprint, thumbnailUrl);
+        List<PhotoResponse> photos = photoResponses(footprint);
+        String thumbnailUrl = photos.isEmpty() ? null : photos.get(0).getS3Url();
+        return FootprintResponse.from(footprint, thumbnailUrl, photos);
     }
 
     private List<PhotoResponse> photoResponses(Footprint footprint) {
