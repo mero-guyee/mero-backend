@@ -166,6 +166,12 @@ public class UserService {
         return nickname;
     }
 
+    public UserResponse getMe(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(messageUtil.getMessage("error.user.notFound")));
+        return UserResponse.from(user);
+    }
+
     @Transactional
     public void changeNickname(Long userId, NicknameChangeRequest request) {
         if (userRepository.existsByNickname(request.getNickname())) {
