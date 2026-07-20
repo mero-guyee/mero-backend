@@ -92,7 +92,8 @@ class FootprintControllerTest {
                 LocalDate.of(2026, 4, 1),
                 null,
                 Collections.emptyList(),
-                null
+                null,
+                Collections.emptyList()
         );
 
         given(footprintService.createFootprint(anyLong(), eq(1L), any(FootprintCreateRequest.class)))
@@ -115,8 +116,8 @@ class FootprintControllerTest {
     void 발자취_목록_조회_성공() throws Exception {
         // given
         List<FootprintResponse> responses = List.of(
-                new FootprintResponse(1L, "client-id-1", 1L, "첫째날", LocalDate.of(2026, 4, 1), null, Collections.emptyList(), null),
-                new FootprintResponse(2L, "client-id-2", 1L, "둘째날", LocalDate.of(2026, 4, 2), null, Collections.emptyList(), null)
+                new FootprintResponse(1L, "client-id-1", 1L, "첫째날", LocalDate.of(2026, 4, 1), null, Collections.emptyList(), null, Collections.emptyList()),
+                new FootprintResponse(2L, "client-id-2", 1L, "둘째날", LocalDate.of(2026, 4, 2), null, Collections.emptyList(), null, Collections.emptyList())
         );
 
         given(footprintService.getFootprints(anyLong(), eq(1L))).willReturn(responses);
@@ -184,7 +185,8 @@ class FootprintControllerTest {
                 LocalDate.of(2026, 4, 2),
                 null,
                 Collections.emptyList(),
-                null
+                null,
+                Collections.emptyList()
         );
 
         given(footprintService.updateFootprint(anyLong(), eq(1L), eq(1L), any(FootprintUpdateRequest.class)))
