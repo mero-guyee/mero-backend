@@ -25,9 +25,6 @@ public class User extends BaseEntity {
     @Column(nullable = false, unique = true, length = 10)
     private String nickname;
 
-    @Column(name = "password_hash", length = 255)
-    private String passwordHash;
-
     @Column(name = "apple_id", length = 255, unique = true)
     private String appleId;
 
@@ -43,20 +40,15 @@ public class User extends BaseEntity {
     @Column(name = "refresh_token", length = 500)
     private String refreshToken;
 
-    @Column(name = "email_verified", nullable = false)
-    private boolean emailVerified;
-
     @Builder
-    public User(Long id, String email, String nickname, String passwordHash,
+    public User(Long id, String email, String nickname,
                 String profileImageUrl, String appleId, String googleId) {
         this.id = id;
         this.email = email;
         this.nickname = nickname;
-        this.passwordHash = passwordHash;
         this.profileImageUrl = profileImageUrl;
         this.appleId = appleId;
         this.googleId = googleId;
-        this.emailVerified = false;
     }
 
     public void linkAppleId(String appleId) {
@@ -66,11 +58,6 @@ public class User extends BaseEntity {
     public void linkGoogleId(String googleId) {
         this.googleId = googleId;
     }
-
-    public void verifyEmail() {
-        this.emailVerified = true;
-    }
-
 
     public void updateLastLogin() {
         this.lastLoginAt = LocalDateTime.now();
@@ -89,10 +76,6 @@ public class User extends BaseEntity {
 
     public void deleteProfileImage() {
         this.profileImageUrl = null;
-    }
-
-    public void updatePassword(String passwordHash) {
-        this.passwordHash = passwordHash;
     }
 
     public void updateRefreshToken(String refreshToken) {
