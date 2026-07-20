@@ -613,7 +613,6 @@ class FootprintServiceTest {
         return User.builder()
                 .id(userId)
                 .email("test@example.com")
-                .passwordHash("password")
                 .nickname("테스트유저")
                 .build();
     }

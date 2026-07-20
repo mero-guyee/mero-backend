@@ -83,7 +83,6 @@ class ExpenseServiceTest {
         User user = User.builder()
                 .id(userId)
                 .email("test@example.com")
-                .passwordHash("password")
                 .nickname("테스트")
                 .build();
 

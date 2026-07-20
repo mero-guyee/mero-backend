@@ -1,7 +1,6 @@
 package io.mero.app.domain.user.controller;
 
 import io.mero.app.domain.user.dto.NicknameChangeRequest;
-import io.mero.app.domain.user.dto.PasswordChangeRequest;
 import io.mero.app.domain.user.dto.UserResponse;
 import io.mero.app.domain.user.service.UserService;
 import io.mero.app.global.util.SecurityUtil;
@@ -34,14 +33,6 @@ public class UserController {
     public ResponseEntity<Void> changeNickname(@Valid @RequestBody NicknameChangeRequest request) {
         Long userId = SecurityUtil.getCurrentUserId();
         userService.changeNickname(userId, request);
-        return ResponseEntity.noContent().build();
-    }
-
-    @Operation(summary = "비밀번호 변경", description = "현재 비밀번호를 확인 후 새 비밀번호로 변경합니다")
-    @PatchMapping("/password")
-    public ResponseEntity<Void> changePassword(@Valid @RequestBody PasswordChangeRequest request) {
-        Long userId = SecurityUtil.getCurrentUserId();
-        userService.changePassword(userId, request);
         return ResponseEntity.noContent().build();
     }
 }

@@ -8,8 +8,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -19,11 +17,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -40,13 +33,10 @@ public class SecurityConfig {
                                 "/",
                                 "/health",
 
-                                // Public 엔드포인트
+                                // Public 엔드포인트 (소셜 로그인, 토큰 재발급)
                                 "/api/auth/**",
-                                "/api/auth/email/verify",
-                                "/api/auth/password/reset-request",
-                                "/api/auth/password/reset",
 
-                                        // 법적 문서 (이용약관, 개인정보처리방침, 위치정보 이용약관)
+                                // 법적 문서 (이용약관, 개인정보처리방침, 위치정보 이용약관)
                                 "/terms",
                                 "/privacy",
                                 "/location",

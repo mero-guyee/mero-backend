@@ -49,9 +49,6 @@ dependencies {
 	implementation 'software.amazon.awssdk:s3:2.20.26'
 	implementation 'software.amazon.awssdk:auth:2.20.26'
 
-	// Email
-	implementation 'org.springframework.boot:spring-boot-starter-mail'
-
 	// Lombok
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'

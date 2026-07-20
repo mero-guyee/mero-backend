@@ -2,7 +2,6 @@ package io.mero.app.domain.user.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mero.app.domain.user.dto.NicknameChangeRequest;
-import io.mero.app.domain.user.dto.PasswordChangeRequest;
 import io.mero.app.domain.user.service.UserService;
 import io.mero.app.global.jwt.JwtAuthenticationFilter;
 import io.mero.app.global.jwt.JwtTokenProvider;
@@ -102,36 +101,6 @@ class UserControllerTest {
 
         // when & then
         mockMvc.perform(patch("/api/users/me/nickname")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andDo(print())
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    @DisplayName("비밀번호 변경 성공")
-    void 비밀번호_변경_성공() throws Exception {
-        // given
-        String body = "{\"currentPassword\":\"oldPassword1\",\"newPassword\":\"newPassword1\"}";
-
-        // when & then
-        mockMvc.perform(patch("/api/users/me/password")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andDo(print())
-                .andExpect(status().isNoContent());
-
-        verify(userService).changePassword(eq(1L), any(PasswordChangeRequest.class));
-    }
-
-    @Test
-    @DisplayName("비밀번호 변경 실패 - 새 비밀번호 길이 부족")
-    void 비밀번호_변경_실패_새_비밀번호_길이_부족() throws Exception {
-        // given
-        String body = "{\"currentPassword\":\"oldPassword1\",\"newPassword\":\"short\"}";
-
-        // when & then
-        mockMvc.perform(patch("/api/users/me/password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andDo(print())
