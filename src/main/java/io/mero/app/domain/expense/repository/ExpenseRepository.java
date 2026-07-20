@@ -6,6 +6,8 @@ import io.mero.app.domain.expense.entity.ExpenseCategory;
 import io.mero.app.domain.trip.entity.Trip;
 import io.mero.app.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -21,6 +23,10 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 
     List<Expense> findByCategory(ExpenseCategory category);
 
-    Optional<Expense> findByClientIdAndTripId(String clientId, Long tripId);
+    // soft delete(@SQLRestriction)를 무시하고 삭제된 행까지 조회 (clientId 재사용/복구용)
+    @Query(value = "SELECT * FROM expenses WHERE client_id = :clientId AND trip_id = :tripId LIMIT 1",
+            nativeQuery = true)
+    Optional<Expense> findByClientIdAndTripIdIncludingDeleted(@Param("clientId") String clientId,
+                                                              @Param("tripId") Long tripId);
 
 }

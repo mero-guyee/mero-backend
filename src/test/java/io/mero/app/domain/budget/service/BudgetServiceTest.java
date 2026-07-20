@@ -27,6 +27,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -73,7 +74,7 @@ class BudgetServiceTest {
                 .build();
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
-        given(budgetRepository.findByClientIdAndTripId("test-client-id-1", tripId)).willReturn(Optional.empty());
+        given(budgetRepository.findByClientIdAndTripIdIncludingDeleted("test-client-id-1", tripId)).willReturn(Optional.empty());
         given(budgetRepository.findByTripAndCurrency(trip, Currency.USD)).willReturn(Optional.empty());
         given(budgetRepository.save(any(Budget.class))).willReturn(budget);
 
@@ -116,7 +117,7 @@ class BudgetServiceTest {
                 .build();
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
-        given(budgetRepository.findByClientIdAndTripId("test-client-id-2", tripId)).willReturn(Optional.empty());
+        given(budgetRepository.findByClientIdAndTripIdIncludingDeleted("test-client-id-2", tripId)).willReturn(Optional.empty());
         given(budgetRepository.findByTripAndCurrency(trip, Currency.KRW)).willReturn(Optional.empty());
         given(budgetRepository.save(any(Budget.class))).willReturn(budget);
 
@@ -157,7 +158,7 @@ class BudgetServiceTest {
                 .build();
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
-        given(budgetRepository.findByClientIdAndTripId("test-client-id-1", tripId)).willReturn(Optional.empty());
+        given(budgetRepository.findByClientIdAndTripIdIncludingDeleted("test-client-id-1", tripId)).willReturn(Optional.empty());
         given(budgetRepository.findByTripAndCurrency(trip, Currency.USD))
                 .willReturn(Optional.of(existingBudget));
         given(messageUtil.getMessage("error.budget.duplicateCurrency"))
@@ -447,7 +448,8 @@ class BudgetServiceTest {
         // when
         budgetService.deleteBudget(userId, tripId, budgetId);
 
-        // then
-        verify(budgetRepository).delete(budget);
+        // then (soft delete: deletedAt 마킹, 물리 삭제 호출 없음)
+        assertThat(budget.isDeleted()).isTrue();
+        verify(budgetRepository, never()).delete(budget);
     }
 }

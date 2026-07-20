@@ -48,10 +48,22 @@ public class FootprintService {
         Trip trip = findTripById(tripId);
         validateOwner(trip, userId);
 
-        // 멱등성 체크: 동일한 clientId로 이미 생성된 Footprint가 있으면 해당 Footprint 반환
-        return footprintRepository.findByClientIdAndTripId(request.getClientId(), tripId)
-                .map(this::toFootprintResponse)
+        // 멱등성 체크: 동일한 clientId 행이 있으면 재사용. soft delete된 경우 복구 후 업데이트.
+        return footprintRepository.findByClientIdAndTripIdIncludingDeleted(request.getClientId(), tripId)
+                .map(footprint -> restoreOrKeepFootprint(footprint, request))
                 .orElseGet(() -> createNewFootprint(trip, request));
+    }
+
+    private FootprintResponse restoreOrKeepFootprint(Footprint footprint, FootprintCreateRequest request) {
+        if (footprint.isDeleted()) {
+            footprint.restore();
+            footprint.update(request.getTitle(), request.getContent(),
+                    request.getDate(), request.getWeatherInfo());
+            List<FootprintLocation> locations =
+                    FootprintLocationMapper.fromRequests(request.getLocations(), footprint);
+            footprint.updateLocations(locations);
+        }
+        return toFootprintResponse(footprint);
     }
 
     private FootprintResponse createNewFootprint(Trip trip, FootprintCreateRequest request) {
@@ -94,7 +106,7 @@ public class FootprintService {
                 .map(ExpenseResponse::from)
                 .toList();
 
-        return FootprintDetailResponse.from(footprint, photoSignedUrls(footprint), expenses);
+        return FootprintDetailResponse.from(footprint, photoResponses(footprint), expenses);
     }
 
     @Transactional
@@ -133,17 +145,15 @@ public class FootprintService {
     }
 
     private FootprintResponse toFootprintResponse(Footprint footprint) {
-        String thumbnailUrl = footprint.getPhotos().stream()
-                .min(Comparator.comparing(Photo::getOrderIndex))
-                .map(photo -> storageService.getImageSignedUrl(photo.getS3Key()))
-                .orElse(null);
-        return FootprintResponse.from(footprint, thumbnailUrl);
+        List<PhotoResponse> photos = photoResponses(footprint);
+        String thumbnailUrl = photos.isEmpty() ? null : photos.get(0).getS3Url();
+        return FootprintResponse.from(footprint, thumbnailUrl, photos);
     }
 
-    private List<String> photoSignedUrls(Footprint footprint) {
+    private List<PhotoResponse> photoResponses(Footprint footprint) {
         return footprint.getPhotos().stream()
                 .sorted(Comparator.comparing(Photo::getOrderIndex))
-                .map(photo -> storageService.getImageSignedUrl(photo.getS3Key()))
+                .map(this::toPhotoResponse)
                 .toList();
     }
 
@@ -188,9 +198,14 @@ public class FootprintService {
         validateTripMatch(trip, tripId);
         validateOwner(trip, userId);
 
-        Optional<Photo> existing = photoRepository.findByClientId(clientId);
+        // 멱등성 체크: soft delete된 사진은 파일을 유지하므로 재업로드 없이 복구.
+        Optional<Photo> existing = photoRepository.findByClientIdIncludingDeleted(clientId);
         if (existing.isPresent()) {
-            return toPhotoResponse(existing.get());
+            Photo existingPhoto = existing.get();
+            if (existingPhoto.isDeleted()) {
+                existingPhoto.restore();
+            }
+            return toPhotoResponse(existingPhoto);
         }
 
         StorageUploadResult uploadResult = storageService
@@ -230,7 +245,6 @@ public class FootprintService {
                     messageUtil.getMessage("error.forbidden"));
         }
 
-        footprint.getPhotos().remove(photo);
-        photoRepository.delete(photo);
+        photo.delete();
     }
 }

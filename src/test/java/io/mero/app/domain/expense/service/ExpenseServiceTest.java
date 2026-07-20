@@ -71,7 +71,6 @@ class ExpenseServiceTest {
         Long userId = 1L;
         ExpenseCreateRequest request = new ExpenseCreateRequest(
                 "test-client-id-1",
-                1L,
                 null,  // footprintId
                 new BigDecimal("100"),
                 Currency.USD,
@@ -116,12 +115,12 @@ class ExpenseServiceTest {
                 .build();
 
         given(tripRepository.findById(1L)).willReturn(Optional.of(trip));
-        given(expenseRepository.findByClientIdAndTripId("test-client-id-1", 1L)).willReturn(Optional.empty());
+        given(expenseRepository.findByClientIdAndTripIdIncludingDeleted("test-client-id-1", 1L)).willReturn(Optional.empty());
         given(expenseCategoryRepository.findById(1L)).willReturn(Optional.of(category));
         given(expenseRepository.save(any(Expense.class))).willReturn(expense);
 
         // when
-        ExpenseResponse response = expenseService.createExpense(userId, request);
+        ExpenseResponse response = expenseService.createExpense(userId, 1L, request);
 
         // then
         assertThat(response.getId()).isEqualTo(1L);
@@ -137,7 +136,6 @@ class ExpenseServiceTest {
         Long userId = 1L;
         ExpenseCreateRequest request = new ExpenseCreateRequest(
                 "test-client-id-2",
-                1L,
                 1L,  // footprintId
                 new BigDecimal("100"),
                 Currency.USD,
@@ -181,13 +179,13 @@ class ExpenseServiceTest {
                 .build();
 
         given(tripRepository.findById(1L)).willReturn(Optional.of(trip));
-        given(expenseRepository.findByClientIdAndTripId("test-client-id-2", 1L)).willReturn(Optional.empty());
+        given(expenseRepository.findByClientIdAndTripIdIncludingDeleted("test-client-id-2", 1L)).willReturn(Optional.empty());
         given(footprintRepository.findById(1L)).willReturn(Optional.of(footprint));
         given(expenseCategoryRepository.findById(1L)).willReturn(Optional.of(category));
         given(expenseRepository.save(any(Expense.class))).willReturn(expense);
 
         // when
-        ExpenseResponse response = expenseService.createExpense(userId, request);
+        ExpenseResponse response = expenseService.createExpense(userId, 1L, request);
 
         // then
         assertThat(response.getFootprintId()).isEqualTo(1L);
@@ -201,7 +199,6 @@ class ExpenseServiceTest {
         Long userId = 1L;
         ExpenseCreateRequest request = new ExpenseCreateRequest(
                 "test-client-id-3",
-                1L,
                 2L,  // 다른 여행의 footprintId
                 new BigDecimal("100"),
                 Currency.USD,
@@ -228,12 +225,12 @@ class ExpenseServiceTest {
                 .build();
 
         given(tripRepository.findById(1L)).willReturn(Optional.of(trip1));
-        given(expenseRepository.findByClientIdAndTripId("test-client-id-3", 1L)).willReturn(Optional.empty());
+        given(expenseRepository.findByClientIdAndTripIdIncludingDeleted("test-client-id-3", 1L)).willReturn(Optional.empty());
         given(footprintRepository.findById(2L)).willReturn(Optional.of(footprint));
         given(messageUtil.getMessage("error.footprint.tripMismatch")).willReturn("같은 여행의 Footprint만 연결할 수 있습니다");
 
         // when & then
-        assertThatThrownBy(() -> expenseService.createExpense(userId, request))
+        assertThatThrownBy(() -> expenseService.createExpense(userId, 1L, request))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("같은 여행의 Footprint만 연결할 수 있습니다");
     }
@@ -246,7 +243,7 @@ class ExpenseServiceTest {
         Long otherUserId = 2L;
 
         ExpenseCreateRequest request = new ExpenseCreateRequest(
-                "test-client-id-4", 1L, null, new BigDecimal("100"), Currency.USD,
+                "test-client-id-4", null, new BigDecimal("100"), Currency.USD,
                 null, null, LocalDate.now(), null
         );
 
@@ -260,7 +257,7 @@ class ExpenseServiceTest {
         given(messageUtil.getMessage("error.forbidden")).willReturn("접근 권한이 없습니다");
 
         // when & then
-        assertThatThrownBy(() -> expenseService.createExpense(userId, request))
+        assertThatThrownBy(() -> expenseService.createExpense(userId, 1L, request))
                 .isInstanceOf(ForbiddenException.class)
                 .hasMessage("접근 권한이 없습니다");
     }
@@ -654,7 +651,7 @@ class ExpenseServiceTest {
         // given
         Long userId = 1L;
         ExpenseCreateRequest request = new ExpenseCreateRequest(
-                "test-client-id-5", 999L, null, new BigDecimal("100"), Currency.USD,
+                "test-client-id-5", null, new BigDecimal("100"), Currency.USD,
                 null, null, LocalDate.now(), null
         );
 
@@ -663,7 +660,7 @@ class ExpenseServiceTest {
                 .willReturn("여행을 찾을 수 없습니다");
 
         // when & then
-        assertThatThrownBy(() -> expenseService.createExpense(userId, request))
+        assertThatThrownBy(() -> expenseService.createExpense(userId, 999L, request))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("여행을 찾을 수 없습니다");
     }
@@ -674,7 +671,7 @@ class ExpenseServiceTest {
         // given
         Long userId = 1L;
         ExpenseCreateRequest request = new ExpenseCreateRequest(
-                "test-client-id-6", 1L, 999L, new BigDecimal("100"), Currency.USD,
+                "test-client-id-6", 999L, new BigDecimal("100"), Currency.USD,
                 null, null, LocalDate.now(), null
         );
 
@@ -690,7 +687,7 @@ class ExpenseServiceTest {
                 .willReturn("Footprint를 찾을 수 없습니다");
 
         // when & then
-        assertThatThrownBy(() -> expenseService.createExpense(userId, request))
+        assertThatThrownBy(() -> expenseService.createExpense(userId, 1L, request))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("Footprint를 찾을 수 없습니다");
     }

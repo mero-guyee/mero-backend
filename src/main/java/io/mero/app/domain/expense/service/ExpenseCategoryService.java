@@ -114,7 +114,7 @@ public class ExpenseCategoryService {
             expense.changeCategory(defaultCategory);
         }
 
-        category.delete();
+        expenseCategoryRepository.delete(category);
     }
 
     private ExpenseCategory findCategoryById(Long categoryId) {

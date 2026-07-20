@@ -44,14 +44,34 @@ public class ExpenseService {
     private final MessageUtil messageUtil;
 
     @Transactional
-    public ExpenseResponse createExpense(Long userId, ExpenseCreateRequest request) {
-        Trip trip = findTripById(request.getTripId());
+    public ExpenseResponse createExpense(Long userId, Long tripId, ExpenseCreateRequest request) {
+        Trip trip = findTripById(tripId);
         validateOwner(trip, userId);
 
-        // 멱등성 체크: 동일한 clientId로 이미 생성된 Expense가 있으면 해당 Expense 반환
-        return expenseRepository.findByClientIdAndTripId(request.getClientId(), request.getTripId())
-                .map(ExpenseResponse::from)
+        // 멱등성 체크: 동일한 clientId 행이 있으면 재사용. soft delete된 경우 복구 후 업데이트.
+        return expenseRepository.findByClientIdAndTripIdIncludingDeleted(request.getClientId(), tripId)
+                .map(expense -> restoreOrKeepExpense(expense, userId, trip, request))
                 .orElseGet(() -> createNewExpense(userId, trip, request));
+    }
+
+    private ExpenseResponse restoreOrKeepExpense(Expense expense, Long userId, Trip trip,
+                                                 ExpenseCreateRequest request) {
+        if (expense.isDeleted()) {
+            ExpenseCategory category = findExpenseCategoryById(request.getCategoryId());
+            validateCategoryOwner(category, userId);
+
+            Footprint footprint = null;
+            if (request.getFootprintId() != null) {
+                footprint = findFootprintById(request.getFootprintId());
+                validateFootprintBelongsToTrip(footprint, trip);
+            }
+
+            expense.restore();
+            expense.update(request.getAmount(), request.getCurrency(), category,
+                    request.getDescription(), request.getDate(), request.getLocation());
+            expense.linkToFootprint(footprint);
+        }
+        return ExpenseResponse.from(expense);
     }
 
     private ExpenseResponse createNewExpense(Long userId, Trip trip, ExpenseCreateRequest request) {

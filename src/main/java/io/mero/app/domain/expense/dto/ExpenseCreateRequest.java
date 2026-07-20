@@ -21,9 +21,6 @@ public class ExpenseCreateRequest {
     @Size(max = 36, message = "{expense.clientId.size}")
     private String clientId;
 
-    @NotNull(message = "{expense.tripId.notNull}")
-    private Long tripId;
-
     private Long footprintId;
 
     @NotNull(message = "{expense.amount.notNull}")

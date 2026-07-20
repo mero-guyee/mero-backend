@@ -1,5 +1,8 @@
 package io.mero.app.domain.trip.service;
 
+import io.mero.app.domain.budget.repository.BudgetRepository;
+import io.mero.app.domain.footprint.repository.FootprintRepository;
+import io.mero.app.domain.footprint.repository.PhotoRepository;
 import io.mero.app.domain.trip.repository.TripDocumentRepository;
 import io.mero.app.domain.trip.repository.TripMemoRepository;
 import io.mero.app.domain.trip.dto.TripCreateRequest;
@@ -64,6 +67,15 @@ class TripServiceTest {
 
     @Mock
     private TripMemoRepository tripMemoRepository;
+
+    @Mock
+    private BudgetRepository budgetRepository;
+
+    @Mock
+    private PhotoRepository photoRepository;
+
+    @Mock
+    private FootprintRepository footprintRepository;
 
     @Mock
     private StorageService storageService;
@@ -437,6 +449,7 @@ class TripServiceTest {
         trip.setCoverImage(coverImage);
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
+        given(tripDocumentRepository.findByTripIdIncludingDeleted(tripId)).willReturn(List.of());
 
         // when
         tripService.deleteTrip(userId, tripId);
@@ -458,6 +471,7 @@ class TripServiceTest {
         Trip trip = createTrip(tripId, user, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15));
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
+        given(tripDocumentRepository.findByTripIdIncludingDeleted(tripId)).willReturn(List.of());
 
         // when
         tripService.deleteTrip(userId, tripId);
@@ -535,7 +549,7 @@ class TripServiceTest {
         String clientId = "doc-client-id-1";
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
-        given(tripDocumentRepository.findByClientIdAndTripId(clientId, tripId)).willReturn(Optional.empty());
+        given(tripDocumentRepository.findByClientIdAndTripIdIncludingDeleted(clientId, tripId)).willReturn(Optional.empty());
         given(storageService.uploadTripDocument(eq(userId), eq(tripId), any(MultipartFile.class))).willReturn(uploadResult);
         given(tripDocumentRepository.save(any(TripDocument.class))).willReturn(document);
         given(storageService.getDocumentSignedUrl("users/1/trips/1/documents/ticket.pdf"))
@@ -577,9 +591,10 @@ class TripServiceTest {
         // when
         tripService.deleteTripDocument(userId, tripId, documentId);
 
-        // then
-        verify(storageService).deleteTripDocument("users/1/trips/1/documents/ticket.pdf");
-        verify(tripDocumentRepository).delete(document);
+        // then (soft delete: 파일 유지, 물리 삭제 호출 없음)
+        assertThat(document.isDeleted()).isTrue();
+        verify(storageService, never()).deleteTripDocument(any());
+        verify(tripDocumentRepository, never()).delete(document);
     }
 
     @Test
@@ -625,7 +640,7 @@ class TripServiceTest {
                 .build();
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
-        given(tripMemoRepository.findByClientIdAndTripId(request.getClientId(), tripId)).willReturn(Optional.empty());
+        given(tripMemoRepository.findByClientIdAndTripIdIncludingDeleted(request.getClientId(), tripId)).willReturn(Optional.empty());
         given(tripMemoRepository.save(any(TripMemo.class))).willReturn(memo);
 
         // when
@@ -658,7 +673,7 @@ class TripServiceTest {
                 .build();
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
-        given(tripMemoRepository.findByClientIdAndTripId(request.getClientId(), tripId)).willReturn(Optional.of(existing));
+        given(tripMemoRepository.findByClientIdAndTripIdIncludingDeleted(request.getClientId(), tripId)).willReturn(Optional.of(existing));
 
         // when
         TripMemoResponse response = tripService.createTripMemo(userId, tripId, request);
@@ -785,8 +800,9 @@ class TripServiceTest {
         // when
         tripService.deleteTripMemo(userId, tripId, memoId);
 
-        // then
-        verify(tripMemoRepository).delete(memo);
+        // then (soft delete: deletedAt 마킹, 물리 삭제 호출 없음)
+        assertThat(memo.isDeleted()).isTrue();
+        verify(tripMemoRepository, never()).delete(memo);
     }
 
     @Test

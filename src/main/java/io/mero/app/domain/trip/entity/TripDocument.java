@@ -8,11 +8,13 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "trip_documents")
+@SQLRestriction("deleted_at IS NULL")
 public class TripDocument extends BaseEntity {
 
     @Id
