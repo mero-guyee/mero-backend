@@ -213,14 +213,12 @@ class UserServiceTest {
         User newUser = User.builder()
                 .id(2L)
                 .email("newapple@example.com")
-                .nickname("user1a2b3c")
                 .appleId("apple-user-id-new")
                 .build();
 
         given(appleAuthService.validate(any())).willReturn(claims);
         given(userRepository.findByAppleId("apple-user-id-new")).willReturn(Optional.empty());
         given(userRepository.findByEmail("newapple@example.com")).willReturn(Optional.empty());
-        given(userRepository.existsByNickname(anyString())).willReturn(false);
         given(userRepository.save(any(User.class))).willReturn(newUser);
         given(jwtTokenProvider.createAccessToken(2L)).willReturn("access-token");
         given(jwtTokenProvider.createRefreshToken(2L)).willReturn("refresh-token");
@@ -231,6 +229,7 @@ class UserServiceTest {
         // then
         assertThat(response.getUserId()).isEqualTo(2L);
         assertThat(response.getEmail()).isEqualTo("newapple@example.com");
+        assertThat(response.getNickname()).isNull();
         verify(userRepository).save(any(User.class));
     }
 
@@ -306,14 +305,12 @@ class UserServiceTest {
         User newUser = User.builder()
                 .id(30L)
                 .email("newgoogle@example.com")
-                .nickname("user1a2b3c")
                 .googleId("google-user-id-new")
                 .build();
 
         given(googleAuthService.validate(any())).willReturn(claims);
         given(userRepository.findByGoogleId("google-user-id-new")).willReturn(Optional.empty());
         given(userRepository.findByEmail("newgoogle@example.com")).willReturn(Optional.empty());
-        given(userRepository.existsByNickname(anyString())).willReturn(false);
         given(userRepository.save(any(User.class))).willReturn(newUser);
         given(jwtTokenProvider.createAccessToken(30L)).willReturn("access-token");
         given(jwtTokenProvider.createRefreshToken(30L)).willReturn("refresh-token");
@@ -324,6 +321,7 @@ class UserServiceTest {
         // then
         assertThat(response.getUserId()).isEqualTo(30L);
         assertThat(response.getEmail()).isEqualTo("newgoogle@example.com");
+        assertThat(response.getNickname()).isNull();
         verify(userRepository).save(any(User.class));
         verify(expenseCategoryService).createDefaultCategoriesForUser(newUser);
     }

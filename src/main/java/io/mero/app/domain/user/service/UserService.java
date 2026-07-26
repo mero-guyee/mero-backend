@@ -17,8 +17,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
-
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -56,10 +54,8 @@ public class UserService {
     }
 
     private User createAppleUser(AppleClaims claims) {
-        String nickname = generateUniqueNickname();
         User user = User.builder()
                 .email(claims.email())
-                .nickname(nickname)
                 .appleId(claims.appleUserId())
                 .build();
         User savedUser = userRepository.save(user);
@@ -87,24 +83,13 @@ public class UserService {
     }
 
     private User createGoogleUser(GoogleClaims claims) {
-        String nickname = generateUniqueNickname();
         User user = User.builder()
                 .email(claims.email())
-                .nickname(nickname)
                 .googleId(claims.googleUserId())
                 .build();
         User savedUser = userRepository.save(user);
         categoryService.createDefaultCategoriesForUser(savedUser);
         return savedUser;
-    }
-
-    private String generateUniqueNickname() {
-        String nickname;
-        do {
-            String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 6);
-            nickname = "user" + suffix;
-        } while (userRepository.existsByNickname(nickname));
-        return nickname;
     }
 
     public UserResponse getMe(Long userId) {
