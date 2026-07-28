@@ -170,7 +170,8 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.profileImage").value("https://lh3.googleusercontent.com/a/pic"))
                 .andExpect(jsonPath("$.accessToken").value("access-token"))
                 .andExpect(jsonPath("$.refreshToken").value("refresh-token"))
-                .andExpect(jsonPath("$.isNewUser").value(true));
+                .andExpect(jsonPath("$.isNewUser").value(true))
+                .andExpect(jsonPath("$.newUser").doesNotExist());
 
         verify(userService).googleLogin(any(GoogleLoginRequest.class));
     }
