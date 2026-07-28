@@ -10,6 +10,9 @@ public interface StorageService {
     StorageUploadResult uploadTripCoverImage(Long userId, MultipartFile image);
     void deleteTripCoverImage(String storageKey);
 
+    StorageUploadResult uploadProfileImage(Long userId, MultipartFile image);
+    void deleteProfileImage(String storageKey);
+
     List<StorageUploadResult> uploadFootprintPhotos(Long userId, Long tripId, Long footprintId, List<MultipartFile> photos);
     void deleteFootprintPhoto(String storageKey);
     void deleteFootprintPhotos(List<String> storageKeys);

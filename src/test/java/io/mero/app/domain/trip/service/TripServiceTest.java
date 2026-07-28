@@ -26,6 +26,7 @@ import io.mero.app.global.enums.DocumentMimeType;
 import io.mero.app.global.enums.ImageMimeType;
 import io.mero.app.global.exception.ForbiddenException;
 import io.mero.app.global.exception.NotFoundException;
+import io.mero.app.global.service.StorageCleaner;
 import io.mero.app.global.service.StorageService;
 import io.mero.app.global.util.MessageUtil;
 import org.junit.jupiter.api.DisplayName;
@@ -79,6 +80,9 @@ class TripServiceTest {
 
     @Mock
     private StorageService storageService;
+
+    @Mock
+    private StorageCleaner storageCleaner;
 
     @Mock
     private MessageUtil messageUtil;
@@ -316,7 +320,7 @@ class TripServiceTest {
         assertThat(response.getImageUrl()).isEqualTo("https://signed.test/cover.jpg");
 
         verify(storageService).uploadTripCoverImage(eq(userId), any(MultipartFile.class));
-        verify(storageService, never()).deleteTripCoverImage(any());
+        verify(storageCleaner, never()).deleteTripCoverImage(any());
         verify(tripCoverImageRepository).save(any(TripCoverImage.class));
     }
 
@@ -371,7 +375,7 @@ class TripServiceTest {
         // then
         assertThat(response.getImageUrl()).isEqualTo("https://signed.test/new_cover.jpg");
 
-        verify(storageService).deleteTripCoverImage("users/1/trips/cover/old_image.jpg");
+        verify(storageCleaner).deleteTripCoverImage("users/1/trips/cover/old_image.jpg");
         verify(tripCoverImageRepository).delete(existingCoverImage);
         verify(storageService).uploadTripCoverImage(eq(userId), any(MultipartFile.class));
         verify(tripCoverImageRepository).save(any(TripCoverImage.class));
@@ -403,7 +407,7 @@ class TripServiceTest {
         tripService.deleteTripImage(userId, tripId);
 
         // then
-        verify(storageService).deleteTripCoverImage("users/1/trips/cover/test.jpg");
+        verify(storageCleaner).deleteTripCoverImage("users/1/trips/cover/test.jpg");
         verify(tripCoverImageRepository).delete(coverImage);
         assertThat(trip.getCoverImage()).isNull();
     }
@@ -424,7 +428,7 @@ class TripServiceTest {
         tripService.deleteTripImage(userId, tripId);
 
         // then
-        verify(storageService, never()).deleteTripCoverImage(any());
+        verify(storageCleaner, never()).deleteTripCoverImage(any());
         verify(tripCoverImageRepository, never()).delete(any());
     }
 
@@ -456,7 +460,7 @@ class TripServiceTest {
 
         // then
         verify(tripRepository).findById(tripId);
-        verify(storageService).deleteTripCoverImage("users/1/trips/cover/test.jpg");
+        verify(storageCleaner).deleteTripCoverImage("users/1/trips/cover/test.jpg");
         verify(tripRepository).delete(trip);
     }
 
@@ -478,7 +482,7 @@ class TripServiceTest {
 
         // then
         verify(tripRepository).findById(tripId);
-        verify(storageService, never()).deleteTripCoverImage(any());
+        verify(storageCleaner, never()).deleteTripCoverImage(any());
         verify(tripRepository).delete(trip);
     }
 
@@ -593,7 +597,7 @@ class TripServiceTest {
 
         // then (soft delete: 파일 유지, 물리 삭제 호출 없음)
         assertThat(document.isDeleted()).isTrue();
-        verify(storageService, never()).deleteTripDocument(any());
+        verify(storageCleaner, never()).deleteTripDocument(any());
         verify(tripDocumentRepository, never()).delete(document);
     }
 

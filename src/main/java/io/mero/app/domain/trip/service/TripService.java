@@ -27,6 +27,7 @@ import io.mero.app.global.enums.DocumentMimeType;
 import io.mero.app.global.enums.ImageMimeType;
 import io.mero.app.global.exception.ForbiddenException;
 import io.mero.app.global.exception.NotFoundException;
+import io.mero.app.global.service.StorageCleaner;
 import io.mero.app.global.service.StorageService;
 import io.mero.app.global.util.MessageUtil;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +52,7 @@ public class TripService {
     private final PhotoRepository photoRepository;
     private final FootprintRepository footprintRepository;
     private final StorageService storageService;
+    private final StorageCleaner storageCleaner;
     private final MessageUtil messageUtil;
 
     @Transactional
@@ -118,9 +120,9 @@ public class TripService {
         Trip trip = findTripById(tripId);
         validateOwner(userId, trip);
 
-        // 기존 이미지 삭제
+        // 기존 이미지 삭제 (스토리지 파일은 커밋 후에 지운다)
         if (trip.getCoverImage() != null) {
-            storageService.deleteTripCoverImage(trip.getCoverImage().getS3Key());
+            storageCleaner.deleteTripCoverImage(trip.getCoverImage().getS3Key());
             tripCoverImageRepository.delete(trip.getCoverImage());
             trip.removeCoverImage();
             tripCoverImageRepository.flush();
@@ -151,7 +153,7 @@ public class TripService {
         validateOwner(userId, trip);
 
         if (trip.getCoverImage() != null) {
-            storageService.deleteTripCoverImage(trip.getCoverImage().getS3Key());
+            storageCleaner.deleteTripCoverImage(trip.getCoverImage().getS3Key());
             tripCoverImageRepository.delete(trip.getCoverImage());
             trip.removeCoverImage();
         }
@@ -224,13 +226,13 @@ public class TripService {
         validateOwner(userId, trip);
 
         if (trip.getCoverImage() != null) {
-            storageService.deleteTripCoverImage(trip.getCoverImage().getS3Key());
+            storageCleaner.deleteTripCoverImage(trip.getCoverImage().getS3Key());
         }
 
         // soft delete된 문서의 파일도 함께 정리 (개별 삭제 시점엔 파일을 유지했으므로)
         List<TripDocument> documents = tripDocumentRepository.findByTripIdIncludingDeleted(tripId);
         for (TripDocument document : documents) {
-            storageService.deleteTripDocument(document.getStorageKey());
+            storageCleaner.deleteTripDocument(document.getStorageKey());
         }
 
         // soft delete된 자식은 @SQLRestriction에 가려져 cascade로 정리되지 않으므로 직접 제거.
@@ -253,11 +255,10 @@ public class TripService {
     }
 
     // native bulk delete로 제거될 사진들의 스토리지 파일을 정리 (@PreRemove가 동작하지 않으므로 수동 처리)
+    // 행이 지워지기 전에 키를 모아 두고, 실제 삭제는 커밋 후에 이뤄진다.
     private void deletePhotoStorage(List<Photo> photos) {
         for (Photo photo : photos) {
-            if (photo.getS3Key() != null && !photo.getS3Key().isEmpty()) {
-                storageService.deleteFootprintPhoto(photo.getS3Key());
-            }
+            storageCleaner.deleteFootprintPhoto(photo.getS3Key());
         }
     }
 

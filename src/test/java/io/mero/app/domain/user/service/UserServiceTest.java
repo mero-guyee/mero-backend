@@ -7,13 +7,17 @@ import io.mero.app.domain.user.dto.LoginResponse;
 import io.mero.app.domain.user.dto.NicknameChangeRequest;
 import io.mero.app.domain.user.dto.TokenRefreshRequest;
 import io.mero.app.domain.user.dto.TokenRefreshResponse;
+import io.mero.app.domain.user.dto.UserResponse;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.UserRepository;
 import io.mero.app.domain.user.service.AppleAuthService.AppleClaims;
 import io.mero.app.domain.user.service.GoogleAuthService.GoogleClaims;
+import io.mero.app.global.dto.StorageUploadResult;
 import io.mero.app.global.exception.BadRequestException;
 import io.mero.app.global.exception.DuplicateException;
 import io.mero.app.global.exception.UnauthorizedException;
+import io.mero.app.global.service.StorageCleaner;
+import io.mero.app.global.service.StorageService;
 import io.mero.app.global.util.TokenHasher;
 import io.mero.app.global.jwt.JwtTokenProvider;
 import io.mero.app.global.util.MessageUtil;
@@ -24,6 +28,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 
@@ -55,10 +61,92 @@ class UserServiceTest {
     private JwtTokenProvider jwtTokenProvider;
 
     @Mock
+    private StorageService storageService;
+
+    @Mock
+    private StorageCleaner storageCleaner;
+
+    @Mock
     private MessageUtil messageUtil;
 
     @InjectMocks
     private UserService userService;
+
+    // ===== 프로필 이미지 =====
+    // 실제 삭제 시점(커밋 이후)은 StorageCleanerTest에서 검증한다.
+
+    @Test
+    @DisplayName("프로필 이미지 교체 - 새 키로 바뀌고 이전 파일 정리를 맡긴다")
+    void 프로필_이미지_교체_성공() {
+        // given
+        long userId = 1L;
+        String previousKey = "users/1/profile/old.jpg";
+        String newKey = "users/1/profile/new.jpg";
+
+        User user = User.builder()
+                .id(userId)
+                .email("test@email.com")
+                .build();
+        user.updateProfileImageKey(previousKey);
+
+        MultipartFile image = new MockMultipartFile("image", "new.jpg", "image/jpeg", "content".getBytes());
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(storageService.uploadProfileImage(userId, image))
+                .willReturn(new StorageUploadResult(newKey, "new.jpg", 7L, "image/jpeg"));
+        given(storageService.getImageSignedUrl(newKey)).willReturn("https://signed/new.jpg");
+
+        // when
+        UserResponse response = userService.updateProfileImage(userId, image);
+
+        // then
+        assertThat(response.getProfileImage()).isEqualTo("https://signed/new.jpg");
+        assertThat(user.getProfileImageKey()).isEqualTo(newKey);
+        verify(storageCleaner).deleteProfileImage(previousKey);
+    }
+
+    @Test
+    @DisplayName("프로필 이미지 삭제 - 키를 비우고 파일 정리를 맡긴다")
+    void 프로필_이미지_삭제_성공() {
+        // given
+        long userId = 1L;
+        String storageKey = "users/1/profile/old.jpg";
+
+        User user = User.builder()
+                .id(userId)
+                .email("test@email.com")
+                .build();
+        user.updateProfileImageKey(storageKey);
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+
+        // when
+        userService.deleteProfileImage(userId);
+
+        // then
+        assertThat(user.getProfileImageKey()).isNull();
+        verify(storageCleaner).deleteProfileImage(storageKey);
+    }
+
+    @Test
+    @DisplayName("프로필 이미지 삭제 - 직접 올린 이미지가 없으면 아무것도 하지 않는다")
+    void 프로필_이미지_삭제_이미지_없으면_무시() {
+        // given
+        long userId = 1L;
+        User user = User.builder()
+                .id(userId)
+                .email("test@email.com")
+                .build();
+        user.updateProfileImage("https://google/profile.jpg");
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+
+        // when
+        userService.deleteProfileImage(userId);
+
+        // then - 소셜 이미지는 건드리지 않는다
+        assertThat(user.getProfileImageUrl()).isEqualTo("https://google/profile.jpg");
+        verify(storageCleaner, never()).deleteProfileImage(any());
+    }
 
     // ===== 토큰 재발급 =====
 

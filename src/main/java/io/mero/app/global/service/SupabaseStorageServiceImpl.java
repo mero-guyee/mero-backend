@@ -48,6 +48,13 @@ public class SupabaseStorageServiceImpl implements StorageService {
     }
 
     @Override
+    public StorageUploadResult uploadProfileImage(Long userId, MultipartFile image) {
+        validateImageFile(image);
+        String path = String.format("users/%d/profile/", userId);
+        return upload(image, path, imagesBucket);
+    }
+
+    @Override
     public List<StorageUploadResult> uploadFootprintPhotos(Long userId, Long tripId, Long footprintId,
                                                            List<MultipartFile> photos) {
         return photos.stream()
@@ -90,6 +97,11 @@ public class SupabaseStorageServiceImpl implements StorageService {
 
     @Override
     public void deleteTripCoverImage(String storageKey) {
+        deleteByKey(imagesBucket, storageKey);
+    }
+
+    @Override
+    public void deleteProfileImage(String storageKey) {
         deleteByKey(imagesBucket, storageKey);
     }
 

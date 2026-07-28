@@ -31,8 +31,13 @@ public class User extends BaseEntity {
     @Column(name = "google_id", length = 255, unique = true)
     private String googleId;
 
+    /** 소셜 로그인으로 받아온 프로필 이미지 URL */
     @Column(name = "profile_image_url", length = 500)
     private String profileImageUrl;
+
+    /** 사용자가 직접 업로드한 프로필 이미지의 스토리지 키 (있으면 소셜 이미지보다 우선) */
+    @Column(name = "profile_image_key", length = 500)
+    private String profileImageKey;
 
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
@@ -74,8 +79,13 @@ public class User extends BaseEntity {
         this.profileImageUrl = profileImageUrl;
     }
 
+    public void updateProfileImageKey(String profileImageKey) {
+        this.profileImageKey = profileImageKey;
+    }
+
+    /** 직접 올린 이미지만 지운다. 소셜 이미지가 있으면 다시 그 이미지로 돌아간다. */
     public void deleteProfileImage() {
-        this.profileImageUrl = null;
+        this.profileImageKey = null;
     }
 
     public void updateRefreshToken(String refreshToken) {

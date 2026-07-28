@@ -16,12 +16,12 @@ public class UserResponse {
     private String profileImage;
     private LocalDateTime createdAt;
 
-    public static UserResponse from(User user) {
+    public static UserResponse from(User user, String profileImage) {
         return new UserResponse(
                 user.getId(),
                 user.getEmail(),
                 user.getNickname(),
-                user.getProfileImageUrl(),
+                profileImage,
                 user.getCreatedAt()
         );
     }

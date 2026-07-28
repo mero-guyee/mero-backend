@@ -10,12 +10,16 @@ import io.mero.app.global.exception.BadRequestException;
 import io.mero.app.global.exception.DuplicateException;
 import io.mero.app.global.exception.NotFoundException;
 import io.mero.app.global.exception.UnauthorizedException;
+import io.mero.app.global.dto.StorageUploadResult;
 import io.mero.app.global.jwt.JwtTokenProvider;
+import io.mero.app.global.service.StorageCleaner;
+import io.mero.app.global.service.StorageService;
 import io.mero.app.global.util.MessageUtil;
 import io.mero.app.global.util.TokenHasher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +31,8 @@ public class UserService {
     private final AppleAuthService appleAuthService;
     private final GoogleAuthService googleAuthService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final StorageService storageService;
+    private final StorageCleaner storageCleaner;
     private final MessageUtil messageUtil;
 
     @Transactional
@@ -105,13 +111,50 @@ public class UserService {
         user.updateRefreshToken(TokenHasher.sha256(refreshToken));
 
         return new LoginResponse(user.getId(), user.getEmail(), user.getNickname(),
-                user.getProfileImageUrl(), accessToken, refreshToken, isNewUser);
+                resolveProfileImage(user), accessToken, refreshToken, isNewUser);
+    }
+
+    /** 직접 올린 이미지가 있으면 서명된 URL을, 없으면 소셜 프로필 이미지 URL을 내려 준다. */
+    private String resolveProfileImage(User user) {
+        if (user.getProfileImageKey() != null) {
+            return storageService.getImageSignedUrl(user.getProfileImageKey());
+        }
+        return user.getProfileImageUrl();
     }
 
     public UserResponse getMe(Long userId) {
-        User user = userRepository.findById(userId)
+        User user = findUser(userId);
+        return UserResponse.from(user, resolveProfileImage(user));
+    }
+
+    @Transactional
+    public UserResponse updateProfileImage(Long userId, MultipartFile image) {
+        User user = findUser(userId);
+        String previousKey = user.getProfileImageKey();
+
+        StorageUploadResult uploadResult = storageService.uploadProfileImage(userId, image);
+        user.updateProfileImageKey(uploadResult.getStorageKey());
+
+        if (previousKey != null) {
+            storageCleaner.deleteProfileImage(previousKey);
+        }
+        return UserResponse.from(user, storageService.getImageSignedUrl(uploadResult.getStorageKey()));
+    }
+
+    @Transactional
+    public void deleteProfileImage(Long userId) {
+        User user = findUser(userId);
+        String storageKey = user.getProfileImageKey();
+        if (storageKey == null) {
+            return;
+        }
+        user.deleteProfileImage();
+        storageCleaner.deleteProfileImage(storageKey);
+    }
+
+    private User findUser(Long userId) {
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(messageUtil.getMessage("error.user.notFound")));
-        return UserResponse.from(user);
     }
 
     @Transactional
