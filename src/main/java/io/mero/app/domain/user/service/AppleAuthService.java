@@ -5,6 +5,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.mero.app.global.exception.BadRequestException;
 import io.mero.app.global.jwt.JwkProvider;
+import io.mero.app.global.util.ClaimUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -49,22 +50,13 @@ public class AppleAuthService {
 
         // Apple은 최초 로그인에만 email을 내려주므로, 없는 것은 정상이다.
         // 다만 email이 있다면 그 값으로 기존 계정에 연결될 수 있으므로 인증 여부를 반드시 확인한다.
-        String email = claims.get("email", String.class);
-        if (email != null && !isEmailVerified(claims)) {
+        String email = ClaimUtils.readString(claims, "email");
+        if (email != null && !ClaimUtils.readBoolean(claims, "email_verified")) {
             log.warn("이메일이 인증되지 않은 Apple 계정의 로그인 시도: sub={}", claims.getSubject());
             throw new BadRequestException("이메일이 인증되지 않은 Apple 계정입니다");
         }
 
         return new AppleClaims(claims.getSubject(), email);
-    }
-
-    /** Apple은 email_verified를 boolean으로도, 문자열 "true"로도 내려준다. */
-    private boolean isEmailVerified(Claims claims) {
-        Object value = claims.get("email_verified");
-        if (value instanceof Boolean verified) {
-            return verified;
-        }
-        return value instanceof String verified && Boolean.parseBoolean(verified);
     }
 
     public record AppleClaims(String appleUserId, String email) {}

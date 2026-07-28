@@ -5,6 +5,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.mero.app.global.exception.BadRequestException;
 import io.mero.app.global.jwt.JwkProvider;
+import io.mero.app.global.util.ClaimUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -52,13 +53,13 @@ public class GoogleAuthService {
             throw new BadRequestException("유효하지 않은 Google 토큰입니다");
         }
 
-        String email = claims.get("email", String.class);
-        Boolean emailVerified = claims.get("email_verified", Boolean.class);
-        if (email == null || !Boolean.TRUE.equals(emailVerified)) {
+        String email = ClaimUtils.readString(claims, "email");
+        if (email == null || !ClaimUtils.readBoolean(claims, "email_verified")) {
+            log.warn("이메일이 인증되지 않은 Google 계정의 로그인 시도: sub={}", claims.getSubject());
             throw new BadRequestException("이메일이 인증되지 않은 Google 계정입니다");
         }
 
-        return new GoogleClaims(claims.getSubject(), email, claims.get("picture", String.class));
+        return new GoogleClaims(claims.getSubject(), email, ClaimUtils.readString(claims, "picture"));
     }
 
     public record GoogleClaims(String googleUserId, String email, String picture) {}
