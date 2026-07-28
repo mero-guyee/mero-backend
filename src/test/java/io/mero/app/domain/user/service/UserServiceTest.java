@@ -201,6 +201,7 @@ class UserServiceTest {
         // then
         assertThat(response.getUserId()).isEqualTo(1L);
         assertThat(response.getAccessToken()).isEqualTo("access-token");
+        assertThat(response.isNewUser()).isFalse();
         verify(userRepository, never()).save(any(User.class));
     }
 
@@ -231,6 +232,7 @@ class UserServiceTest {
         assertThat(response.getUserId()).isEqualTo(2L);
         assertThat(response.getEmail()).isEqualTo("newapple@example.com");
         assertThat(response.getNickname()).isNull();
+        assertThat(response.isNewUser()).isTrue();
         verify(userRepository).save(any(User.class));
     }
 
@@ -268,6 +270,7 @@ class UserServiceTest {
         assertThat(user.getRefreshToken()).isEqualTo(TokenHasher.sha256("refresh-token"));
         assertThat(user.getProfileImageUrl()).isEqualTo("https://lh3.googleusercontent.com/a/new");
         assertThat(response.getProfileImage()).isEqualTo("https://lh3.googleusercontent.com/a/new");
+        assertThat(response.isNewUser()).isFalse();
         verify(userRepository, never()).save(any(User.class));
         verify(userRepository, never()).findByEmail(anyString());
     }
@@ -299,6 +302,7 @@ class UserServiceTest {
         assertThat(response.getUserId()).isEqualTo(20L);
         assertThat(existing.getGoogleId()).isEqualTo("google-user-id-2");
         assertThat(existing.getProfileImageUrl()).isEqualTo("https://lh3.googleusercontent.com/a/linked");
+        assertThat(response.isNewUser()).isFalse();
         verify(userRepository, never()).save(any(User.class));
     }
 
@@ -331,6 +335,7 @@ class UserServiceTest {
         assertThat(response.getEmail()).isEqualTo("newgoogle@example.com");
         assertThat(response.getNickname()).isNull();
         assertThat(response.getProfileImage()).isEqualTo("https://lh3.googleusercontent.com/a/newuser");
+        assertThat(response.isNewUser()).isTrue();
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(captor.capture());

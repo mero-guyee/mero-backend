@@ -36,14 +36,14 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Apple 로그인", description = "Apple Identity Token으로 로그인합니다. 신규 유저는 자동으로 계정이 생성됩니다.")
+    @Operation(summary = "Apple 로그인", description = "Apple Identity Token으로 로그인합니다. 신규 유저는 자동으로 계정이 생성되며 응답의 isNewUser가 true입니다.")
     @PostMapping("/apple")
     public ResponseEntity<LoginResponse> appleLogin(@Valid @RequestBody AppleLoginRequest request) {
         LoginResponse response = userService.appleLogin(request);
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Google 로그인", description = "Google ID Token으로 로그인합니다. 신규 유저는 자동으로 계정이 생성됩니다.")
+    @Operation(summary = "Google 로그인", description = "Google ID Token으로 로그인합니다. 신규 유저는 자동으로 계정이 생성되며 응답의 isNewUser가 true입니다.")
     @PostMapping("/google")
     public ResponseEntity<LoginResponse> googleLogin(@Valid @RequestBody GoogleLoginRequest request) {
         LoginResponse response = userService.googleLogin(request);

@@ -33,70 +33,79 @@ public class UserService {
     public LoginResponse appleLogin(AppleLoginRequest request) {
         AppleClaims claims = appleAuthService.validate(request.getIdentityToken());
 
-        User user = userRepository.findByAppleId(claims.appleUserId())
-                .orElseGet(() -> {
-                    if (claims.email() != null) {
-                        return userRepository.findByEmail(claims.email())
-                                .map(existing -> {
-                                    existing.linkAppleId(claims.appleUserId());
-                                    return existing;
-                                })
-                                .orElseGet(() -> createAppleUser(claims));
-                    }
-                    throw new BadRequestException(messageUtil.getMessage("error.apple.noEmail"));
-                });
+        boolean isNewUser = false;
+        User user = userRepository.findByAppleId(claims.appleUserId()).orElse(null);
 
-        String accessToken = jwtTokenProvider.createAccessToken(user.getId());
-        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
-        user.updateRefreshToken(TokenHasher.sha256(refreshToken));
+        if (user == null) {
+            if (claims.email() == null) {
+                throw new BadRequestException(messageUtil.getMessage("error.apple.noEmail"));
+            }
+            user = userRepository.findByEmail(claims.email()).orElse(null);
+            if (user != null) {
+                user.linkAppleId(claims.appleUserId());
+            } else {
+                user = createAppleUser(claims);
+                isNewUser = true;
+            }
+        }
 
-        return new LoginResponse(user.getId(), user.getEmail(), user.getNickname(),
-                user.getProfileImageUrl(), accessToken, refreshToken);
+        return issueLoginResponse(user, isNewUser);
     }
 
     private User createAppleUser(AppleClaims claims) {
-        User user = User.builder()
+        return saveNewUser(User.builder()
                 .email(claims.email())
                 .appleId(claims.appleUserId())
-                .build();
-        User savedUser = userRepository.save(user);
-        categoryService.createDefaultCategoriesForUser(savedUser);
-        return savedUser;
+                .build());
     }
 
     @Transactional
     public LoginResponse googleLogin(GoogleLoginRequest request) {
         GoogleClaims claims = googleAuthService.validate(request.getIdToken());
 
-        User user = userRepository.findByGoogleId(claims.googleUserId())
-                .orElseGet(() -> userRepository.findByEmail(claims.email())
-                        .map(existing -> {
-                            existing.linkGoogleId(claims.googleUserId());
-                            return existing;
-                        })
-                        .orElseGet(() -> createGoogleUser(claims)));
+        boolean isNewUser = false;
+        User user = userRepository.findByGoogleId(claims.googleUserId()).orElse(null);
+
+        if (user == null) {
+            user = userRepository.findByEmail(claims.email()).orElse(null);
+            if (user != null) {
+                user.linkGoogleId(claims.googleUserId());
+            } else {
+                user = createGoogleUser(claims);
+                isNewUser = true;
+            }
+        }
 
         if (claims.picture() != null) {
             user.updateProfileImage(claims.picture());
         }
 
+        return issueLoginResponse(user, isNewUser);
+    }
+
+    private User createGoogleUser(GoogleClaims claims) {
+        return saveNewUser(User.builder()
+                .email(claims.email())
+                .googleId(claims.googleUserId())
+                .profileImageUrl(claims.picture())
+                .build());
+    }
+
+    /** 신규 가입자를 저장하고 기본 지출 카테고리를 함께 만들어 준다. */
+    private User saveNewUser(User user) {
+        User savedUser = userRepository.save(user);
+        categoryService.createDefaultCategoriesForUser(savedUser);
+        return savedUser;
+    }
+
+    /** 액세스/리프레시 토큰을 새로 발급하고 리프레시 토큰 해시를 저장한 뒤 응답을 만든다. */
+    private LoginResponse issueLoginResponse(User user, boolean isNewUser) {
         String accessToken = jwtTokenProvider.createAccessToken(user.getId());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
         user.updateRefreshToken(TokenHasher.sha256(refreshToken));
 
         return new LoginResponse(user.getId(), user.getEmail(), user.getNickname(),
-                user.getProfileImageUrl(), accessToken, refreshToken);
-    }
-
-    private User createGoogleUser(GoogleClaims claims) {
-        User user = User.builder()
-                .email(claims.email())
-                .googleId(claims.googleUserId())
-                .profileImageUrl(claims.picture())
-                .build();
-        User savedUser = userRepository.save(user);
-        categoryService.createDefaultCategoriesForUser(savedUser);
-        return savedUser;
+                user.getProfileImageUrl(), accessToken, refreshToken, isNewUser);
     }
 
     public UserResponse getMe(Long userId) {
