@@ -85,6 +85,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
     }
 
+    @ExceptionHandler(ExternalServiceException.class)
+    public ResponseEntity<ErrorResponse> handleExternalServiceException(ExternalServiceException e) {
+        log.error("ExternalServiceException: {}", e.getMessage(), e);
+        ErrorResponse errorResponse = new ErrorResponse("EXTERNAL_SERVICE_ERROR", e.getMessage());
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(errorResponse);
+    }
+
     @ExceptionHandler(FileUploadException.class)
     public ResponseEntity<ErrorResponse> handleFileUploadException(FileUploadException e) {
         log.error("FileUploadException: {}", e.getMessage());
