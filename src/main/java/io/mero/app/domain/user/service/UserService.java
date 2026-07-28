@@ -50,7 +50,8 @@ public class UserService {
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
         user.updateRefreshToken(TokenHasher.sha256(refreshToken));
 
-        return new LoginResponse(user.getId(), user.getEmail(), user.getNickname(), accessToken, refreshToken);
+        return new LoginResponse(user.getId(), user.getEmail(), user.getNickname(),
+                user.getProfileImageUrl(), accessToken, refreshToken);
     }
 
     private User createAppleUser(AppleClaims claims) {
@@ -75,17 +76,23 @@ public class UserService {
                         })
                         .orElseGet(() -> createGoogleUser(claims)));
 
+        if (claims.picture() != null) {
+            user.updateProfileImage(claims.picture());
+        }
+
         String accessToken = jwtTokenProvider.createAccessToken(user.getId());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
         user.updateRefreshToken(TokenHasher.sha256(refreshToken));
 
-        return new LoginResponse(user.getId(), user.getEmail(), user.getNickname(), accessToken, refreshToken);
+        return new LoginResponse(user.getId(), user.getEmail(), user.getNickname(),
+                user.getProfileImageUrl(), accessToken, refreshToken);
     }
 
     private User createGoogleUser(GoogleClaims claims) {
         User user = User.builder()
                 .email(claims.email())
                 .googleId(claims.googleUserId())
+                .profileImageUrl(claims.picture())
                 .build();
         User savedUser = userRepository.save(user);
         categoryService.createDefaultCategoriesForUser(savedUser);

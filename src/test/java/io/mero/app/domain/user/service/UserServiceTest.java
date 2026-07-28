@@ -20,6 +20,7 @@ import io.mero.app.global.util.MessageUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -240,13 +241,15 @@ class UserServiceTest {
     void Google_로그인_성공_기존_계정() {
         // given
         GoogleLoginRequest request = new GoogleLoginRequest();
-        GoogleClaims claims = new GoogleClaims("google-user-id-1", "google@example.com");
+        GoogleClaims claims = new GoogleClaims("google-user-id-1", "google@example.com",
+                "https://lh3.googleusercontent.com/a/new");
 
         User user = User.builder()
                 .id(10L)
                 .email("google@example.com")
                 .nickname("user-google-1")
                 .googleId("google-user-id-1")
+                .profileImageUrl("https://lh3.googleusercontent.com/a/old")
                 .build();
 
         given(googleAuthService.validate(any())).willReturn(claims);
@@ -263,6 +266,8 @@ class UserServiceTest {
         assertThat(response.getAccessToken()).isEqualTo("access-token");
         assertThat(response.getRefreshToken()).isEqualTo("refresh-token");
         assertThat(user.getRefreshToken()).isEqualTo(TokenHasher.sha256("refresh-token"));
+        assertThat(user.getProfileImageUrl()).isEqualTo("https://lh3.googleusercontent.com/a/new");
+        assertThat(response.getProfileImage()).isEqualTo("https://lh3.googleusercontent.com/a/new");
         verify(userRepository, never()).save(any(User.class));
         verify(userRepository, never()).findByEmail(anyString());
     }
@@ -272,7 +277,8 @@ class UserServiceTest {
     void Google_로그인_성공_동일_이메일_계정_연결() {
         // given
         GoogleLoginRequest request = new GoogleLoginRequest();
-        GoogleClaims claims = new GoogleClaims("google-user-id-2", "existing@example.com");
+        GoogleClaims claims = new GoogleClaims("google-user-id-2", "existing@example.com",
+                "https://lh3.googleusercontent.com/a/linked");
 
         User existing = User.builder()
                 .id(20L)
@@ -292,6 +298,7 @@ class UserServiceTest {
         // then
         assertThat(response.getUserId()).isEqualTo(20L);
         assertThat(existing.getGoogleId()).isEqualTo("google-user-id-2");
+        assertThat(existing.getProfileImageUrl()).isEqualTo("https://lh3.googleusercontent.com/a/linked");
         verify(userRepository, never()).save(any(User.class));
     }
 
@@ -300,7 +307,8 @@ class UserServiceTest {
     void Google_로그인_성공_신규_사용자() {
         // given
         GoogleLoginRequest request = new GoogleLoginRequest();
-        GoogleClaims claims = new GoogleClaims("google-user-id-new", "newgoogle@example.com");
+        GoogleClaims claims = new GoogleClaims("google-user-id-new", "newgoogle@example.com",
+                "https://lh3.googleusercontent.com/a/newuser");
 
         User newUser = User.builder()
                 .id(30L)
@@ -322,7 +330,12 @@ class UserServiceTest {
         assertThat(response.getUserId()).isEqualTo(30L);
         assertThat(response.getEmail()).isEqualTo("newgoogle@example.com");
         assertThat(response.getNickname()).isNull();
-        verify(userRepository).save(any(User.class));
+        assertThat(response.getProfileImage()).isEqualTo("https://lh3.googleusercontent.com/a/newuser");
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        assertThat(captor.getValue().getProfileImageUrl())
+                .isEqualTo("https://lh3.googleusercontent.com/a/newuser");
         verify(expenseCategoryService).createDefaultCategoriesForUser(newUser);
     }
 

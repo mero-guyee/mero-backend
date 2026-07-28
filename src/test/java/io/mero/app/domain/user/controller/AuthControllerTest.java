@@ -117,7 +117,7 @@ class AuthControllerTest {
         String body = "{\"identityToken\":\"valid.apple.token\"}";
 
         LoginResponse response = new LoginResponse(
-                2L, "apple@example.com", "user1a2b3c", "access-token", "refresh-token"
+                2L, "apple@example.com", "user1a2b3c", null, "access-token", "refresh-token"
         );
 
         given(userService.appleLogin(any(AppleLoginRequest.class))).willReturn(response);
@@ -153,7 +153,8 @@ class AuthControllerTest {
         String body = "{\"idToken\":\"valid.google.token\"}";
 
         LoginResponse response = new LoginResponse(
-                3L, "google@example.com", "user-google", "access-token", "refresh-token"
+                3L, "google@example.com", "user-google", "https://lh3.googleusercontent.com/a/pic",
+                "access-token", "refresh-token"
         );
 
         given(userService.googleLogin(any(GoogleLoginRequest.class))).willReturn(response);
@@ -166,6 +167,7 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value(3L))
                 .andExpect(jsonPath("$.email").value("google@example.com"))
+                .andExpect(jsonPath("$.profileImage").value("https://lh3.googleusercontent.com/a/pic"))
                 .andExpect(jsonPath("$.accessToken").value("access-token"))
                 .andExpect(jsonPath("$.refreshToken").value("refresh-token"));
 

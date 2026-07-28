@@ -79,7 +79,7 @@ public class GoogleAuthService {
                 throw new BadRequestException("이메일이 인증되지 않은 Google 계정입니다");
             }
 
-            return new GoogleClaims(claims.getSubject(), email);
+            return new GoogleClaims(claims.getSubject(), email, claims.get("picture", String.class));
 
         } catch (BadRequestException e) {
             throw e;
@@ -88,5 +88,5 @@ public class GoogleAuthService {
         }
     }
 
-    public record GoogleClaims(String googleUserId, String email) {}
+    public record GoogleClaims(String googleUserId, String email, String picture) {}
 }
