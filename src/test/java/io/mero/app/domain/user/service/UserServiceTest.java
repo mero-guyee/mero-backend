@@ -14,7 +14,6 @@ import io.mero.app.domain.user.service.AppleAuthService.AppleClaims;
 import io.mero.app.domain.user.service.GoogleAuthService.GoogleClaims;
 import io.mero.app.global.dto.StorageUploadResult;
 import io.mero.app.global.exception.BadRequestException;
-import io.mero.app.global.exception.DuplicateException;
 import io.mero.app.global.exception.UnauthorizedException;
 import io.mero.app.global.service.StorageCleaner;
 import io.mero.app.global.service.StorageService;
@@ -467,7 +466,6 @@ class UserServiceTest {
         NicknameChangeRequest request = mock(NicknameChangeRequest.class);
         given(request.getNickname()).willReturn("새닉네임");
 
-        given(userRepository.existsByNickname("새닉네임")).willReturn(false);
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
 
         // when
@@ -479,20 +477,26 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("닉네임 변경 실패 - 닉네임 중복")
-    void 닉네임_변경_실패_닉네임_중복() {
+    @DisplayName("닉네임 변경 성공 - 다른 사용자가 쓰는 닉네임도 허용")
+    void 닉네임_변경_성공_중복_허용() {
         // given
         Long userId = 1L;
+
+        User user = User.builder()
+                .id(userId)
+                .email("test@example.com")
+                .nickname("기존닉네임")
+                .build();
 
         NicknameChangeRequest request = mock(NicknameChangeRequest.class);
         given(request.getNickname()).willReturn("중복닉네임");
 
-        given(userRepository.existsByNickname("중복닉네임")).willReturn(true);
-        given(messageUtil.getMessage("error.duplicate.nickname")).willReturn("이미 사용 중인 닉네임입니다");
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
 
-        // when & then
-        assertThatThrownBy(() -> userService.changeNickname(userId, request))
-                .isInstanceOf(DuplicateException.class)
-                .hasMessage("이미 사용 중인 닉네임입니다");
+        // when
+        userService.changeNickname(userId, request);
+
+        // then
+        assertThat(user.getNickname()).isEqualTo("중복닉네임");
     }
 }

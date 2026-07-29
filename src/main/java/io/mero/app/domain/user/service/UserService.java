@@ -7,7 +7,6 @@ import io.mero.app.domain.user.service.GoogleAuthService.GoogleClaims;
 import io.mero.app.domain.user.entity.User;
 import io.mero.app.domain.user.repository.UserRepository;
 import io.mero.app.global.exception.BadRequestException;
-import io.mero.app.global.exception.DuplicateException;
 import io.mero.app.global.exception.NotFoundException;
 import io.mero.app.global.exception.UnauthorizedException;
 import io.mero.app.global.dto.StorageUploadResult;
@@ -159,9 +158,6 @@ public class UserService {
 
     @Transactional
     public void changeNickname(Long userId, NicknameChangeRequest request) {
-        if (userRepository.existsByNickname(request.getNickname())) {
-            throw new DuplicateException(messageUtil.getMessage("error.duplicate.nickname"));
-        }
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(messageUtil.getMessage("error.user.notFound")))
                 .updateNickname(request.getNickname());
