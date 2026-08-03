@@ -3,6 +3,7 @@ package io.mero.app.domain.expense.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mero.app.domain.expense.dto.CurrencyUsageDto;
 import io.mero.app.domain.expense.dto.ExpenseCreateRequest;
+import io.mero.app.domain.expense.dto.ExpenseFootprintLinkRequest;
 import io.mero.app.domain.expense.dto.ExpenseListResponse;
 import io.mero.app.domain.expense.dto.ExpenseResponse;
 import io.mero.app.domain.expense.dto.ExpenseUpdateRequest;
@@ -217,6 +218,68 @@ class ExpenseControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.footprintId").isEmpty())
                 .andExpect(jsonPath("$.amount").value(150));
+    }
+
+    @Test
+    @DisplayName("Footprint 연결 API 성공")
+    void linkFootprint_Success() throws Exception {
+        // given
+        ExpenseFootprintLinkRequest request = new ExpenseFootprintLinkRequest(10L);
+
+        ExpenseResponse response = new ExpenseResponse(
+                1L, "client-id-1", 1L, 10L,
+                new BigDecimal("150"), Currency.USD,
+                1L, "식비", "🍔", "#FF5733",
+                "스타벅스", LocalDate.now(), "도쿄",
+                LocalDateTime.now()
+        );
+
+        given(expenseService.linkFootprint(anyLong(), eq(1L), eq(10L)))
+                .willReturn(response);
+
+        // when & then
+        mockMvc.perform(patch("/api/trips/1/expenses/1/footprint")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.footprintId").value(10));
+    }
+
+    @Test
+    @DisplayName("Footprint 연결 API 실패 - footprintId 누락")
+    void linkFootprint_Fail_FootprintIdMissing() throws Exception {
+        // given
+        ExpenseFootprintLinkRequest request = new ExpenseFootprintLinkRequest(null);
+
+        // when & then
+        mockMvc.perform(patch("/api/trips/1/expenses/1/footprint")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("Footprint 연결 해제 API 성공")
+    void unlinkFootprint_Success() throws Exception {
+        // given
+        ExpenseResponse response = new ExpenseResponse(
+                1L, "client-id-1", 1L, null,
+                new BigDecimal("150"), Currency.USD,
+                1L, "식비", "🍔", "#FF5733",
+                "스타벅스", LocalDate.now(), "도쿄",
+                LocalDateTime.now()
+        );
+
+        given(expenseService.unlinkFootprint(anyLong(), eq(1L)))
+                .willReturn(response);
+
+        // when & then
+        mockMvc.perform(delete("/api/trips/1/expenses/1/footprint"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.footprintId").isEmpty());
     }
 
     @Test

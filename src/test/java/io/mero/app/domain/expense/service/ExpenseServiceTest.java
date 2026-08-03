@@ -618,6 +618,155 @@ class ExpenseServiceTest {
     }
 
     @Test
+    @DisplayName("Footprint 연결 성공")
+    void linkFootprint_Success() {
+        // given
+        Long userId = 1L;
+        Long expenseId = 1L;
+
+        User user = User.builder().id(userId).build();
+        Trip trip = Trip.builder()
+                .id(1L)
+                .user(user)
+                .build();
+        Footprint footprint = Footprint.builder()
+                .id(1L)
+                .trip(trip)
+                .build();
+        ExpenseCategory category = ExpenseCategory.builder()
+                .user(user)
+                .name("식비")
+                .icon("🍔")
+                .color("#FF5733")
+                .isDefault(false)
+                .displayOrder(1)
+                .build();
+        Expense expense = Expense.builder()
+                .id(expenseId)
+                .trip(trip)
+                .footprint(null)
+                .amount(new BigDecimal("100"))
+                .currency(Currency.USD)
+                .category(category)
+                .date(LocalDate.now())
+                .build();
+
+        given(expenseRepository.findById(expenseId)).willReturn(Optional.of(expense));
+        given(footprintRepository.findById(1L)).willReturn(Optional.of(footprint));
+
+        // when
+        ExpenseResponse response = expenseService.linkFootprint(userId, expenseId, 1L);
+
+        // then
+        assertThat(response.getFootprintId()).isEqualTo(1L);
+        assertThat(expense.getFootprint()).isEqualTo(footprint);
+    }
+
+    @Test
+    @DisplayName("Footprint 연결 실패 - 다른 여행의 Footprint")
+    void linkFootprint_Fail_FootprintFromDifferentTrip() {
+        // given
+        Long userId = 1L;
+        Long expenseId = 1L;
+
+        User user = User.builder().id(userId).build();
+        Trip trip1 = Trip.builder().id(1L).user(user).build();
+        Trip trip2 = Trip.builder().id(2L).user(user).build();
+        Footprint footprint = Footprint.builder()
+                .id(2L)
+                .trip(trip2)  // 다른 여행!
+                .build();
+        Expense expense = Expense.builder()
+                .id(expenseId)
+                .trip(trip1)
+                .amount(new BigDecimal("100"))
+                .currency(Currency.USD)
+                .date(LocalDate.now())
+                .build();
+
+        given(expenseRepository.findById(expenseId)).willReturn(Optional.of(expense));
+        given(footprintRepository.findById(2L)).willReturn(Optional.of(footprint));
+        given(messageUtil.getMessage("error.footprint.tripMismatch"))
+                .willReturn("같은 여행의 Footprint만 연결할 수 있습니다");
+
+        // when & then
+        assertThatThrownBy(() -> expenseService.linkFootprint(userId, expenseId, 2L))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("같은 여행의 Footprint만 연결할 수 있습니다");
+    }
+
+    @Test
+    @DisplayName("Footprint 연결 실패 - 다른 사용자의 지출")
+    void linkFootprint_Fail_Forbidden() {
+        // given
+        Long userId = 1L;
+        Long expenseId = 1L;
+
+        User owner = User.builder().id(2L).build();
+        Trip trip = Trip.builder().id(1L).user(owner).build();
+        Expense expense = Expense.builder()
+                .id(expenseId)
+                .trip(trip)
+                .amount(new BigDecimal("100"))
+                .currency(Currency.USD)
+                .date(LocalDate.now())
+                .build();
+
+        given(expenseRepository.findById(expenseId)).willReturn(Optional.of(expense));
+        given(messageUtil.getMessage("error.forbidden")).willReturn("권한이 없습니다");
+
+        // when & then
+        assertThatThrownBy(() -> expenseService.linkFootprint(userId, expenseId, 1L))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessage("권한이 없습니다");
+        verify(footprintRepository, never()).findById(any());
+    }
+
+    @Test
+    @DisplayName("Footprint 연결 해제 성공")
+    void unlinkFootprint_Success() {
+        // given
+        Long userId = 1L;
+        Long expenseId = 1L;
+
+        User user = User.builder().id(userId).build();
+        Trip trip = Trip.builder()
+                .id(1L)
+                .user(user)
+                .build();
+        Footprint footprint = Footprint.builder()
+                .id(1L)
+                .trip(trip)
+                .build();
+        ExpenseCategory category = ExpenseCategory.builder()
+                .user(user)
+                .name("식비")
+                .icon("🍔")
+                .color("#FF5733")
+                .isDefault(false)
+                .displayOrder(1)
+                .build();
+        Expense expense = Expense.builder()
+                .id(expenseId)
+                .trip(trip)
+                .footprint(footprint)  // 처음엔 있음
+                .amount(new BigDecimal("100"))
+                .currency(Currency.USD)
+                .category(category)
+                .date(LocalDate.now())
+                .build();
+
+        given(expenseRepository.findById(expenseId)).willReturn(Optional.of(expense));
+
+        // when
+        ExpenseResponse response = expenseService.unlinkFootprint(userId, expenseId);
+
+        // then
+        assertThat(response.getFootprintId()).isNull();
+        assertThat(expense.getFootprint()).isNull();
+    }
+
+    @Test
     @DisplayName("지출 삭제 성공")
     void deleteExpense_Success() {
         // given

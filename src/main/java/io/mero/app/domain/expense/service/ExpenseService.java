@@ -174,6 +174,28 @@ public class ExpenseService {
     }
 
     @Transactional
+    public ExpenseResponse linkFootprint(Long userId, Long expenseId, Long footprintId) {
+        Expense expense = findExpenseById(expenseId);
+        validateOwner(expense.getTrip(), userId);
+
+        Footprint footprint = findFootprintById(footprintId);
+        validateFootprintBelongsToTrip(footprint, expense.getTrip());
+        expense.linkToFootprint(footprint);
+
+        return ExpenseResponse.from(expense);
+    }
+
+    @Transactional
+    public ExpenseResponse unlinkFootprint(Long userId, Long expenseId) {
+        Expense expense = findExpenseById(expenseId);
+        validateOwner(expense.getTrip(), userId);
+
+        expense.unlinkFromFootprint();
+
+        return ExpenseResponse.from(expense);
+    }
+
+    @Transactional
     public void deleteExpense(Long userId, Long expenseId) {
         Expense expense = findExpenseById(expenseId);
         validateOwner(expense.getTrip(), userId);
