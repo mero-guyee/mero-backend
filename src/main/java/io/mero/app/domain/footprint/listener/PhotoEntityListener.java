@@ -25,9 +25,9 @@ public class PhotoEntityListener {
     @PreRemove
     public void preRemove(Photo photo) {
         if (storageCleaner == null) {
-            log.warn("StorageCleaner를 사용할 수 없어 파일 삭제를 건너뜁니다: {}", photo.getS3Key());
+            log.warn("StorageCleaner를 사용할 수 없어 파일 삭제를 건너뜁니다: {}", photo.getStorageKey());
             return;
         }
-        storageCleaner.deleteFootprintPhoto(photo.getS3Key());
+        storageCleaner.deleteFootprintPhoto(photo.getStorageKey());
     }
 }

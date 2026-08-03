@@ -82,7 +82,7 @@ public class UserService {
         }
 
         if (claims.picture() != null) {
-            user.updateProfileImage(claims.picture());
+            user.updateSocialProfileImage(claims.picture());
         }
 
         return issueLoginResponse(user, isNewUser);
@@ -92,7 +92,7 @@ public class UserService {
         return saveNewUser(User.builder()
                 .email(claims.email())
                 .googleId(claims.googleUserId())
-                .profileImageUrl(claims.picture())
+                .socialProfileImageUrl(claims.picture())
                 .build());
     }
 
@@ -118,7 +118,7 @@ public class UserService {
         if (user.getProfileImageKey() != null) {
             return storageService.getImageSignedUrl(user.getProfileImageKey());
         }
-        return user.getProfileImageUrl();
+        return user.getSocialProfileImageUrl();
     }
 
     public UserResponse getMe(Long userId) {

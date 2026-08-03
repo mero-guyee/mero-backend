@@ -22,8 +22,9 @@ public class TripCoverImage extends BaseEntity {
     @JoinColumn(name = "trip_id", nullable = false)
     private Trip trip;
 
+    /** 컬럼명 s3_key는 S3에서 옮겨오기 전 이름이라 그대로 두었다. 값은 스토리지 구현체와 무관한 객체 키다. */
     @Column(name = "s3_key", nullable = false)
-    private String s3Key;
+    private String storageKey;
 
     @Column(name = "original_filename", length = 500)
     private String originalFilename;
@@ -42,11 +43,11 @@ public class TripCoverImage extends BaseEntity {
     private Integer height;
 
     @Builder
-    public TripCoverImage(Trip trip, String s3Key,
+    public TripCoverImage(Trip trip, String storageKey,
                           String originalFilename, Long fileSize, ImageMimeType mimeType,
                           Integer width, Integer height) {
         this.trip = trip;
-        this.s3Key = s3Key;
+        this.storageKey = storageKey;
         this.originalFilename = originalFilename;
         this.fileSize = fileSize;
         this.mimeType = mimeType;
@@ -54,9 +55,9 @@ public class TripCoverImage extends BaseEntity {
         this.height = height;
     }
 
-    public void update(String s3Key, String originalFilename,
+    public void update(String storageKey, String originalFilename,
                        Long fileSize, ImageMimeType mimeType, Integer width, Integer height) {
-        this.s3Key = s3Key;
+        this.storageKey = storageKey;
         this.originalFilename = originalFilename;
         this.fileSize = fileSize;
         this.mimeType = mimeType;

@@ -33,7 +33,7 @@ public class User extends BaseEntity {
 
     /** 소셜 로그인으로 받아온 프로필 이미지 URL */
     @Column(name = "profile_image_url", length = 500)
-    private String profileImageUrl;
+    private String socialProfileImageUrl;
 
     /** 사용자가 직접 업로드한 프로필 이미지의 스토리지 키 (있으면 소셜 이미지보다 우선) */
     @Column(name = "profile_image_key", length = 500)
@@ -47,11 +47,11 @@ public class User extends BaseEntity {
 
     @Builder
     public User(Long id, String email, String nickname,
-                String profileImageUrl, String appleId, String googleId) {
+                String socialProfileImageUrl, String appleId, String googleId) {
         this.id = id;
         this.email = email;
         this.nickname = nickname;
-        this.profileImageUrl = profileImageUrl;
+        this.socialProfileImageUrl = socialProfileImageUrl;
         this.appleId = appleId;
         this.googleId = googleId;
     }
@@ -75,8 +75,8 @@ public class User extends BaseEntity {
         this.nickname = nickname;
     }
 
-    public void updateProfileImage(String profileImageUrl) {
-        this.profileImageUrl = profileImageUrl;
+    public void updateSocialProfileImage(String socialProfileImageUrl) {
+        this.socialProfileImageUrl = socialProfileImageUrl;
     }
 
     public void updateProfileImageKey(String profileImageKey) {

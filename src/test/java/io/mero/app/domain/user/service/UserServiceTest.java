@@ -135,7 +135,7 @@ class UserServiceTest {
                 .id(userId)
                 .email("test@email.com")
                 .build();
-        user.updateProfileImage("https://google/profile.jpg");
+        user.updateSocialProfileImage("https://google/profile.jpg");
 
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
 
@@ -143,7 +143,7 @@ class UserServiceTest {
         userService.deleteProfileImage(userId);
 
         // then - 소셜 이미지는 건드리지 않는다
-        assertThat(user.getProfileImageUrl()).isEqualTo("https://google/profile.jpg");
+        assertThat(user.getSocialProfileImageUrl()).isEqualTo("https://google/profile.jpg");
         verify(storageCleaner, never()).deleteProfileImage(any());
     }
 
@@ -338,7 +338,7 @@ class UserServiceTest {
                 .email("google@example.com")
                 .nickname("user-google-1")
                 .googleId("google-user-id-1")
-                .profileImageUrl("https://lh3.googleusercontent.com/a/old")
+                .socialProfileImageUrl("https://lh3.googleusercontent.com/a/old")
                 .build();
 
         given(googleAuthService.validate(any())).willReturn(claims);
@@ -355,7 +355,7 @@ class UserServiceTest {
         assertThat(response.getAccessToken()).isEqualTo("access-token");
         assertThat(response.getRefreshToken()).isEqualTo("refresh-token");
         assertThat(user.getRefreshToken()).isEqualTo(TokenHasher.sha256("refresh-token"));
-        assertThat(user.getProfileImageUrl()).isEqualTo("https://lh3.googleusercontent.com/a/new");
+        assertThat(user.getSocialProfileImageUrl()).isEqualTo("https://lh3.googleusercontent.com/a/new");
         assertThat(response.getProfileImage()).isEqualTo("https://lh3.googleusercontent.com/a/new");
         assertThat(response.isNewUser()).isFalse();
         verify(userRepository, never()).save(any(User.class));
@@ -388,7 +388,7 @@ class UserServiceTest {
         // then
         assertThat(response.getUserId()).isEqualTo(20L);
         assertThat(existing.getGoogleId()).isEqualTo("google-user-id-2");
-        assertThat(existing.getProfileImageUrl()).isEqualTo("https://lh3.googleusercontent.com/a/linked");
+        assertThat(existing.getSocialProfileImageUrl()).isEqualTo("https://lh3.googleusercontent.com/a/linked");
         assertThat(response.isNewUser()).isFalse();
         verify(userRepository, never()).save(any(User.class));
     }
@@ -426,7 +426,7 @@ class UserServiceTest {
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(captor.capture());
-        assertThat(captor.getValue().getProfileImageUrl())
+        assertThat(captor.getValue().getSocialProfileImageUrl())
                 .isEqualTo("https://lh3.googleusercontent.com/a/newuser");
         verify(expenseCategoryService).createDefaultCategoriesForUser(newUser);
     }

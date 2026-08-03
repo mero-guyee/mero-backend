@@ -158,7 +158,7 @@ public class FootprintService {
     }
 
     private PhotoResponse toPhotoResponse(Photo photo) {
-        return PhotoResponse.from(photo, storageService.getImageSignedUrl(photo.getS3Key()));
+        return PhotoResponse.from(photo, storageService.getImageSignedUrl(photo.getStorageKey()));
     }
 
     private Trip findTripById(Long tripId) {
@@ -215,7 +215,7 @@ public class FootprintService {
         Photo newPhoto = Photo.builder()
                 .footprint(footprint)
                 .clientId(clientId)
-                .s3Key(uploadResult.getStorageKey())
+                .storageKey(uploadResult.getStorageKey())
                 .originalFilename(uploadResult.getOriginalFilename())
                 .fileSize(uploadResult.getFileSize())
                 .mimeType(ImageMimeType.fromMimeType(uploadResult.getMimeType()))

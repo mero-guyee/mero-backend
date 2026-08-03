@@ -28,11 +28,8 @@ public class TripDocument extends BaseEntity {
     @Column(nullable = false)
     private String originalFileName;
 
-    @Column(nullable = false)
-    private String storedFileName;
-
-    @Column(name = "local_file_path", length = 500)
-    private String localFilePath;
+    @Column(name = "stored_file_name", nullable = false)
+    private String storageKey;
 
     @Column(nullable = false)
     private Long fileSize;
@@ -50,18 +47,14 @@ public class TripDocument extends BaseEntity {
 
     @Builder
     public TripDocument(Trip trip, String originalFileName,
-                        String storedFileName,
+                        String storageKey,
                         Long fileSize, DocumentMimeType contentType, String clientId) {
         this.trip = trip;
         this.originalFileName = originalFileName;
-        this.storedFileName = storedFileName;
+        this.storageKey = storageKey;
         this.fileSize = fileSize;
         this.contentType = contentType;
         this.uploadStatus = UploadStatus.COMPLETED;
         this.clientId = clientId;
-    }
-
-    public String getStorageKey() {
-        return storedFileName;
     }
 }

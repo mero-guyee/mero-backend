@@ -337,7 +337,7 @@ class TripServiceTest {
         // 기존 커버 이미지 설정
         TripCoverImage existingCoverImage = TripCoverImage.builder()
                 .trip(trip)
-                .s3Key("users/1/trips/cover/old_image.jpg")
+                .storageKey("users/1/trips/cover/old_image.jpg")
                 .originalFilename("old_image.jpg")
                 .fileSize(100L)
                 .mimeType(ImageMimeType.JPEG)
@@ -394,7 +394,7 @@ class TripServiceTest {
         // 커버 이미지 설정
         TripCoverImage coverImage = TripCoverImage.builder()
                 .trip(trip)
-                .s3Key("users/1/trips/cover/test.jpg")
+                .storageKey("users/1/trips/cover/test.jpg")
                 .originalFilename("test.jpg")
                 .fileSize(100L)
                 .mimeType(ImageMimeType.JPEG)
@@ -445,7 +445,7 @@ class TripServiceTest {
         // 커버 이미지 설정
         TripCoverImage coverImage = TripCoverImage.builder()
                 .trip(trip)
-                .s3Key("users/1/trips/cover/test.jpg")
+                .storageKey("users/1/trips/cover/test.jpg")
                 .originalFilename("test.jpg")
                 .fileSize(100L)
                 .mimeType(ImageMimeType.JPEG)
@@ -501,7 +501,7 @@ class TripServiceTest {
         TripDocument document = TripDocument.builder()
                 .trip(trip)
                 .originalFileName("ticket.pdf")
-                .storedFileName("users/1/trips/1/documents/ticket.pdf")
+                .storageKey("users/1/trips/1/documents/ticket.pdf")
                 .fileSize(11L)
                 .contentType(DocumentMimeType.PDF)
                 .build();
@@ -545,7 +545,7 @@ class TripServiceTest {
         TripDocument document = TripDocument.builder()
                 .trip(trip)
                 .originalFileName("ticket.pdf")
-                .storedFileName("users/1/trips/1/documents/ticket.pdf")
+                .storageKey("users/1/trips/1/documents/ticket.pdf")
                 .fileSize(11L)
                 .contentType(DocumentMimeType.PDF)
                 .build();
@@ -584,7 +584,7 @@ class TripServiceTest {
         TripDocument document = TripDocument.builder()
                 .trip(trip)
                 .originalFileName("ticket.pdf")
-                .storedFileName("users/1/trips/1/documents/ticket.pdf")
+                .storageKey("users/1/trips/1/documents/ticket.pdf")
                 .fileSize(11L)
                 .contentType(DocumentMimeType.PDF)
                 .build();

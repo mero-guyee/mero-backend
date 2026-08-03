@@ -122,7 +122,7 @@ public class TripService {
 
         // 기존 이미지 삭제 (스토리지 파일은 커밋 후에 지운다)
         if (trip.getCoverImage() != null) {
-            storageCleaner.deleteTripCoverImage(trip.getCoverImage().getS3Key());
+            storageCleaner.deleteTripCoverImage(trip.getCoverImage().getStorageKey());
             tripCoverImageRepository.delete(trip.getCoverImage());
             trip.removeCoverImage();
             tripCoverImageRepository.flush();
@@ -138,7 +138,7 @@ public class TripService {
         StorageUploadResult uploadResult = storageService.uploadTripCoverImage(userId, image);
         TripCoverImage coverImage = TripCoverImage.builder()
                 .trip(trip)
-                .s3Key(uploadResult.getStorageKey())
+                .storageKey(uploadResult.getStorageKey())
                 .originalFilename(uploadResult.getOriginalFilename())
                 .fileSize(uploadResult.getFileSize())
                 .mimeType(ImageMimeType.fromMimeType(uploadResult.getMimeType()))
@@ -153,7 +153,7 @@ public class TripService {
         validateOwner(userId, trip);
 
         if (trip.getCoverImage() != null) {
-            storageCleaner.deleteTripCoverImage(trip.getCoverImage().getS3Key());
+            storageCleaner.deleteTripCoverImage(trip.getCoverImage().getStorageKey());
             tripCoverImageRepository.delete(trip.getCoverImage());
             trip.removeCoverImage();
         }
@@ -193,7 +193,7 @@ public class TripService {
                 .trip(trip)
                 .clientId(clientId)
                 .originalFileName(uploadResult.getOriginalFilename())
-                .storedFileName(uploadResult.getStorageKey())
+                .storageKey(uploadResult.getStorageKey())
                 .fileSize(uploadResult.getFileSize())
                 .contentType(DocumentMimeType.fromMimeType(uploadResult.getMimeType()))
                 .build();
@@ -226,7 +226,7 @@ public class TripService {
         validateOwner(userId, trip);
 
         if (trip.getCoverImage() != null) {
-            storageCleaner.deleteTripCoverImage(trip.getCoverImage().getS3Key());
+            storageCleaner.deleteTripCoverImage(trip.getCoverImage().getStorageKey());
         }
 
         // soft delete된 문서의 파일도 함께 정리 (개별 삭제 시점엔 파일을 유지했으므로)
@@ -258,7 +258,7 @@ public class TripService {
     // 행이 지워지기 전에 키를 모아 두고, 실제 삭제는 커밋 후에 이뤄진다.
     private void deletePhotoStorage(List<Photo> photos) {
         for (Photo photo : photos) {
-            storageCleaner.deleteFootprintPhoto(photo.getS3Key());
+            storageCleaner.deleteFootprintPhoto(photo.getStorageKey());
         }
     }
 
@@ -268,7 +268,7 @@ public class TripService {
 
     private String coverSignedUrl(Trip trip) {
         TripCoverImage cover = trip.getCoverImage();
-        return cover != null ? storageService.getImageSignedUrl(cover.getS3Key()) : null;
+        return cover != null ? storageService.getImageSignedUrl(cover.getStorageKey()) : null;
     }
 
     private TripDocumentResponse toDocumentResponse(TripDocument document) {

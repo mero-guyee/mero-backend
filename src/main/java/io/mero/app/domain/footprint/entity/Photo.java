@@ -25,11 +25,9 @@ public class Photo extends BaseEntity {
     @JoinColumn(name = "footprint_id", nullable = false)
     private Footprint footprint;
 
+    /** 컬럼명 s3_key는 S3에서 옮겨오기 전 이름이라 그대로 두었다. 값은 스토리지 구현체와 무관한 객체 키다. */
     @Column(name = "s3_key", nullable = false)
-    private String s3Key;
-
-    @Column(name = "local_file_path", length = 500)
-    private String localFilePath;
+    private String storageKey;
 
     @Column(name = "original_filename", length = 500)
     private String originalFilename;
@@ -58,11 +56,11 @@ public class Photo extends BaseEntity {
     private String clientId;
 
     @Builder
-    public Photo(Footprint footprint, String s3Key,
+    public Photo(Footprint footprint, String storageKey,
                  String originalFilename, Long fileSize, ImageMimeType mimeType,
                  Integer width, Integer height, Integer orderIndex, String clientId) {
         this.footprint = footprint;
-        this.s3Key = s3Key;
+        this.storageKey = storageKey;
         this.originalFilename = originalFilename;
         this.fileSize = fileSize;
         this.mimeType = mimeType;
@@ -73,9 +71,9 @@ public class Photo extends BaseEntity {
         this.clientId = clientId;
     }
 
-    public void update(String s3Key, String originalFilename,
+    public void update(String storageKey, String originalFilename,
                        Long fileSize, ImageMimeType mimeType, Integer width, Integer height) {
-        this.s3Key = s3Key;
+        this.storageKey = storageKey;
         this.originalFilename = originalFilename;
         this.fileSize = fileSize;
         this.mimeType = mimeType;
