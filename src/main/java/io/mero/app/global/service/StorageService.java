@@ -15,7 +15,6 @@ public interface StorageService {
 
     List<StorageUploadResult> uploadFootprintPhotos(Long userId, Long tripId, Long footprintId, List<MultipartFile> photos);
     void deleteFootprintPhoto(String storageKey);
-    void deleteFootprintPhotos(List<String> storageKeys);
 
     StorageUploadResult uploadTripDocument(Long userId, Long tripId, MultipartFile document);
     void deleteTripDocument(String storageKey);

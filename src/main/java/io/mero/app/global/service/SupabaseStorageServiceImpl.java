@@ -114,11 +114,6 @@ public class SupabaseStorageServiceImpl implements StorageService {
     }
 
     @Override
-    public void deleteFootprintPhotos(List<String> storageKeys) {
-        storageKeys.forEach(key -> deleteByKey(imagesBucket, key));
-    }
-
-    @Override
     public void deleteTripDocument(String storageKey) {
         deleteByKey(docsBucket, storageKey);
     }

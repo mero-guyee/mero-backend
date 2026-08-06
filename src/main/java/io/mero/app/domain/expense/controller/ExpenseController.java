@@ -1,7 +1,6 @@
 package io.mero.app.domain.expense.controller;
 
 import io.mero.app.domain.expense.dto.ExpenseCreateRequest;
-import io.mero.app.domain.expense.dto.ExpenseFootprintLinkRequest;
 import io.mero.app.domain.expense.dto.ExpenseListResponse;
 import io.mero.app.domain.expense.dto.ExpenseResponse;
 import io.mero.app.domain.expense.dto.ExpenseUpdateRequest;
@@ -59,12 +58,12 @@ public class ExpenseController {
     }
 
     @Operation(summary = "경비-발자취 연결", description = "경비에 발자취를 연결합니다 (같은 여행의 발자취만 가능)")
-    @PatchMapping("/{expenseId}/footprint")
+    @PatchMapping("/{expenseId}/footprint/{footprintId}")
     public ResponseEntity<ExpenseResponse> linkFootprint(
             @PathVariable Long expenseId,
-            @Valid @RequestBody ExpenseFootprintLinkRequest request) {
+            @PathVariable Long footprintId) {
         Long userId = SecurityUtil.getCurrentUserId();
-        ExpenseResponse response = expenseService.linkFootprint(userId, expenseId, request.getFootprintId());
+        ExpenseResponse response = expenseService.linkFootprint(userId, expenseId, footprintId);
         return ResponseEntity.ok(response);
     }
 

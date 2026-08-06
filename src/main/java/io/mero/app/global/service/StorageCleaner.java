@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -34,10 +33,6 @@ public class StorageCleaner {
 
     public void deleteFootprintPhoto(String storageKey) {
         runAfterCommit(storageKey, storageService::deleteFootprintPhoto);
-    }
-
-    public void deleteFootprintPhotos(List<String> storageKeys) {
-        storageKeys.forEach(this::deleteFootprintPhoto);
     }
 
     private void runAfterCommit(String storageKey, Consumer<String> deleteAction) {
