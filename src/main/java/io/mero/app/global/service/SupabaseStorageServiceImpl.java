@@ -1,6 +1,7 @@
 package io.mero.app.global.service;
 
 import io.mero.app.global.dto.StorageUploadResult;
+import io.mero.app.global.enums.DocumentMimeType;
 import io.mero.app.global.exception.FileDeleteException;
 import io.mero.app.global.exception.FileUploadException;
 import io.mero.app.global.exception.InvalidFileException;
@@ -27,6 +28,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class SupabaseStorageServiceImpl implements StorageService {
+
+    private static final long MAX_FILE_SIZE = 20 * 1024 * 1024;
 
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
@@ -171,23 +174,25 @@ public class SupabaseStorageServiceImpl implements StorageService {
     }
 
     private void validateImageFile(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new InvalidFileException("파일이 비어있습니다");
-        }
+        validateFileSize(file);
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
             throw new InvalidFileException("이미지 파일만 업로드 가능합니다");
         }
-        if (file.getSize() > 10 * 1024 * 1024) {
-            throw new InvalidFileException("파일 크기는 10MB를 초과할 수 없습니다");
-        }
     }
 
     private void validateDocumentFile(MultipartFile file) {
+        validateFileSize(file);
+        if (!DocumentMimeType.isSupported(file.getContentType())) {
+            throw new InvalidFileException("PDF, JPG, PNG 파일만 업로드 가능합니다");
+        }
+    }
+
+    private void validateFileSize(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new InvalidFileException("파일이 비어있습니다");
         }
-        if (file.getSize() > 20 * 1024 * 1024) {
+        if (file.getSize() > MAX_FILE_SIZE) {
             throw new InvalidFileException("파일 크기는 20MB를 초과할 수 없습니다");
         }
     }
