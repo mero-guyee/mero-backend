@@ -20,7 +20,6 @@ public class AppleAuthService {
 
     private static final String APPLE_KEYS_URL = "https://appleid.apple.com/auth/keys";
     private static final String APPLE_ISSUER = "https://appleid.apple.com";
-    private static final String PROVIDER_NAME = "Apple";
 
     @Value("${apple.bundle-id}")
     private String bundleId;
@@ -28,7 +27,7 @@ public class AppleAuthService {
     private final JwkProvider jwkProvider;
 
     public AppleClaims validate(String identityToken) {
-        PublicKey publicKey = jwkProvider.getPublicKeyFor(PROVIDER_NAME, APPLE_KEYS_URL, identityToken);
+        PublicKey publicKey = jwkProvider.getPublicKeyFor(APPLE_KEYS_URL, identityToken);
 
         Claims claims;
         try {
@@ -50,7 +49,7 @@ public class AppleAuthService {
 
         // Apple은 최초 로그인에만 email을 내려주므로, 없는 것은 정상이다.
         // 다만 email이 있다면 그 값으로 기존 계정에 연결될 수 있으므로 인증 여부를 반드시 확인한다.
-        String email = ClaimUtils.readString(claims, "email");
+        String email = claims.get("email", String.class);
         if (email != null && !ClaimUtils.readBoolean(claims, "email_verified")) {
             log.warn("이메일이 인증되지 않은 Apple 계정의 로그인 시도: sub={}", claims.getSubject());
             throw new BadRequestException("이메일이 인증되지 않은 Apple 계정입니다");

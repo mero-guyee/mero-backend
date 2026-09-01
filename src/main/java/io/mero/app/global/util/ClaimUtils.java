@@ -22,10 +22,4 @@ public final class ClaimUtils {
         }
         return value instanceof String stringValue && Boolean.parseBoolean(stringValue);
     }
-
-    /** 문자열 클레임을 읽는다. 없거나 문자열이 아니면 null. */
-    public static String readString(Claims claims, String name) {
-        Object value = claims.get(name);
-        return value instanceof String stringValue ? stringValue : null;
-    }
 }

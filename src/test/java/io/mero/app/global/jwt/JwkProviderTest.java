@@ -8,7 +8,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -19,6 +18,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
+import java.time.Duration;
 import java.util.Base64;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,7 +38,6 @@ class JwkProviderTest {
     @Spy
     private ObjectMapper objectMapper = new ObjectMapper();
 
-    @InjectMocks
     private JwkProvider jwkProvider;
 
     private KeyPair keyPair;
@@ -46,6 +45,8 @@ class JwkProviderTest {
     @BeforeEach
     void setUp() throws Exception {
         keyPair = KeyPairGenerator.getInstance("RSA").generateKeyPair();
+        // 재조회 간격은 각 테스트가 정한다. 기본은 0이라 로테이션 경로가 바로 동작한다.
+        jwkProvider = new JwkProvider(restTemplate, objectMapper, Duration.ZERO);
     }
 
     @Test
@@ -55,7 +56,7 @@ class JwkProviderTest {
         given(restTemplate.getForObject(JWKS_URL, String.class)).willReturn(jwks("kid-1", keyPair));
 
         // when
-        PublicKey key = jwkProvider.getPublicKeyFor("Test", JWKS_URL, token("kid-1", keyPair));
+        PublicKey key = jwkProvider.getPublicKeyFor(JWKS_URL, token("kid-1", keyPair));
 
         // then
         assertThat(key).isEqualTo(keyPair.getPublic());
@@ -69,9 +70,9 @@ class JwkProviderTest {
         String token = token("kid-1", keyPair);
 
         // when
-        jwkProvider.getPublicKeyFor("Test", JWKS_URL, token);
-        jwkProvider.getPublicKeyFor("Test", JWKS_URL, token);
-        jwkProvider.getPublicKeyFor("Test", JWKS_URL, token);
+        jwkProvider.getPublicKeyFor(JWKS_URL, token);
+        jwkProvider.getPublicKeyFor(JWKS_URL, token);
+        jwkProvider.getPublicKeyFor(JWKS_URL, token);
 
         // then
         verify(restTemplate, times(1)).getForObject(JWKS_URL, String.class);
@@ -86,12 +87,27 @@ class JwkProviderTest {
                 .willReturn(jwks("kid-1", keyPair), jwks("kid-2", rotated));
 
         // when
-        jwkProvider.getPublicKeyFor("Test", JWKS_URL, token("kid-1", keyPair));
-        PublicKey key = jwkProvider.getPublicKeyFor("Test", JWKS_URL, token("kid-2", rotated));
+        jwkProvider.getPublicKeyFor(JWKS_URL, token("kid-1", keyPair));
+        PublicKey key = jwkProvider.getPublicKeyFor(JWKS_URL, token("kid-2", rotated));
 
         // then
         assertThat(key).isEqualTo(rotated.getPublic());
         verify(restTemplate, times(2)).getForObject(JWKS_URL, String.class);
+    }
+
+    @Test
+    @DisplayName("최소 간격 안에 모르는 kid가 다시 오면 JWKS를 재조회하지 않는다")
+    void 최소_간격_안에서는_재조회하지_않음() {
+        // given
+        jwkProvider = new JwkProvider(restTemplate, objectMapper, Duration.ofMinutes(1));
+        given(restTemplate.getForObject(JWKS_URL, String.class)).willReturn(jwks("kid-1", keyPair));
+        jwkProvider.getPublicKeyFor(JWKS_URL, token("kid-1", keyPair));
+
+        // when & then
+        assertThatThrownBy(() -> jwkProvider.getPublicKeyFor(JWKS_URL, token("unknown-kid", keyPair)))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("공개키를 찾을 수 없습니다");
+        verify(restTemplate, times(1)).getForObject(JWKS_URL, String.class);
     }
 
     @Test
@@ -101,7 +117,7 @@ class JwkProviderTest {
         given(restTemplate.getForObject(JWKS_URL, String.class)).willReturn(jwks("kid-1", keyPair));
 
         // when & then
-        assertThatThrownBy(() -> jwkProvider.getPublicKeyFor("Test", JWKS_URL, token("unknown-kid", keyPair)))
+        assertThatThrownBy(() -> jwkProvider.getPublicKeyFor(JWKS_URL, token("unknown-kid", keyPair)))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("공개키를 찾을 수 없습니다");
     }
@@ -114,7 +130,7 @@ class JwkProviderTest {
                 .willThrow(new ResourceAccessException("connection refused"));
 
         // when & then
-        assertThatThrownBy(() -> jwkProvider.getPublicKeyFor("Test", JWKS_URL, token("kid-1", keyPair)))
+        assertThatThrownBy(() -> jwkProvider.getPublicKeyFor(JWKS_URL, token("kid-1", keyPair)))
                 .isInstanceOf(ExternalServiceException.class)
                 .hasMessageContaining("공개키를 가져오지 못했습니다");
     }
@@ -129,9 +145,9 @@ class JwkProviderTest {
                 .compact();
 
         // when & then
-        assertThatThrownBy(() -> jwkProvider.getPublicKeyFor("Test", JWKS_URL, tokenWithoutKid))
+        assertThatThrownBy(() -> jwkProvider.getPublicKeyFor(JWKS_URL, tokenWithoutKid))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("유효하지 않은 Test 토큰입니다");
+                .hasMessageContaining("유효하지 않은 토큰입니다");
     }
 
     private String token(String kid, KeyPair keyPair) {

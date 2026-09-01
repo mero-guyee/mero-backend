@@ -20,7 +20,6 @@ import java.util.Date;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,7 +40,7 @@ class AppleAuthServiceTest {
     void setUp() throws Exception {
         keyPair = KeyPairGenerator.getInstance("RSA").generateKeyPair();
         ReflectionTestUtils.setField(appleAuthService, "bundleId", BUNDLE_ID);
-        given(jwkProvider.getPublicKeyFor(eq("Apple"), any(), any())).willReturn(keyPair.getPublic());
+        given(jwkProvider.getPublicKeyFor(any(), any())).willReturn(keyPair.getPublic());
     }
 
     @Test

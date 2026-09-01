@@ -21,7 +21,6 @@ import java.util.Set;
 public class GoogleAuthService {
 
     private static final String GOOGLE_KEYS_URL = "https://www.googleapis.com/oauth2/v3/certs";
-    private static final String PROVIDER_NAME = "Google";
     private static final Set<String> GOOGLE_ISSUERS = Set.of(
             "https://accounts.google.com",
             "accounts.google.com"
@@ -33,7 +32,7 @@ public class GoogleAuthService {
     private final JwkProvider jwkProvider;
 
     public GoogleClaims validate(String idToken) {
-        PublicKey publicKey = jwkProvider.getPublicKeyFor(PROVIDER_NAME, GOOGLE_KEYS_URL, idToken);
+        PublicKey publicKey = jwkProvider.getPublicKeyFor(GOOGLE_KEYS_URL, idToken);
 
         Claims claims;
         try {
@@ -53,13 +52,13 @@ public class GoogleAuthService {
             throw new BadRequestException("유효하지 않은 Google 토큰입니다");
         }
 
-        String email = ClaimUtils.readString(claims, "email");
+        String email = claims.get("email", String.class);
         if (email == null || !ClaimUtils.readBoolean(claims, "email_verified")) {
             log.warn("이메일이 인증되지 않은 Google 계정의 로그인 시도: sub={}", claims.getSubject());
             throw new BadRequestException("이메일이 인증되지 않은 Google 계정입니다");
         }
 
-        return new GoogleClaims(claims.getSubject(), email, ClaimUtils.readString(claims, "picture"));
+        return new GoogleClaims(claims.getSubject(), email, claims.get("picture", String.class));
     }
 
     public record GoogleClaims(String googleUserId, String email, String picture) {}

@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mero.app.global.exception.BadRequestException;
 import io.mero.app.global.exception.ExternalServiceException;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -25,53 +25,68 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 소셜 로그인 제공자의 JWKS 엔드포인트에서 RSA 공개키를 가져온다.
  *
- * <p>공개키는 자주 바뀌지 않으므로 TTL 동안 메모리에 캐시한다. 캐시에 없는 kid를 만나면
- * 키 로테이션으로 보고 한 번만 강제로 다시 받아온다.
+ * <p>키는 kid로 캐시하고, 모르는 kid를 만나면 키 로테이션으로 보고 다시 받아온다.
+ * 만료 시간을 따로 두지 않는 이유는, 로테이션이야말로 키가 바뀌는 유일한 경우라 이 경로가
+ * 이미 그것을 처리하기 때문이다. 다만 존재하지 않는 kid를 반복 전송해 JWKS 조회를 계속
+ * 유발할 수 있으므로, 같은 URL에 대한 재조회에는 최소 간격을 둔다.
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class JwkProvider {
 
-    private static final Duration CACHE_TTL = Duration.ofHours(1);
+    private static final Duration MIN_REFRESH_INTERVAL = Duration.ofMinutes(1);
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
-    private final Map<String, CachedJwkSet> cache = new ConcurrentHashMap<>();
+    private final Duration minRefreshInterval;
+    private final Map<String, JwkSet> cache = new ConcurrentHashMap<>();
+
+    @Autowired
+    public JwkProvider(RestTemplate restTemplate, ObjectMapper objectMapper) {
+        this(restTemplate, objectMapper, MIN_REFRESH_INTERVAL);
+    }
+
+    JwkProvider(RestTemplate restTemplate, ObjectMapper objectMapper, Duration minRefreshInterval) {
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
+        this.minRefreshInterval = minRefreshInterval;
+    }
 
     /**
      * ID 토큰 헤더의 kid에 해당하는 공개키를 반환한다.
      *
-     * @param providerName 예외 메시지에 쓰이는 제공자 이름 (예: "Apple")
-     * @param jwksUrl      제공자의 JWKS 엔드포인트
-     * @param token        검증할 ID 토큰
+     * @param jwksUrl 제공자의 JWKS 엔드포인트
+     * @param token   검증할 ID 토큰
      */
-    public PublicKey getPublicKeyFor(String providerName, String jwksUrl, String token) {
-        String kid = extractKid(providerName, token);
+    public PublicKey getPublicKeyFor(String jwksUrl, String token) {
+        String kid = extractKid(token);
 
-        CachedJwkSet cached = cache.get(jwksUrl);
-        if (cached != null && !cached.isExpired()) {
+        JwkSet cached = cache.get(jwksUrl);
+        if (cached != null) {
             PublicKey key = cached.keys().get(kid);
             if (key != null) {
                 return key;
             }
-            log.info("{} JWKS 캐시에 없는 kid: {}. 키 로테이션으로 보고 갱신한다", providerName, kid);
+            if (!cached.isRefreshable(minRefreshInterval)) {
+                throw new BadRequestException("인증 서버의 공개키를 찾을 수 없습니다");
+            }
+            log.info("JWKS 캐시에 없는 kid: {}. 키 로테이션으로 보고 갱신한다", kid);
         }
 
         PublicKey key = refresh(jwksUrl).get(kid);
         if (key == null) {
-            throw new BadRequestException(providerName + " 공개키를 찾을 수 없습니다");
+            throw new BadRequestException("인증 서버의 공개키를 찾을 수 없습니다");
         }
         return key;
     }
 
-    private String extractKid(String providerName, String token) {
+    private String extractKid(String token) {
         try {
             String[] parts = token.split("\\.");
             String headerJson = new String(Base64.getUrlDecoder().decode(parts[0]), StandardCharsets.UTF_8);
             return objectMapper.readTree(headerJson).get("kid").asText();
         } catch (Exception e) {
-            throw new BadRequestException("유효하지 않은 " + providerName + " 토큰입니다");
+            throw new BadRequestException("유효하지 않은 토큰입니다");
         }
     }
 
@@ -84,7 +99,7 @@ public class JwkProvider {
         }
 
         Map<String, PublicKey> keys = parseKeys(keysJson);
-        cache.put(jwksUrl, new CachedJwkSet(keys, Instant.now().plus(CACHE_TTL)));
+        cache.put(jwksUrl, new JwkSet(keys, Instant.now()));
         return keys;
     }
 
@@ -109,9 +124,9 @@ public class JwkProvider {
         }
     }
 
-    private record CachedJwkSet(Map<String, PublicKey> keys, Instant expiresAt) {
-        boolean isExpired() {
-            return Instant.now().isAfter(expiresAt);
+    private record JwkSet(Map<String, PublicKey> keys, Instant fetchedAt) {
+        boolean isRefreshable(Duration minInterval) {
+            return Duration.between(fetchedAt, Instant.now()).compareTo(minInterval) >= 0;
         }
     }
 }

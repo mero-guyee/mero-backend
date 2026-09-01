@@ -21,7 +21,6 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,7 +41,7 @@ class GoogleAuthServiceTest {
     void setUp() throws Exception {
         keyPair = KeyPairGenerator.getInstance("RSA").generateKeyPair();
         ReflectionTestUtils.setField(googleAuthService, "clientIds", List.of(CLIENT_ID));
-        given(jwkProvider.getPublicKeyFor(eq("Google"), any(), any())).willReturn(keyPair.getPublic());
+        given(jwkProvider.getPublicKeyFor(any(), any())).willReturn(keyPair.getPublic());
     }
 
     @Test
