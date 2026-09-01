@@ -453,7 +453,7 @@ class TripServiceTest {
         trip.setCoverImage(coverImage);
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
-        given(tripDocumentRepository.findByTripIdIncludingDeleted(tripId)).willReturn(List.of());
+        given(tripDocumentRepository.findStorageKeysByTripId(tripId)).willReturn(List.of());
 
         // when
         tripService.deleteTrip(userId, tripId);
@@ -475,7 +475,7 @@ class TripServiceTest {
         Trip trip = createTrip(tripId, user, "남미 여행", LocalDate.of(2026, 3, 11), LocalDate.of(2026, 5, 15));
 
         given(tripRepository.findById(tripId)).willReturn(Optional.of(trip));
-        given(tripDocumentRepository.findByTripIdIncludingDeleted(tripId)).willReturn(List.of());
+        given(tripDocumentRepository.findStorageKeysByTripId(tripId)).willReturn(List.of());
 
         // when
         tripService.deleteTrip(userId, tripId);

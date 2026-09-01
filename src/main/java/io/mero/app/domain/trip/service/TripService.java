@@ -3,7 +3,6 @@ package io.mero.app.domain.trip.service;
 import io.mero.app.domain.trip.entity.TripDocument;
 import io.mero.app.domain.trip.entity.TripMemo;
 import io.mero.app.domain.budget.repository.BudgetRepository;
-import io.mero.app.domain.footprint.entity.Photo;
 import io.mero.app.domain.footprint.repository.FootprintRepository;
 import io.mero.app.domain.footprint.repository.PhotoRepository;
 import io.mero.app.domain.trip.repository.TripDocumentRepository;
@@ -230,14 +229,13 @@ public class TripService {
         }
 
         // soft delete된 문서의 파일도 함께 정리 (개별 삭제 시점엔 파일을 유지했으므로)
-        List<TripDocument> documents = tripDocumentRepository.findByTripIdIncludingDeleted(tripId);
-        for (TripDocument document : documents) {
-            storageCleaner.deleteTripDocument(document.getStorageKey());
+        for (String storageKey : tripDocumentRepository.findStorageKeysByTripId(tripId)) {
+            storageCleaner.deleteTripDocument(storageKey);
         }
 
         // soft delete된 자식은 @SQLRestriction에 가려져 cascade로 정리되지 않으므로 직접 제거.
         // 사진은 native bulk delete라 @PreRemove가 동작하지 않으므로 스토리지 파일을 먼저 정리한다.
-        deletePhotoStorage(photoRepository.findSoftDeletedByTripId(tripId));
+        deletePhotoStorage(photoRepository.findSoftDeletedStorageKeysByTripId(tripId));
         photoRepository.deleteSoftDeletedByTripId(tripId);
         tripDocumentRepository.deleteSoftDeletedByTripId(tripId);
         budgetRepository.deleteSoftDeletedByTripId(tripId);
@@ -246,7 +244,7 @@ public class TripService {
         // soft delete된 발자취는 cascade 대상에서 빠지는데, DB의 ON DELETE CASCADE가 발자취 행을
         // 지울 때 자식(photo/footprint_location)엔 cascade가 없어 FK 위반이 난다.
         // 자식 → 발자취 순으로 직접 정리한다. (사진은 스토리지 파일도 함께 제거)
-        deletePhotoStorage(photoRepository.findByDeletedFootprintTripId(tripId));
+        deletePhotoStorage(photoRepository.findStorageKeysByDeletedFootprintTripId(tripId));
         photoRepository.deleteByDeletedFootprintTripId(tripId);
         footprintRepository.deleteLocationsByDeletedFootprintTripId(tripId);
         footprintRepository.deleteSoftDeletedByTripId(tripId);
@@ -256,9 +254,9 @@ public class TripService {
 
     // native bulk delete로 제거될 사진들의 스토리지 파일을 정리 (@PreRemove가 동작하지 않으므로 수동 처리)
     // 행이 지워지기 전에 키를 모아 두고, 실제 삭제는 커밋 후에 이뤄진다.
-    private void deletePhotoStorage(List<Photo> photos) {
-        for (Photo photo : photos) {
-            storageCleaner.deleteFootprintPhoto(photo.getStorageKey());
+    private void deletePhotoStorage(List<String> storageKeys) {
+        for (String storageKey : storageKeys) {
+            storageCleaner.deleteFootprintPhoto(storageKey);
         }
     }
 

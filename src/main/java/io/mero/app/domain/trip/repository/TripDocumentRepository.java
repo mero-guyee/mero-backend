@@ -20,9 +20,11 @@ public interface TripDocumentRepository extends JpaRepository<TripDocument, Long
     Optional<TripDocument> findByClientIdAndTripIdIncludingDeleted(@Param("clientId") String clientId,
                                                                    @Param("tripId") Long tripId);
 
-    // 삭제된 문서까지 포함해 스토리지 정리 대상 조회 (여행 hard delete 시 고아 파일 방지)
-    @Query(value = "SELECT * FROM trip_documents WHERE trip_id = :tripId", nativeQuery = true)
-    List<TripDocument> findByTripIdIncludingDeleted(@Param("tripId") Long tripId);
+    // 삭제된 문서까지 포함해 스토리지 정리 대상 조회 (여행 hard delete 시 고아 파일 방지).
+    // 엔티티가 아니라 키만 조회한다: 곧 bulk delete로 사라질 행을 영속성 컨텍스트에 올리면
+    // 이후 flush에서 detach된 trip 참조를 transient로 오인해 TransientObjectException이 난다.
+    @Query(value = "SELECT stored_file_name FROM trip_documents WHERE trip_id = :tripId", nativeQuery = true)
+    List<String> findStorageKeysByTripId(@Param("tripId") Long tripId);
 
     // 여행 hard delete 시, cascade로 정리되지 않는 soft delete된 문서를 직접 제거
     @Modifying

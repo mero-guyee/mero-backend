@@ -25,10 +25,11 @@ public interface PhotoRepository extends JpaRepository<Photo, Long> {
 
     // 활성 발자취에 속한 soft delete된 사진 조회 (bulk delete 전 스토리지 정리용)
     // 삭제된 발자취의 사진은 findByDeletedFootprintTripId가 처리하므로 제외한다.
-    @Query(value = "SELECT * FROM photo WHERE deleted_at IS NOT NULL " +
+    // 엔티티가 아니라 키만 조회한다 (bulk delete로 사라질 행을 영속성 컨텍스트에 올리지 않기 위해)
+    @Query(value = "SELECT s3_key FROM photo WHERE deleted_at IS NOT NULL " +
             "AND footprint_id IN (SELECT id FROM footprint WHERE trip_id = :tripId AND deleted_at IS NULL)",
             nativeQuery = true)
-    List<Photo> findSoftDeletedByTripId(@Param("tripId") Long tripId);
+    List<String> findSoftDeletedStorageKeysByTripId(@Param("tripId") Long tripId);
 
     // 활성 발자취의 물리 삭제(JPA cascade)를 막는 soft delete된 사진을 직접 제거
     @Modifying
@@ -38,9 +39,9 @@ public interface PhotoRepository extends JpaRepository<Photo, Long> {
     void deleteSoftDeletedByTripId(@Param("tripId") Long tripId);
 
     // soft delete된 발자취에 매달린 사진 조회 (발자취 hard delete 전 스토리지 정리용)
-    @Query(value = "SELECT * FROM photo WHERE footprint_id IN " +
+    @Query(value = "SELECT s3_key FROM photo WHERE footprint_id IN " +
             "(SELECT id FROM footprint WHERE trip_id = :tripId AND deleted_at IS NOT NULL)", nativeQuery = true)
-    List<Photo> findByDeletedFootprintTripId(@Param("tripId") Long tripId);
+    List<String> findStorageKeysByDeletedFootprintTripId(@Param("tripId") Long tripId);
 
     // soft delete된 발자취의 사진을 직접 제거 (발자취 행 삭제 시 FK 위반 방지, soft delete 여부 무관)
     @Modifying
