@@ -51,31 +51,18 @@ class TripDeleteJpaTest {
     @MockitoBean
     MessageUtil messageUtil;
 
-    private User user;
-    private Trip trip;
-
-    private void base() {
-        user = User.builder().email("a@b.c").nickname("n").build();
+    @Test
+    @DisplayName("soft delete된 자식까지 있는 여행을 삭제해도 flush가 성공한다")
+    void deleteTripWithSoftDeletedChildren() {
+        User user = User.builder().email("a@b.c").nickname("n").build();
         em.persist(user);
-        trip = Trip.builder()
+
+        Trip trip = Trip.builder()
                 .user(user).title("t")
                 .startDate(LocalDate.now()).endDate(LocalDate.now())
                 .countries(List.of("KR")).clientId("trip-1")
                 .build();
         em.persist(trip);
-    }
-
-    private void deleteAndFlush() {
-        em.flush();
-        em.clear();
-        tripService.deleteTrip(user.getId(), trip.getId());
-        em.flush();
-    }
-
-    @Test
-    @DisplayName("soft delete된 자식까지 있는 여행을 삭제해도 flush가 성공한다")
-    void deleteTripWithSoftDeletedChildren() {
-        base();
 
         TripCoverImage cover = TripCoverImage.builder()
                 .trip(trip).storageKey("cover").mimeType(ImageMimeType.JPEG).build();
@@ -84,7 +71,7 @@ class TripDeleteJpaTest {
 
         em.persist(doc(trip, "doc-live", false));
         em.persist(doc(trip, "doc-dead", true));
-        em.persist(memo(trip, "memo-1"));
+        em.persist(TripMemo.builder().trip(trip).title("t").content("c").clientId("memo-1").build());
         em.persist(budget(trip, "budget-live", false));
         em.persist(budget(trip, "budget-dead", true));
 
@@ -106,7 +93,11 @@ class TripDeleteJpaTest {
         em.persist(expense(trip, liveFp, category, "exp-live", false));
         em.persist(expense(trip, deadFp, category, "exp-dead", true));
 
-        deleteAndFlush();
+        em.flush();
+        em.clear();
+
+        tripService.deleteTrip(user.getId(), trip.getId());
+        em.flush();
 
         em.clear();
         assertThat(em.find(Trip.class, trip.getId())).isNull();
@@ -118,10 +109,6 @@ class TripDeleteJpaTest {
                 .fileSize(1L).contentType(DocumentMimeType.PDF).clientId(clientId).build();
         if (deleted) d.delete();
         return d;
-    }
-
-    private TripMemo memo(Trip trip, String clientId) {
-        return TripMemo.builder().trip(trip).title("t").content("c").clientId(clientId).build();
     }
 
     private Budget budget(Trip trip, String clientId, boolean deleted) {

@@ -229,9 +229,7 @@ public class TripService {
         }
 
         // soft delete된 문서의 파일도 함께 정리 (개별 삭제 시점엔 파일을 유지했으므로)
-        for (String storageKey : tripDocumentRepository.findStorageKeysByTripId(tripId)) {
-            storageCleaner.deleteTripDocument(storageKey);
-        }
+        tripDocumentRepository.findStorageKeysByTripId(tripId).forEach(storageCleaner::deleteTripDocument);
 
         // soft delete된 자식은 @SQLRestriction에 가려져 cascade로 정리되지 않으므로 직접 제거.
         // 사진은 native bulk delete라 @PreRemove가 동작하지 않으므로 스토리지 파일을 먼저 정리한다.
@@ -255,9 +253,7 @@ public class TripService {
     // native bulk delete로 제거될 사진들의 스토리지 파일을 정리 (@PreRemove가 동작하지 않으므로 수동 처리)
     // 행이 지워지기 전에 키를 모아 두고, 실제 삭제는 커밋 후에 이뤄진다.
     private void deletePhotoStorage(List<String> storageKeys) {
-        for (String storageKey : storageKeys) {
-            storageCleaner.deleteFootprintPhoto(storageKey);
-        }
+        storageKeys.forEach(storageCleaner::deleteFootprintPhoto);
     }
 
     private TripResponse toTripResponse(Trip trip) {

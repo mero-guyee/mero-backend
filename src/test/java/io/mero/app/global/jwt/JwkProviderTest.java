@@ -8,9 +8,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
@@ -38,6 +40,7 @@ class JwkProviderTest {
     @Spy
     private ObjectMapper objectMapper = new ObjectMapper();
 
+    @InjectMocks
     private JwkProvider jwkProvider;
 
     private KeyPair keyPair;
@@ -45,8 +48,8 @@ class JwkProviderTest {
     @BeforeEach
     void setUp() throws Exception {
         keyPair = KeyPairGenerator.getInstance("RSA").generateKeyPair();
-        // 재조회 간격은 각 테스트가 정한다. 기본은 0이라 로테이션 경로가 바로 동작한다.
-        jwkProvider = new JwkProvider(restTemplate, objectMapper, Duration.ZERO);
+        // 간격을 0으로 두면 로테이션 경로가 스로틀에 막히지 않는다. 스로틀 자체는 아래에서 따로 검증한다.
+        ReflectionTestUtils.setField(jwkProvider, "minRefreshInterval", Duration.ZERO);
     }
 
     @Test
@@ -99,7 +102,7 @@ class JwkProviderTest {
     @DisplayName("최소 간격 안에 모르는 kid가 다시 오면 JWKS를 재조회하지 않는다")
     void 최소_간격_안에서는_재조회하지_않음() {
         // given
-        jwkProvider = new JwkProvider(restTemplate, objectMapper, Duration.ofMinutes(1));
+        ReflectionTestUtils.setField(jwkProvider, "minRefreshInterval", Duration.ofMinutes(1));
         given(restTemplate.getForObject(JWKS_URL, String.class)).willReturn(jwks("kid-1", keyPair));
         jwkProvider.getPublicKeyFor(JWKS_URL, token("kid-1", keyPair));
 

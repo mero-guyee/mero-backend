@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mero.app.global.exception.BadRequestException;
 import io.mero.app.global.exception.ExternalServiceException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -32,25 +32,15 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class JwkProvider {
-
-    private static final Duration MIN_REFRESH_INTERVAL = Duration.ofMinutes(1);
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
-    private final Duration minRefreshInterval;
     private final Map<String, JwkSet> cache = new ConcurrentHashMap<>();
 
-    @Autowired
-    public JwkProvider(RestTemplate restTemplate, ObjectMapper objectMapper) {
-        this(restTemplate, objectMapper, MIN_REFRESH_INTERVAL);
-    }
-
-    JwkProvider(RestTemplate restTemplate, ObjectMapper objectMapper, Duration minRefreshInterval) {
-        this.restTemplate = restTemplate;
-        this.objectMapper = objectMapper;
-        this.minRefreshInterval = minRefreshInterval;
-    }
+    /** 같은 URL에 대한 JWKS 재조회 최소 간격. 테스트에서만 바꾼다. */
+    private Duration minRefreshInterval = Duration.ofMinutes(1);
 
     /**
      * ID 토큰 헤더의 kid에 해당하는 공개키를 반환한다.
